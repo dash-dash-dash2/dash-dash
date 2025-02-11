@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/nours/OneDrive/Bureau/sinor%20phase/learn/learn%20next.js/client/app/type/tables/tables.ts"],"sourcesContent":["\r\n  export interface Player {\r\n    id: string;\r\n    name: string;\r\n  }\r\n  \r\n  export const players: Player[] = [\r\n    { id: \"1\", name: \"Nour\" },\r\n    { id: \"2\", name: \"Ghassen\" },\r\n    { id: \"3\", name: \"Talel\" },\r\n  ];"],"names":[],"mappings":";;;AAMS,MAAM,UAAoB;IAC/B;QAAE,IAAI;QAAK,MAAM;IAAO;IACxB;QAAE,IAAI;QAAK,MAAM;IAAU;IAC3B;QAAE,IAAI;QAAK,MAAM;IAAQ;CAC1B"}},
+    {"offset": {"line": 24, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}},
+    {"offset": {"line": 30, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/nours/OneDrive/Bureau/sinor%20phase/learn/learn%20next.js/client/app/about/description/%5Bplayer%5D/page.tsx"],"sourcesContent":["import { players } from \"@/app/type/tables/tables\"; // Import the array\r\nimport { notFound } from \"next/navigation\";\r\n\r\ninterface PlayerPageProps {\r\n  params: { id: string }; // Next.js automatically provides `params`\r\n}\r\n\r\nconst PlayerPage: React.FC<PlayerPageProps> = ({ params }) => {\r\n  const player = players.find((p) => p.id === params.id);\r\n\r\n  if (!player) {\r\n    return notFound(); // Show 404 if the player is not found\r\n  }\r\n\r\n  return (\r\n    <div>\r\n      <h1>Player Details</h1>\r\n      <p>ID: {player.id}</p>\r\n      <p>Name: {player.name}</p>\r\n    </div>\r\n  );\r\n};\r\n\r\nexport default PlayerPage;\r\n"],"names":[],"mappings":";;;;AAAA,0NAAoD,mBAAmB;AACvE;AAAA;;;;AAMA,MAAM,aAAwC,CAAC,EAAE,MAAM,EAAE;IACvD,MAAM,SAAS,+HAAA,CAAA,UAAO,CAAC,IAAI,CAAC,CAAC,IAAM,EAAE,EAAE,KAAK,OAAO,EAAE;IAErD,IAAI,CAAC,QAAQ;QACX,OAAO,CAAA,GAAA,qLAAA,CAAA,WAAQ,AAAD,KAAK,sCAAsC;IAC3D;IAEA,qBACE,8OAAC;;0BACC,8OAAC;0BAAG;;;;;;0BACJ,8OAAC;;oBAAE;oBAAK,OAAO,EAAE;;;;;;;0BACjB,8OAAC;;oBAAE;oBAAO,OAAO,IAAI;;;;;;;;;;;;;AAG3B;uCAEe"}},
+    {"offset": {"line": 82, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}},
+    {"offset": {"line": 93, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":""}},
+    {"offset": {"line": 93, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
+}
