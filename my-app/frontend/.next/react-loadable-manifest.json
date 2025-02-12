@@ -1,1 +1,9 @@
-{}
+{
+  "app/page.tsx -> ./home/page": {
+    "id": "app/page.tsx -> ./home/page",
+    "files": [
+      "static/chunks/_8aea62._.js",
+      "static/chunks/app_home_page_tsx_454d32._.js"
+    ]
+  }
+}
