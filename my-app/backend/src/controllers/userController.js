@@ -5,15 +5,15 @@ const prisma = new PrismaClient();
 
 // Register a new user
 const registerUser = async (req, res) => {
-  const { name, email, password, phone, address, location } = req.body;
+  const { name, email, password, phone, address } = req.body;
 
-  // Validate required fields
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
+  // Validate required fields - only name, email, and password are required
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: "Name, email, and password are required." });
   }
 
   try {
-    // Check if user already exists
+    // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists." });
@@ -22,22 +22,37 @@ const registerUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with optional fields
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        phone,
-        address,
-        location,
+        phone: phone || null,    // Make phone optional
+        address: address || null, // Make address optional
+        role: 'CUSTOMER',        // Default role
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        role: true,
+        createdAt: true
+      }
     });
+    
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    // Respond with success message and user data (excluding password)
-    res.status(201).json({ message: "User registered successfully", user: { ...user, password: undefined } });
+    res.status(201).json({ user, token });
+
   } catch (error) {
-    console.error("Registration error:", error); // Log the error for debugging
+    console.error("Registration error:", error);
     res.status(500).json({ error: "Registration failed", details: error.message });
   }
 };
@@ -47,24 +62,45 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find user
-    const user = await prisma.user.findUnique({ where: { email } });
+    // Find user with more details
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true,
+        role: true,
+        phone: true,
+        address: true,
+        createdAt: true
+      }
+    });
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    // Generate JWT
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.status(200).json({ message: "Login successful", token });
+    const { password: _, ...userWithoutPassword } = user;
+
+    res.status(200).json({ 
+      message: "Login successful", 
+      user: userWithoutPassword,
+      token 
+    });
   } catch (error) {
-    console.error("Login error:", error); // Log the error for debugging
+    console.error("Login error:", error);
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
@@ -74,13 +110,22 @@ const getUserProfile = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true
+      }
+    });
+    
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+    
     res.status(200).json(user);
   } catch (error) {
-    console.error("Profile fetch error:", error); // Log the error for debugging
+    console.error("Profile fetch error:", error);
     res.status(500).json({ error: "Failed to fetch profile", details: error.message });
   }
 };
