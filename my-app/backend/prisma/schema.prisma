@@ -13,188 +13,198 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Table (Customers)
+// Define the Role enum
+enum Role {
+  CUSTOMER
+  DELIVERYMAN
+  RESTAURANT_OWNER
+  ADMIN
+}
+
+// User Table (Central entity for all users)
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String   // Hashed using Bcrypt
-  phone     String?
-  address   String?
-  location  String?  // Latitude and longitude (e.g., "48.8566,2.3522")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]  // One-to-many relationship with Order
-  ratings   Rating[] // One-to-many relationship with Rating
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String       @unique
+  password      String
+  phone         String?
+  address       String?
+  location      String?
+  role          Role         @default(CUSTOMER) // Role of the user
+  deliverymanId Int?         // Foreign key to Deliveryman (optional)
+  restaurantId  Int?         // Foreign key to Restaurant (optional)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  orders        Order[]      // One-to-many relationship with Order
+  ratings       Rating[]     // One-to-many relationship with Rating
+  chats         Chat[]       // One-to-many relationship with Chat
+  deliveryman   Deliveryman? @relation("UserDeliveryman") // Optional relation to Deliveryman
+  restaurant    Restaurant?  @relation("UserRestaurant")  // Optional relation to Restaurant
 }
 
-// Deliveryman Table (Drivers)
+// Deliveryman Table (Role-specific fields)
 model Deliveryman {
-  id          Int      @id @default(autoincrement())
-  name        String
-  email       String   @unique
-  password    String   // Hashed using Bcrypt
-  phone       String?
-  vehicleType String   // e.g., bike, car
-  isAvailable Boolean  @default(true)
-  location    String?  // Latitude and longitude (e.g., "48.8566,2.3522")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]  // One-to-many relationship with Order
+  id            Int            @id @default(autoincrement())
+  vehicleType   String
+  isAvailable   Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User?          @relation("UserDeliveryman", fields: [userId], references: [id]) // One-to-one relationship with User
+  userId        Int?           @unique // Make userId optional
+  orders        Order[]        // One-to-many relationship with Order
   notifications Notification[] // One-to-many relationship with Notification
+  chats         Chat[]         // One-to-many relationship with Chat
 }
 
-// Restaurant Table
+// Restaurant Table (Role-specific fields)
 model Restaurant {
-  id          Int      @id @default(autoincrement())
-  name        String
-  email       String   @unique
-  password    String   // Hashed using Bcrypt
-  phone       String?
-  address     String?
+  id          Int                  @id @default(autoincrement())
   cuisineType String
-  location    String?  // Latitude and longitude (e.g., "48.8566,2.3522")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]  // One-to-many relationship with Order
-  menus       Menu[]   // One-to-many relationship with Menu
-  ratings     Rating[] // One-to-many relationship with Rating
+  location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  user        User                 @relation("UserRestaurant", fields: [userId], references: [id]) // One-to-one relationship with User
+  userId      Int                  @unique // Foreign key to User
+  orders      Order[]              // One-to-many relationship with Order
+  menus       Menu[]               // One-to-many relationship with Menu
+  ratings     Rating[]             // One-to-many relationship with Rating
   categories  CategoryRestaurant[] // Many-to-many relationship with Category
 }
 
 // Order Table
 model Order {
-  id            Int      @id @default(autoincrement())
-  userId        Int      // Foreign key to User
-  restaurantId  Int      // Foreign key to Restaurant
-  deliverymanId Int?     // Foreign key to Deliveryman (nullable until assigned)
-  status        String   @default("Pending") // e.g., "Pending", "Preparing", "Out for Delivery", "Delivered"
+  id            Int            @id @default(autoincrement())
+  userId        Int
+  restaurantId  Int
+  deliverymanId Int?
+  status        String         @default("Pending")
   totalAmount   Float
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id])
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
-  deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id])
-  chats         Chat[]   // One-to-many relationship with Chat
-  payments      Payment[] // One-to-many relationship with Payment
-  history       OrderHistory[] // One-to-many relationship with OrderHistory
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id])
+  restaurant    Restaurant     @relation(fields: [restaurantId], references: [id])
+  deliveryman   Deliveryman?   @relation(fields: [deliverymanId], references: [id])
+  chats         Chat[]         // One-to-many relationship with Chat
+  payments      Payment[]      // One-to-many relationship with Payment
+  notifications Notification[] // One-to-many relationship with Notification
+  history       OrderHistory[]  // One-to-many relationship with OrderHistory
 }
 
 // Chat Table (Real-time chat between user and driver)
 model Chat {
-  id            Int      @id @default(autoincrement())
-  orderId       Int      // Foreign key to Order
-  userId        Int      // Foreign key to User
-  deliverymanId Int      // Foreign key to Deliveryman
+  id            Int         @id @default(autoincrement())
+  orderId       Int
+  userId        Int?        // Make optional if user can be null
+  deliverymanId Int?        // Make optional if deliveryman can be null
   message       String
-  sender        String   // Enum: "user" or "deliveryman"
-  createdAt     DateTime @default(now())
-  order         Order    @relation(fields: [orderId], references: [id])
-  user          User     @relation(fields: [userId], references: [id])
-  deliveryman   Deliveryman @relation(fields: [deliverymanId], references: [id])
+  sender        String      // "user" or "deliveryman"
+  createdAt     DateTime    @default(now())
+  order         Order       @relation(fields: [orderId], references: [id])
+  user          User?       @relation(fields: [userId], references: [id]) // Make optional
+  deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id]) // Make optional
 }
 
-// Notification Table (Driver notifications)
+// Notification Table
 model Notification {
-  id            Int      @id @default(autoincrement())
-  deliverymanId Int      // Foreign key to Deliveryman
-  orderId       Int      // Foreign key to Order
+  id            Int         @id @default(autoincrement())
+  deliverymanId Int
+  orderId       Int
   message       String
-  isRead        Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  isRead        Boolean     @default(false)
+  createdAt     DateTime    @default(now())
   deliveryman   Deliveryman @relation(fields: [deliverymanId], references: [id])
-  order         Order    @relation(fields: [orderId], references: [id])
+  order         Order       @relation(fields: [orderId], references: [id])
 }
 
 // Category-Restaurant Table (Many-to-many relationship)
 model CategoryRestaurant {
-  id            Int      @id @default(autoincrement())
-  categoryId    Int      // Foreign key to Category
-  restaurantId  Int      // Foreign key to Restaurant
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  category      Category @relation(fields: [categoryId], references: [id])
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  id           Int        @id @default(autoincrement())
+  categoryId   Int // Foreign key to Category
+  restaurantId Int // Foreign key to Restaurant
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  category     Category   @relation(fields: [categoryId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 }
 
 // Category Table (e.g., Italian, Mexican, etc.)
 model Category {
-  id            Int      @id @default(autoincrement())
-  name          String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  restaurants   CategoryRestaurant[] // Many-to-many relationship with Restaurant
-  foods         CategoryFood[]       // Many-to-many relationship with Food
+  id          Int                  @id @default(autoincrement())
+  name        String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  restaurants CategoryRestaurant[] // Many-to-many relationship with Restaurant
+  foods       CategoryFood[]       // Many-to-many relationship with Food
 }
 
 // Category-Food Table (Many-to-many relationship)
 model CategoryFood {
-  id            Int      @id @default(autoincrement())
-  categoryId    Int      // Foreign key to Category
-  foodId        Int      // Foreign key to Food
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  category      Category @relation(fields: [categoryId], references: [id])
-  food          Food     @relation(fields: [foodId], references: [id])
+  id         Int      @id @default(autoincrement())
+  categoryId Int // Foreign key to Category
+  foodId     Int // Foreign key to Food
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id])
+  food       Food     @relation(fields: [foodId], references: [id])
 }
 
 // Food Table (Menu items)
 model Food {
-  id            Int      @id @default(autoincrement())
-  name          String
-  description   String?
-  price         Float
-  imageUrl      String?
-  menuId        Int      // Foreign key to Menu
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  menu          Menu     @relation(fields: [menuId], references: [id])
-  categories    CategoryFood[] // Many-to-many relationship with Category
-  supplements   Supplement[]   // One-to-many relationship with Supplement
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  menuId      Int // Foreign key to Menu
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  menu        Menu           @relation(fields: [menuId], references: [id])
+  categories  CategoryFood[] // Many-to-many relationship with Category
+  supplements Supplement[]   // One-to-many relationship with Supplement
 }
 
 // Supplement Table (e.g., extra cheese, sauces)
 model Supplement {
-  id            Int      @id @default(autoincrement())
-  name          String
-  price         Float
-  foodId        Int      // Foreign key to Food
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  food          Food     @relation(fields: [foodId], references: [id])
+  id        Int      @id @default(autoincrement())
+  name      String
+  price     Float
+  foodId    Int // Foreign key to Food
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  food      Food     @relation(fields: [foodId], references: [id])
 }
 
 // Menu Table (Restaurant menus)
 model Menu {
-  id            Int      @id @default(autoincrement())
-  name          String
-  restaurantId  Int      // Foreign key to Restaurant
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
-  foods         Food[]   // One-to-many relationship with Food
+  id           Int        @id @default(autoincrement())
+  name         String
+  restaurantId Int // Foreign key to Restaurant
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  foods        Food[]     // One-to-many relationship with Food
 }
 
 // Rating Table (User ratings for restaurants)
 model Rating {
-  id            Int      @id @default(autoincrement())
-  score         Int      // e.g., 1 to 5
-  comment       String?
-  userId        Int      // Foreign key to User
-  restaurantId  Int      // Foreign key to Restaurant
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [userId], references: [id])
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id])
+  id           Int        @id @default(autoincrement())
+  score        Int // e.g., 1 to 5
+  comment      String?
+  userId       Int // Foreign key to User
+  restaurantId Int // Foreign key to Restaurant
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  user         User       @relation(fields: [userId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 }
 
 // Payment Table (Order payments)
 model Payment {
   id            Int      @id @default(autoincrement())
-  orderId       Int      // Foreign key to Order
+  orderId       Int // Foreign key to Order
   amount        Float
-  paymentMethod String   // e.g., "Credit Card", "Debit Card"
-  status        String   // e.g., "Pending", "Completed"
+  paymentMethod String // e.g., "Credit Card", "Debit Card"
+  status        String // e.g., "Pending", "Completed"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   order         Order    @relation(fields: [orderId], references: [id])
@@ -205,16 +215,16 @@ model Admin {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
-  password  String   // Hashed using Bcrypt
+  password  String // Hashed using Bcrypt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 // OrderHistory Table (History of orders)
 model OrderHistory {
-  id            Int      @id @default(autoincrement())
-  orderId       Int      // Foreign key to Order
-  status        String   // e.g., "Pending", "Preparing", "Out for Delivery", "Delivered"
-  updatedAt     DateTime @default(now())
-  order         Order    @relation(fields: [orderId], references: [id])
+  id        Int      @id @default(autoincrement())
+  orderId   Int // Foreign key to Order
+  status    String // e.g., "Pending", "Preparing", "Out for Delivery", "Delivered"
+  updatedAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
 }
