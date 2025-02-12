@@ -1,194 +1,274 @@
 "use client";
 import React, { useState } from "react";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+import Category from "./category";
+import Order from "./order";
 
-// Simple Navbar Component
-const Navbar: React.FC = () => (
-  <nav style={{ padding: "16px", background: "#333", color: "#fff", textAlign: "center" }}>
-    <h2>Restaurant Menu</h2>
-  </nav>
-);
-
-// Simple Sidebar Component
-const Sidebar: React.FC = () => (
-  <aside style={{ width: "200px", background: "#f4f4f4", padding: "16px" }}>
-    <h3>Sidebar</h3>
-    <ul>
-      <li>Home</li>
-      <li>Menu</li>
-      <li>Orders</li>
-    </ul>
-  </aside>
-);
-
-// Simple Category Component
-const Category: React.FC = () => (
-  <div style={{ marginBottom: "16px" }}>
-    <h3>Categories</h3>
-    <p>Select your favorite meal</p>
-  </div>
-);
-
-// Simple Order Component
-const Order: React.FC = () => (
-  <div style={{ width: "200px", background: "#f4f4f4", padding: "16px" }}>
-    <h3>Order Summary</h3>
-    <p>No items selected</p>
-  </div>
-);
-
-// Ingredient & Product Interfaces
-interface Ingredient {
-  name: string;
-  price: number;
-  default: boolean;
-}
-
-interface Product {
-  id: number;
+interface MenuItem {
   name: string;
   description: string;
-  basePrice: number;
-  image: string;
-  calories: number;
-  preparationTime: string;
-  ingredients: Ingredient[];
+  price: number;
+  imageUrl: string;
 }
 
-// Product List
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Burger Deluxe",
-    description: "Juicy beef burger with fresh toppings.",
-    basePrice: 8.99,
-    image: "/images/burger.jpg",
-    calories: 650,
-    preparationTime: "15 minutes",
-    ingredients: [
-      { name: "Lettuce", price: 0, default: true },
-      { name: "Tomato", price: 0, default: true },
-      { name: "Cheese", price: 1.5, default: false },
-      { name: "Bacon", price: 2, default: false },
-    ],
-  },
-];
+const ingredientsList = ["Cheese", "Tomatoes", "Lettuce", "Onions", "Bacon", "Mushrooms"];
 
-// Simple Dialog Component
-const Dialog: React.FC<{ open: boolean; onOpenChange: () => void; children?: React.ReactNode }> = ({
-  open,
-  onOpenChange,
-  children,
-}) => {
-  if (!open) return null;
+const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, description, price, imageUrl, onClick }) => {
   return (
     <div
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        borderRadius: "12px",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        overflow: "hidden",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        cursor: "pointer",
       }}
-      onClick={onOpenChange}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.15)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "none";
+        e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+      }}
+      onClick={() => onClick({ name, description, price, imageUrl })}
     >
-      <div
-        style={{ background: "#fff", padding: "20px", borderRadius: "10px", width: "400px" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-        <button onClick={onOpenChange} style={{ marginTop: "10px", padding: "5px", width: "100%" }}>
-          Close
-        </button>
+      <img src={imageUrl} alt={name} style={{ width: "100%", height: "160px", objectFit: "cover" }} />
+      <div style={{ padding: "16px" }}>
+        <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px" }}>{name}</h3>
+        <p style={{ fontSize: "14px", color: "#666666", marginBottom: "12px" }}>{description}</p>
+        <p style={{ fontSize: "16px", fontWeight: "bold", color: "#FFB800" }}>${price.toFixed(2)}</p>
       </div>
     </div>
   );
 };
 
-// Simple Checkbox Component
-const Checkbox: React.FC<{ checked: boolean; onCheckedChange: () => void; disabled?: boolean }> = ({
-  checked,
-  onCheckedChange,
-  disabled,
-}) => (
-  <input type="checkbox" checked={checked} onChange={onCheckedChange} disabled={disabled} />
-);
-
-// Main Restaurant Component
 const Restaurant: React.FC = () => {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(new Set());
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
 
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setSelectedIngredients(new Set(product.ingredients.filter((ing) => ing.default).map((ing) => ing.name)));
-  };
-
-  const handleIngredientToggle = (ingredientName: string) => {
-    setSelectedIngredients((prev) => {
-      const newSelected = new Set(prev);
-      newSelected.has(ingredientName) ? newSelected.delete(ingredientName) : newSelected.add(ingredientName);
-      return newSelected;
-    });
-  };
-
-  const calculateTotalPrice = (product: Product, selectedIngs: Set<string>) => {
-    return (
-      product.basePrice +
-      product.ingredients
-        .filter((ing) => selectedIngs.has(ing.name) && !ing.default)
-        .reduce((sum, ing) => sum + ing.price, 0)
+  const handleIngredientChange = (ingredient: string) => {
+    setSelectedIngredients((prev) =>
+      prev.includes(ingredient) ? prev.filter((item) => item !== ingredient) : [...prev, ingredient]
     );
   };
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px" }}>
       <Navbar />
       <div style={{ display: "flex", gap: "24px" }}>
         <Sidebar />
         <div style={{ flex: 1 }}>
           <Category />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
-            {products.map((product) => (
-              <div key={product.id} style={{ cursor: "pointer" }} onClick={() => handleProductSelect(product)}>
-                <img src={product.image} alt={product.name} style={{ width: "100%", borderRadius: "12px" }} />
-                <h3>{product.name}</h3>
-                <p>${product.basePrice.toFixed(2)}</p>
-              </div>
+            {[{
+              name: "Cheeseburger",
+              description: "Juicy beef patty with melted cheese, lettuce, and tomato.",
+              price: 9.99,
+              imageUrl: "https://via.placeholder.com/250x160"
+            }, {
+              name: "Margherita Pizza",
+              description: "Classic pizza with fresh mozzarella, tomatoes, and basil.",
+              price: 12.99,
+              imageUrl: "https://via.placeholder.com/250x160"
+            }].map((item, index) => (
+              <MenuCard key={index} {...item} onClick={setSelectedItem} />
             ))}
           </div>
         </div>
-        <Order />
+        <div style={{ width: "300px", backgroundColor: "#ffffff", borderRadius: "12px", padding: "16px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}>
+          <Order />
+        </div>
       </div>
-
-      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-        {selectedProduct && (
-          <>
-            <h2>{selectedProduct.name}</h2>
-            <img src={selectedProduct.image} alt={selectedProduct.name} style={{ width: "100%", borderRadius: "12px" }} />
-            <p>{selectedProduct.description}</p>
-            <h3>Ingredients</h3>
-            {selectedProduct.ingredients.map((ingredient) => (
-              <div key={ingredient.name} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
-                <Checkbox
-                  checked={selectedIngredients.has(ingredient.name)}
-                  onCheckedChange={() => handleIngredientToggle(ingredient.name)}
-                  disabled={ingredient.default}
-                />
-                <span>
-                  {ingredient.name} {ingredient.default ? "(Included)" : `+ $${ingredient.price.toFixed(2)}`}
-                </span>
-              </div>
-            ))}
-            <p><strong>Total: ${calculateTotalPrice(selectedProduct, selectedIngredients).toFixed(2)}</strong></p>
-          </>
-        )}
-      </Dialog>
+      {selectedItem && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          backgroundColor: "rgba(0, 0, 0, 0.5)", display: "flex", justifyContent: "center", alignItems: "center"
+        }}>
+          <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "12px", width: "400px" }}>
+            <h2>{selectedItem.name}</h2>
+            <img src={selectedItem.imageUrl} alt={selectedItem.name} style={{ width: "100%", borderRadius: "8px" }} />
+            <p>{selectedItem.description}</p>
+            <p style={{ fontSize: "18px", fontWeight: "bold" }}>${selectedItem.price.toFixed(2)}</p>
+            <h3>Choose Ingredients:</h3>
+            <div>
+              {ingredientsList.map((ingredient) => (
+                <label key={ingredient} style={{ display: "block", marginBottom: "8px" }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIngredients.includes(ingredient)}
+                    onChange={() => handleIngredientChange(ingredient)}
+                  />
+                  {ingredient}
+                </label>
+              ))}
+            </div>
+            <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between" }}>
+              <button onClick={() => setSelectedItem(null)} style={{ padding: "8px 12px", cursor: "pointer" }}>Close</button>
+              <button style={{ padding: "8px 12px", backgroundColor: "#FFB800", color: "white", cursor: "pointer" }}>Add to Order</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Restaurant;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// "use client";
+// import React, { useState, useEffect } from "react";
+// import axios from "axios";
+// import Navbar from "./Navbar";
+// import Sidebar from "./Sidebar";
+// import Category from "./category";
+// import Order from "./order";
+
+// interface MenuItem {
+//   name: string;
+//   description: string;
+//   price: number;
+//   imageUrl: string;
+// }
+
+// const ingredientsList = ["Cheese", "Tomatoes", "Lettuce", "Onions", "Bacon", "Mushrooms"];
+
+// const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, description, price, imageUrl, onClick }) => {
+//   return (
+//     <div
+//       style={{
+//         borderRadius: "12px",
+//         backgroundColor: "#ffffff",
+//         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+//         overflow: "hidden",
+//         transition: "transform 0.2s, box-shadow 0.2s",
+//         cursor: "pointer",
+//       }}
+//       onMouseEnter={(e) => {
+//         e.currentTarget.style.transform = "translateY(-4px)";
+//         e.currentTarget.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.15)";
+//       }}
+//       onMouseLeave={(e) => {
+//         e.currentTarget.style.transform = "none";
+//         e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+//       }}
+//       onClick={() => onClick({ name, description, price, imageUrl })}
+//     >
+//       <img src={imageUrl} alt={name} style={{ width: "100%", height: "160px", objectFit: "cover" }} />
+//       <div style={{ padding: "16px" }}>
+//         <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px" }}>{name}</h3>
+//         <p style={{ fontSize: "14px", color: "#666666", marginBottom: "12px" }}>{description}</p>
+//         <p style={{ fontSize: "16px", fontWeight: "bold", color: "#FFB800" }}>${price.toFixed(2)}</p>
+//       </div>
+//     </div>
+//   );
+// };
+
+// const Restaurant: React.FC = () => {
+//   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+//   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+//   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+//   const [loading, setLoading] = useState<boolean>(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // Fetch menu items from API
+//   useEffect(() => {
+//     const fetchMenuItems = async () => {
+//       try {
+//         const response = await axios.get("https://your-api-endpoint.com/menu-items");
+//         setMenuItems(response.data);
+//         setLoading(false);
+//       } catch (err) {
+//         setError("Failed to fetch menu items");
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchMenuItems();
+//   }, []);
+
+//   const handleIngredientChange = (ingredient: string) => {
+//     setSelectedIngredients((prev) =>
+//       prev.includes(ingredient) ? prev.filter((item) => item !== ingredient) : [...prev, ingredient]
+//     );
+//   };
+
+//   if (loading) {
+//     return <div>Loading...</div>;
+//   }
+
+//   if (error) {
+//     return <div>{error}</div>;
+//   }
+
+//   return (
+//     <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px" }}>
+//       <Navbar />
+//       <div style={{ display: "flex", gap: "24px" }}>
+//         <Sidebar />
+//         <div style={{ flex: 1 }}>
+//           <Category />
+//           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
+//             {menuItems.map((item, index) => (
+//               <MenuCard key={index} {...item} onClick={setSelectedItem} />
+//             ))}
+//           </div>
+//         </div>
+//         <div style={{ width: "300px", backgroundColor: "#ffffff", borderRadius: "12px", padding: "16px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}>
+//           <Order />
+//         </div>
+//       </div>
+//       {selectedItem && (
+//         <div style={{
+//           position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+//           backgroundColor: "rgba(0, 0, 0, 0.5)", display: "flex", justifyContent: "center", alignItems: "center"
+//         }}>
+//           <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "12px", width: "400px" }}>
+//             <h2>{selectedItem.name}</h2>
+//             <img src={selectedItem.imageUrl} alt={selectedItem.name} style={{ width: "100%", borderRadius: "8px" }} />
+//             <p>{selectedItem.description}</p>
+//             <p style={{ fontSize: "18px", fontWeight: "bold" }}>${selectedItem.price.toFixed(2)}</p>
+//             <h3>Choose Ingredients:</h3>
+//             <div>
+//               {ingredientsList.map((ingredient) => (
+//                 <label key={ingredient} style={{ display: "block", marginBottom: "8px" }}>
+//                   <input
+//                     type="checkbox"
+//                     checked={selectedIngredients.includes(ingredient)}
+//                     onChange={() => handleIngredientChange(ingredient)}
+//                   />
+//                   {ingredient}
+//                 </label>
+//               ))}
+//             </div>
+//             <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between" }}>
+//               <button onClick={() => setSelectedItem(null)} style={{ padding: "8px 12px", cursor: "pointer" }}>Close</button>
+//               <button style={{ padding: "8px 12px", backgroundColor: "#FFB800", color: "white", cursor: "pointer" }}>Add to Order</button>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Restaurant;

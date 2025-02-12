@@ -6,7 +6,7 @@ var { r: __turbopack_require__, f: __turbopack_module_context__, i: __turbopack_
 {
 __turbopack_export_value__((__turbopack_import__) => {
     return Promise.all([
-  "server/chunks/ssr/app_home_c84ff2._.js"
+  "server/chunks/ssr/app_home_page_tsx_628429._.js"
 ].map((chunk) => __turbopack_load__(chunk))).then(() => {
         return __turbopack_import__("[project]/app/home/page.tsx [app-rsc] (ecmascript)");
     });

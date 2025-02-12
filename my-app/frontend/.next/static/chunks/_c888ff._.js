@@ -10,16 +10,183 @@ __turbopack_esm__({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 ;
-function Home() {
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {}, void 0, false, {
+// Sample data for restaurants
+const restaurants = [
+    {
+        id: 1,
+        name: "Pizza Palace",
+        image: "https://via.placeholder.com/150?text=Pizza+Palace",
+        review: "Delicious pizza with fresh ingredients!"
+    },
+    {
+        id: 2,
+        name: "Sushi Haven",
+        image: "https://via.placeholder.com/150?text=Sushi+Haven",
+        review: "Best sushi in town! Highly recommended."
+    },
+    {
+        id: 3,
+        name: "Burger Joint",
+        image: "https://via.placeholder.com/150?text=Burger+Joint",
+        review: "Juicy burgers with a perfect blend of spices."
+    }
+];
+// Navbar Component (Simple Example)
+function Navbar() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+        style: {
+            backgroundColor: "#333",
+            color: "white",
+            padding: "10px",
+            textAlign: "center"
+        },
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+            children: "Foodie App"
+        }, void 0, false, {
+            fileName: "[project]/app/home/page.tsx",
+            lineNumber: 29,
+            columnNumber: 13
+        }, this)
+    }, void 0, false, {
         fileName: "[project]/app/home/page.tsx",
-        lineNumber: 7,
-        columnNumber: 7
+        lineNumber: 28,
+        columnNumber: 9
     }, this);
 }
-_c = Home;
-var _c;
-__turbopack_refresh__.register(_c, "Home");
+_c = Navbar;
+// Restorant Component
+function Restorant() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "restaurant-container",
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                children: "Explore Our Restaurants"
+            }, void 0, false, {
+                fileName: "[project]/app/home/page.tsx",
+                lineNumber: 38,
+                columnNumber: 13
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "card-grid",
+                children: restaurants.map((restaurant)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "restaurant-card",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                                src: restaurant.image,
+                                alt: restaurant.name,
+                                className: "restaurant-image"
+                            }, void 0, false, {
+                                fileName: "[project]/app/home/page.tsx",
+                                lineNumber: 42,
+                                columnNumber: 25
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                children: restaurant.name
+                            }, void 0, false, {
+                                fileName: "[project]/app/home/page.tsx",
+                                lineNumber: 43,
+                                columnNumber: 25
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "restaurant-review",
+                                children: restaurant.review
+                            }, void 0, false, {
+                                fileName: "[project]/app/home/page.tsx",
+                                lineNumber: 44,
+                                columnNumber: 25
+                            }, this)
+                        ]
+                    }, restaurant.id, true, {
+                        fileName: "[project]/app/home/page.tsx",
+                        lineNumber: 41,
+                        columnNumber: 21
+                    }, this))
+            }, void 0, false, {
+                fileName: "[project]/app/home/page.tsx",
+                lineNumber: 39,
+                columnNumber: 13
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/app/home/page.tsx",
+        lineNumber: 37,
+        columnNumber: 9
+    }, this);
+}
+_c1 = Restorant;
+function Home() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Navbar, {}, void 0, false, {
+                fileName: "[project]/app/home/page.tsx",
+                lineNumber: 56,
+                columnNumber: 13
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Restorant, {}, void 0, false, {
+                fileName: "[project]/app/home/page.tsx",
+                lineNumber: 57,
+                columnNumber: 13
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/app/home/page.tsx",
+        lineNumber: 55,
+        columnNumber: 9
+    }, this);
+}
+_c2 = Home;
+// Inline CSS Styling
+const styles = `
+.restaurant-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+.restaurant-card {
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.restaurant-card:hover {
+    transform: scale(1.05);
+}
+
+.restaurant-image {
+    width: 100%;
+    height: auto;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.restaurant-review {
+    padding: 10px;
+    font-size: 14px;
+    color: #555;
+}
+`;
+// Inject styles into the document (for simplicity)
+if (typeof document !== "undefined") {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerHTML = styles;
+    document.head.appendChild(styleSheet);
+}
+var _c, _c1, _c2;
+__turbopack_refresh__.register(_c, "Navbar");
+__turbopack_refresh__.register(_c1, "Restorant");
+__turbopack_refresh__.register(_c2, "Home");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_refresh__.registerExports(module, globalThis.$RefreshHelpers$);
 }

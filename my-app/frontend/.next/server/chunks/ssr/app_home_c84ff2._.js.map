@@ -8,6 +8,6 @@
     {"offset": {"line": 29, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}},
     {"offset": {"line": 35, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":""}},
     {"offset": {"line": 39, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}},
-    {"offset": {"line": 45, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/anas/Desktop/Senior%20phase/dash/dash-dash/my-app/frontend/app/home/page.tsx"],"sourcesContent":["import  Navbar  from \"./Navbar\";\r\nimport Restorant from \"./Restorant\";\r\n\r\nexport default function Home() {\r\n    return (\r\n      <div>\r\n        {/* <Navbar /> */}\r\n        <Restorant />\r\n      </div>\r\n    );\r\n  }"],"names":[],"mappings":";;;;AACA;;;AAEe,SAAS;IACpB,qBACE,8OAAC;kBAEC,cAAA,8OAAC,yHAAA,CAAA,UAAS;;;;;;;;;;AAGhB"}},
+    {"offset": {"line": 45, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/anas/Desktop/Senior%20phase/dash/dash-dash/my-app/frontend/app/home/page.tsx"],"sourcesContent":["import  Navbar  from \"./Navbar\";\r\nimport Restorant from \"./Restorant\";\r\n\r\nexport default function Home() {\r\n    return (\r\n      <div>\r\n        \r\n        <Restorant />\r\n      </div>\r\n    );\r\n  }"],"names":[],"mappings":";;;;AACA;;;AAEe,SAAS;IACpB,qBACE,8OAAC;kBAEC,cAAA,8OAAC,yHAAA,CAAA,UAAS;;;;;;;;;;AAGhB"}},
     {"offset": {"line": 65, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
 }

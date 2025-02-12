@@ -468,8 +468,8 @@ __turbopack_esm__({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Navbar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/app/home/Navbar.tsx [app-ssr] (ecmascript)"); // Adjust the import path as needed
-var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Sidebar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/app/home/Sidebar.tsx [app-ssr] (ecmascript)"); // Adjust the import path as needed
+var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Navbar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/app/home/Navbar.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Sidebar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/app/home/Sidebar.tsx [app-ssr] (ecmascript)");
 (()=>{
     const e = new Error("Cannot find module './Category'");
     e.code = 'MODULE_NOT_FOUND';
@@ -481,16 +481,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Sidebar$2e$ts
     throw e;
 })();
 (()=>{
-    const e = new Error("Cannot find module '@/components/ui/dialog'");
+    const e = new Error("Cannot find module './Restaurant.css'");
     e.code = 'MODULE_NOT_FOUND';
     throw e;
 })();
-(()=>{
-    const e = new Error("Cannot find module '@/components/ui/checkbox'");
-    e.code = 'MODULE_NOT_FOUND';
-    throw e;
-})();
-"use client"; // Mark this component as a Client Component
+"use client";
 ;
 ;
 ;
@@ -498,632 +493,165 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Sidebar$2e$ts
 ;
 ;
 ;
-;
-// MenuCard Component
-const MenuCard = ({ name, description, price, imageUrl, onClick })=>{
-    const cardStyle = {
-        borderRadius: '12px',
-        backgroundColor: '#ffffff',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        cursor: 'pointer'
-    };
-    const imageStyle = {
-        width: '100%',
-        height: '160px',
-        objectFit: 'cover'
-    };
-    const contentStyle = {
-        padding: '16px'
-    };
-    const titleStyle = {
-        fontSize: '18px',
-        fontWeight: 'bold',
-        marginBottom: '8px'
-    };
-    const descriptionStyle = {
-        fontSize: '14px',
-        color: '#666666',
-        marginBottom: '12px'
-    };
-    const priceStyle = {
-        fontSize: '16px',
-        fontWeight: 'bold',
-        color: '#FFB800'
-    };
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        style: cardStyle,
-        onMouseEnter: (e)=>{
-            e.currentTarget.style.transform = 'translateY(-4px)';
-            e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)';
-        },
-        onMouseLeave: (e)=>{
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-        },
-        onClick: onClick,
+const products = [
+    {
+        id: 1,
+        name: "Burger Deluxe",
+        description: "Juicy beef burger with fresh toppings.",
+        basePrice: 8.99,
+        image: "/images/burger.jpg",
+        calories: 650,
+        preparationTime: "15 minutes",
+        ingredients: [
+            {
+                name: "Lettuce",
+                price: 0,
+                default: true
+            },
+            {
+                name: "Tomato",
+                price: 0,
+                default: true
+            },
+            {
+                name: "Cheese",
+                price: 1.5,
+                default: false
+            },
+            {
+                name: "Bacon",
+                price: 2,
+                default: false
+            }
+        ]
+    }
+];
+const MenuCard = ({ name, description, price, imageUrl })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "menu-card",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
                 src: imageUrl,
                 alt: name,
-                style: imageStyle
+                className: "menu-card-image"
             }, void 0, false, {
                 fileName: "[project]/app/home/Restorant.tsx",
-                lineNumber: 68,
-                columnNumber: 7
+                lineNumber: 51,
+                columnNumber: 5
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                style: contentStyle,
+                className: "menu-card-content",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                        style: titleStyle,
+                        className: "menu-card-title",
                         children: name
                     }, void 0, false, {
                         fileName: "[project]/app/home/Restorant.tsx",
-                        lineNumber: 70,
-                        columnNumber: 9
+                        lineNumber: 53,
+                        columnNumber: 7
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        style: descriptionStyle,
+                        className: "menu-card-description",
                         children: description
                     }, void 0, false, {
                         fileName: "[project]/app/home/Restorant.tsx",
-                        lineNumber: 71,
-                        columnNumber: 9
+                        lineNumber: 54,
+                        columnNumber: 7
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        style: priceStyle,
+                        className: "menu-card-price",
                         children: [
                             "$",
                             price.toFixed(2)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/home/Restorant.tsx",
-                        lineNumber: 72,
-                        columnNumber: 9
+                        lineNumber: 55,
+                        columnNumber: 7
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/home/Restorant.tsx",
-                lineNumber: 69,
-                columnNumber: 7
+                lineNumber: 52,
+                columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/home/Restorant.tsx",
-        lineNumber: 56,
-        columnNumber: 5
+        lineNumber: 50,
+        columnNumber: 3
     }, this);
-};
-// Restaurant Component
 const Restaurant = ()=>{
     const [selectedProduct, setSelectedProduct] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [selectedIngredients, setSelectedIngredients] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(new Set());
-    const handleProductSelect = (product)=>{
-        setSelectedProduct(product);
-        // Initialize with default ingredients
-        setSelectedIngredients(new Set(product.ingredients.filter((ing)=>ing.default).map((ing)=>ing.name)));
-    };
-    const handleIngredientToggle = (ingredientName, isDefault)=>{
-        const newSelected = new Set(selectedIngredients);
-        if (newSelected.has(ingredientName)) {
-            if (!isDefault) {
-                // Only allow removing non-default ingredients
-                newSelected.delete(ingredientName);
-            }
-        } else {
-            newSelected.add(ingredientName);
-        }
-        setSelectedIngredients(newSelected);
-    };
-    const calculateTotalPrice = (product, selectedIngs)=>{
-        const ingredientsPrice = product.ingredients.filter((ing)=>selectedIngs.has(ing.name)).reduce((sum, ing)=>sum + ing.price, 0);
-        return product.basePrice + ingredientsPrice;
-    };
-    const restaurantStyle = {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px',
-        padding: '24px'
-    };
-    const mainContentStyle = {
-        display: 'flex',
-        gap: '24px'
-    };
-    const menuGridStyle = {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-        gap: '24px',
-        flex: 1
-    };
-    const orderContainerStyle = {
-        width: '300px',
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        padding: '16px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-    };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        style: restaurantStyle,
+        className: "restaurant-container",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Navbar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                 fileName: "[project]/app/home/Restorant.tsx",
-                lineNumber: 142,
+                lineNumber: 66,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                style: mainContentStyle,
+                className: "restaurant-main-content",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$app$2f$home$2f$Sidebar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                         fileName: "[project]/app/home/Restorant.tsx",
-                        lineNumber: 144,
+                        lineNumber: 68,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        style: {
-                            flex: 1
-                        },
+                        className: "restaurant-menu",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Category, {}, void 0, false, {
                                 fileName: "[project]/app/home/Restorant.tsx",
-                                lineNumber: 146,
+                                lineNumber: 70,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                style: menuGridStyle,
+                                className: "restaurant-menu-grid",
                                 children: products.map((product)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(MenuCard, {
                                         name: product.name,
                                         description: product.description,
                                         price: product.basePrice,
-                                        imageUrl: product.image,
-                                        onClick: ()=>handleProductSelect(product)
+                                        imageUrl: product.image
                                     }, product.id, false, {
                                         fileName: "[project]/app/home/Restorant.tsx",
-                                        lineNumber: 149,
+                                        lineNumber: 73,
                                         columnNumber: 15
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/app/home/Restorant.tsx",
-                                lineNumber: 147,
+                                lineNumber: 71,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/home/Restorant.tsx",
-                        lineNumber: 145,
+                        lineNumber: 69,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        style: orderContainerStyle,
+                        className: "restaurant-order-container",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Order, {}, void 0, false, {
                             fileName: "[project]/app/home/Restorant.tsx",
-                            lineNumber: 161,
+                            lineNumber: 84,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/home/Restorant.tsx",
-                        lineNumber: 160,
+                        lineNumber: 83,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/home/Restorant.tsx",
-                lineNumber: 143,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Dialog, {
-                open: !!selectedProduct,
-                onOpenChange: ()=>setSelectedProduct(null),
-                children: selectedProduct && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(DialogContent, {
-                    style: {
-                        maxWidth: '800px'
-                    },
-                    children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(DialogHeader, {
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(DialogTitle, {
-                                style: {
-                                    fontSize: '24px',
-                                    fontWeight: 'bold'
-                                },
-                                children: selectedProduct.name
-                            }, void 0, false, {
-                                fileName: "[project]/app/home/Restorant.tsx",
-                                lineNumber: 170,
-                                columnNumber: 15
-                            }, this)
-                        }, void 0, false, {
-                            fileName: "[project]/app/home/Restorant.tsx",
-                            lineNumber: 169,
-                            columnNumber: 13
-                        }, this),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            style: {
-                                marginTop: '16px'
-                            },
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    style: {
-                                        display: 'grid',
-                                        gridTemplateColumns: '1fr 1fr',
-                                        gap: '24px'
-                                    },
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
-                                                    src: selectedProduct.image,
-                                                    alt: selectedProduct.name,
-                                                    style: {
-                                                        borderRadius: '12px',
-                                                        objectFit: 'cover',
-                                                        width: '100%',
-                                                        height: '300px'
-                                                    }
-                                                }, void 0, false, {
-                                                    fileName: "[project]/app/home/Restorant.tsx",
-                                                    lineNumber: 177,
-                                                    columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    style: {
-                                                        marginTop: '16px'
-                                                    },
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                            style: {
-                                                                fontSize: '14px',
-                                                                color: '#666666'
-                                                            },
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    style: {
-                                                                        fontWeight: '600'
-                                                                    },
-                                                                    children: "Calories:"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/app/home/Restorant.tsx",
-                                                                    lineNumber: 184,
-                                                                    columnNumber: 23
-                                                                }, this),
-                                                                " ",
-                                                                selectedProduct.calories,
-                                                                " kcal"
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/app/home/Restorant.tsx",
-                                                            lineNumber: 183,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                            style: {
-                                                                fontSize: '14px',
-                                                                color: '#666666'
-                                                            },
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                    style: {
-                                                                        fontWeight: '600'
-                                                                    },
-                                                                    children: "Preparation Time:"
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/app/home/Restorant.tsx",
-                                                                    lineNumber: 187,
-                                                                    columnNumber: 23
-                                                                }, this),
-                                                                " ",
-                                                                selectedProduct.preparationTime
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/app/home/Restorant.tsx",
-                                                            lineNumber: 186,
-                                                            columnNumber: 21
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                            style: {
-                                                                color: '#666666',
-                                                                marginTop: '8px'
-                                                            },
-                                                            children: selectedProduct.description
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/app/home/Restorant.tsx",
-                                                            lineNumber: 189,
-                                                            columnNumber: 21
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/app/home/Restorant.tsx",
-                                                    lineNumber: 182,
-                                                    columnNumber: 19
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/home/Restorant.tsx",
-                                            lineNumber: 176,
-                                            columnNumber: 17
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                style: {
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: '24px'
-                                                },
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                                style: {
-                                                                    fontSize: '18px',
-                                                                    fontWeight: '600',
-                                                                    marginBottom: '12px'
-                                                                },
-                                                                children: "Included Ingredients:"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                lineNumber: 196,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                style: {
-                                                                    display: 'flex',
-                                                                    flexDirection: 'column',
-                                                                    gap: '12px'
-                                                                },
-                                                                children: selectedProduct.ingredients.filter((ingredient)=>ingredient.default).map((ingredient)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        style: {
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'space-between'
-                                                                        },
-                                                                        children: [
-                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                style: {
-                                                                                    display: 'flex',
-                                                                                    alignItems: 'center',
-                                                                                    gap: '12px'
-                                                                                },
-                                                                                children: [
-                                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Checkbox, {
-                                                                                        id: ingredient.name,
-                                                                                        checked: true,
-                                                                                        disabled: true
-                                                                                    }, void 0, false, {
-                                                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                                                        lineNumber: 205,
-                                                                                        columnNumber: 33
-                                                                                    }, this),
-                                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                                        htmlFor: ingredient.name,
-                                                                                        style: {
-                                                                                            fontSize: '14px',
-                                                                                            fontWeight: '500'
-                                                                                        },
-                                                                                        children: ingredient.name
-                                                                                    }, void 0, false, {
-                                                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                                                        lineNumber: 210,
-                                                                                        columnNumber: 33
-                                                                                    }, this)
-                                                                                ]
-                                                                            }, void 0, true, {
-                                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                                lineNumber: 204,
-                                                                                columnNumber: 31
-                                                                            }, this),
-                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                style: {
-                                                                                    fontSize: '14px',
-                                                                                    color: '#666666'
-                                                                                },
-                                                                                children: "Included"
-                                                                            }, void 0, false, {
-                                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                                lineNumber: 217,
-                                                                                columnNumber: 31
-                                                                            }, this)
-                                                                        ]
-                                                                    }, ingredient.name, true, {
-                                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                                        lineNumber: 203,
-                                                                        columnNumber: 29
-                                                                    }, this))
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                lineNumber: 199,
-                                                                columnNumber: 23
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                        lineNumber: 195,
-                                                        columnNumber: 21
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                                style: {
-                                                                    fontSize: '18px',
-                                                                    fontWeight: '600',
-                                                                    marginBottom: '12px'
-                                                                },
-                                                                children: "Optional Add-ons:"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                lineNumber: 225,
-                                                                columnNumber: 23
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                style: {
-                                                                    display: 'flex',
-                                                                    flexDirection: 'column',
-                                                                    gap: '12px'
-                                                                },
-                                                                children: selectedProduct.ingredients.filter((ingredient)=>!ingredient.default).map((ingredient)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                        style: {
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'space-between'
-                                                                        },
-                                                                        children: [
-                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                                style: {
-                                                                                    display: 'flex',
-                                                                                    alignItems: 'center',
-                                                                                    gap: '12px'
-                                                                                },
-                                                                                children: [
-                                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Checkbox, {
-                                                                                        id: ingredient.name,
-                                                                                        checked: selectedIngredients.has(ingredient.name),
-                                                                                        onCheckedChange: ()=>handleIngredientToggle(ingredient.name, false)
-                                                                                    }, void 0, false, {
-                                                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                                                        lineNumber: 234,
-                                                                                        columnNumber: 33
-                                                                                    }, this),
-                                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                                                        htmlFor: ingredient.name,
-                                                                                        style: {
-                                                                                            fontSize: '14px',
-                                                                                            fontWeight: '500'
-                                                                                        },
-                                                                                        children: ingredient.name
-                                                                                    }, void 0, false, {
-                                                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                                                        lineNumber: 239,
-                                                                                        columnNumber: 33
-                                                                                    }, this)
-                                                                                ]
-                                                                            }, void 0, true, {
-                                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                                lineNumber: 233,
-                                                                                columnNumber: 31
-                                                                            }, this),
-                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                                style: {
-                                                                                    fontSize: '14px',
-                                                                                    color: '#666666'
-                                                                                },
-                                                                                children: [
-                                                                                    "+$",
-                                                                                    ingredient.price.toFixed(2)
-                                                                                ]
-                                                                            }, void 0, true, {
-                                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                                lineNumber: 246,
-                                                                                columnNumber: 31
-                                                                            }, this)
-                                                                        ]
-                                                                    }, ingredient.name, true, {
-                                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                                        lineNumber: 232,
-                                                                        columnNumber: 29
-                                                                    }, this))
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                                lineNumber: 228,
-                                                                columnNumber: 23
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/app/home/Restorant.tsx",
-                                                        lineNumber: 224,
-                                                        columnNumber: 21
-                                                    }, this)
-                                                ]
-                                            }, void 0, true, {
-                                                fileName: "[project]/app/home/Restorant.tsx",
-                                                lineNumber: 193,
-                                                columnNumber: 19
-                                            }, this)
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/home/Restorant.tsx",
-                                            lineNumber: 192,
-                                            columnNumber: 17
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/home/Restorant.tsx",
-                                    lineNumber: 175,
-                                    columnNumber: 15
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    style: {
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        marginTop: '24px',
-                                        paddingTop: '24px',
-                                        borderTop: '1px solid #e5e7eb'
-                                    },
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                            style: {
-                                                fontSize: '24px',
-                                                fontWeight: 'bold',
-                                                color: '#FFB800'
-                                            },
-                                            children: [
-                                                "$",
-                                                calculateTotalPrice(selectedProduct, selectedIngredients).toFixed(2)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/app/home/Restorant.tsx",
-                                            lineNumber: 257,
-                                            columnNumber: 17
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                            style: {
-                                                backgroundColor: '#FFB800',
-                                                color: '#ffffff',
-                                                padding: '8px 24px',
-                                                borderRadius: '8px',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                fontSize: '14px',
-                                                fontWeight: '500',
-                                                transition: 'opacity 0.2s'
-                                            },
-                                            onMouseEnter: (e)=>{
-                                                e.currentTarget.style.opacity = '0.9';
-                                            },
-                                            onMouseLeave: (e)=>{
-                                                e.currentTarget.style.opacity = '1';
-                                            },
-                                            children: "Add to Cart"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/home/Restorant.tsx",
-                                            lineNumber: 260,
-                                            columnNumber: 17
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/app/home/Restorant.tsx",
-                                    lineNumber: 256,
-                                    columnNumber: 15
-                                }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/home/Restorant.tsx",
-                            lineNumber: 174,
-                            columnNumber: 13
-                        }, this)
-                    ]
-                }, void 0, true, {
-                    fileName: "[project]/app/home/Restorant.tsx",
-                    lineNumber: 168,
-                    columnNumber: 11
-                }, this)
-            }, void 0, false, {
-                fileName: "[project]/app/home/Restorant.tsx",
-                lineNumber: 166,
+                lineNumber: 67,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/home/Restorant.tsx",
-        lineNumber: 141,
+        lineNumber: 65,
         columnNumber: 5
     }, this);
 };
