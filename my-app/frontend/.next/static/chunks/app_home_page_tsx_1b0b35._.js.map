@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/anas/Desktop/Senior%20phase/dash/dash-dash/my-app/frontend/app/home/page.tsx"],"sourcesContent":["\"use client\"; // Required for client-side navigation\r\n\r\nimport { useRouter } from \"next/navigation\";\r\nimport Restorant from \"./Restorant\";\r\n\r\nexport default function Home() {\r\n  const router = useRouter();\r\n\r\n  return (\r\n    <div>\r\n      <button onClick={() => router.push(\"Restorant\")}>\r\n        Go to Restorant\r\n      </button>\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;AAEA;;;AAFA,cAAc,sCAAsC;;AAKrC,SAAS;;IACtB,MAAM,SAAS,CAAA,GAAA,qIAAA,CAAA,YAAS,AAAD;IAEvB,qBACE,6LAAC;kBACC,cAAA,6LAAC;YAAO,SAAS,IAAM,OAAO,IAAI,CAAC;sBAAc;;;;;;;;;;;AAKvD;GAVwB;;QACP,qIAAA,CAAA,YAAS;;;KADF"}},
+    {"offset": {"line": 45, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
+}
