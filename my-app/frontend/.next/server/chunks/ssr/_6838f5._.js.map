@@ -1,9 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/anas/Desktop/Senior%20phase/dash/dash-dash/my-app/frontend/app/layout.tsx"],"sourcesContent":["export default function RootLayout({\r\n  children,\r\n}: Readonly<{\r\n  children: React.ReactNode;\r\n}>) {\r\n  return (\r\n    <html lang=\"en\">\r\n      <body\r\n        className={`${geistSans.variable} ${geistMono.variable} antialiased`}\r\n      >\r\n        <Navbar />  {/* ✅ Move Navbar inside body */}\r\n        {children}\r\n      </body>\r\n    </html>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;AAAe,SAAS,WAAW,EACjC,QAAQ,EAGR;IACA,qBACE,8OAAC;QAAK,MAAK;kBACT,cAAA,8OAAC;YACC,WAAW,GAAG,UAAU,QAAQ,CAAC,CAAC,EAAE,UAAU,QAAQ,CAAC,YAAY,CAAC;;8BAEpE,8OAAC;;;;;gBAAS;gBACT;;;;;;;;;;;;AAIT"}},
-    {"offset": {"line": 37, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}},
-    {"offset": {"line": 48, "column": 0}, "map": {"version":3,"sources":["file://C%3A/Users/anas/Desktop/Senior%20phase/dash/dash-dash/my-app/frontend/node_modules/next/src/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = require('../../module.compiled').vendored[\n  'react-rsc'\n].ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":";AAAAA,OAAOC,OAAO,GAAGC,QAAQ,0HAAyBC,QAAQ,CACxD,YACD,CAACC,kBAAkB","ignoreList":[0]}},
-    {"offset": {"line": 50, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
-}
