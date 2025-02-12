@@ -13,53 +13,61 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Table (Customers)
-model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  phone     String?
-  address   String?
-  location  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[] // One-to-many relationship with Order
-  ratings   Rating[] // One-to-many relationship with Rating
-  chats     Chat[] // One-to-many relationship with Chat (added)
+// Define the Role enum
+enum Role {
+  CUSTOMER
+  DELIVERYMAN
+  RESTAURANT_OWNER
+  ADMIN
 }
 
-model Deliveryman {
-  id            Int            @id @default(autoincrement())
+// User Table (Central entity for all users)
+model User {
+  id            Int          @id @default(autoincrement())
   name          String
-  email         String         @unique
+  email         String       @unique
   password      String
   phone         String?
+  address       String?
+  location      String?
+  role          Role         @default(CUSTOMER) // Role of the user
+  deliverymanId Int?         // Foreign key to Deliveryman (optional)
+  restaurantId  Int?         // Foreign key to Restaurant (optional)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  orders        Order[]      // One-to-many relationship with Order
+  ratings       Rating[]     // One-to-many relationship with Rating
+  chats         Chat[]       // One-to-many relationship with Chat
+  deliveryman   Deliveryman? @relation("UserDeliveryman") // Optional relation to Deliveryman
+  restaurant    Restaurant?  @relation("UserRestaurant")  // Optional relation to Restaurant
+}
+
+// Deliveryman Table (Role-specific fields)
+model Deliveryman {
+  id            Int            @id @default(autoincrement())
   vehicleType   String
   isAvailable   Boolean        @default(true)
-  location      String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  user          User?          @relation("UserDeliveryman", fields: [userId], references: [id]) // One-to-one relationship with User
+  userId        Int?           @unique // Make userId optional
   orders        Order[]        // One-to-many relationship with Order
   notifications Notification[] // One-to-many relationship with Notification
   chats         Chat[]         // One-to-many relationship with Chat
 }
 
-// Restaurant Table
+// Restaurant Table (Role-specific fields)
 model Restaurant {
   id          Int                  @id @default(autoincrement())
-  name        String
-  email       String               @unique
-  password    String // Hashed using Bcrypt
-  phone       String?
-  address     String?
   cuisineType String
   location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
-  orders      Order[] // One-to-many relationship with Order
-  menus       Menu[] // One-to-many relationship with Menu
-  ratings     Rating[] // One-to-many relationship with Rating
+  user        User                 @relation("UserRestaurant", fields: [userId], references: [id]) // One-to-one relationship with User
+  userId      Int                  @unique // Foreign key to User
+  orders      Order[]              // One-to-many relationship with Order
+  menus       Menu[]               // One-to-many relationship with Menu
+  ratings     Rating[]             // One-to-many relationship with Rating
   categories  CategoryRestaurant[] // Many-to-many relationship with Category
 }
 
@@ -76,10 +84,10 @@ model Order {
   user          User           @relation(fields: [userId], references: [id])
   restaurant    Restaurant     @relation(fields: [restaurantId], references: [id])
   deliveryman   Deliveryman?   @relation(fields: [deliverymanId], references: [id])
-  chats         Chat[] // One-to-many relationship with Chat
-  payments      Payment[] // One-to-many relationship with Payment
-  notifications Notification[] // One-to-many relationship with Notification (added)
-  history       OrderHistory[] // One-to-many relationship with OrderHistory
+  chats         Chat[]         // One-to-many relationship with Chat
+  payments      Payment[]      // One-to-many relationship with Payment
+  notifications Notification[] // One-to-many relationship with Notification
+  history       OrderHistory[]  // One-to-many relationship with OrderHistory
 }
 
 // Chat Table (Real-time chat between user and driver)
@@ -96,6 +104,7 @@ model Chat {
   deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id]) // Make optional
 }
 
+// Notification Table
 model Notification {
   id            Int         @id @default(autoincrement())
   deliverymanId Int
@@ -125,7 +134,7 @@ model Category {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   restaurants CategoryRestaurant[] // Many-to-many relationship with Restaurant
-  foods       CategoryFood[] // Many-to-many relationship with Food
+  foods       CategoryFood[]       // Many-to-many relationship with Food
 }
 
 // Category-Food Table (Many-to-many relationship)
@@ -151,7 +160,7 @@ model Food {
   updatedAt   DateTime       @updatedAt
   menu        Menu           @relation(fields: [menuId], references: [id])
   categories  CategoryFood[] // Many-to-many relationship with Category
-  supplements Supplement[] // One-to-many relationship with Supplement
+  supplements Supplement[]   // One-to-many relationship with Supplement
 }
 
 // Supplement Table (e.g., extra cheese, sauces)
@@ -173,7 +182,7 @@ model Menu {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-  foods        Food[] // One-to-many relationship with Food
+  foods        Food[]     // One-to-many relationship with Food
 }
 
 // Rating Table (User ratings for restaurants)
