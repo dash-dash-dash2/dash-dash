@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "./Sidebar";
-import Category from "./category";
+import Category from "@/app/home/component/category";
 import Order from "./order";
 
 interface MenuItem {

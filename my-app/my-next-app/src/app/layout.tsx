@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 <<<<<<< HEAD:my-app/frontend/app/layout.tsx
 import Navbar from "./home/Navbar";
-import  Sidebar  from "./home/Sidebar";
+import  Sidebar  from "../components/Sidebar";
 =======
 import { AuthProvider } from '@/context/AuthContext'
 import { RestaurantProvider } from '@/context/RestaurantContext'
