@@ -2,16 +2,30 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, User } from "lucide-react";
+import { Search, User, ChevronDown } from "lucide-react";
 
 export default function Navbar() {
   const [search, setSearch] = useState("");
+  const [showChoices, setShowChoices] = useState(false);
   const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
       router.push(`/search?query=${search}`);
+    }
+  };
+
+  const toggleChoices = () => {
+    setShowChoices((prev) => !prev);
+  };
+
+  const handleChoiceClick = (choice: string) => {
+    setShowChoices(false);
+    if (choice === "deliveryman") {
+      router.push("/deliveryRegistration");
+    } else if (choice === "restaurantOwner") {
+      router.push("/restaurantOwner");
     }
   };
 
@@ -103,6 +117,29 @@ export default function Navbar() {
             <Search className="text-gray-500 w-5 h-5" />
           </button>
         </form>
+
+        {/* Career Dropdown */}
+        <div className="relative">
+          <button onClick={toggleChoices} className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
+            Career <ChevronDown className="w-5 h-5 ml-2" />
+          </button>
+          {showChoices && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
+              <button
+                onClick={() => handleChoiceClick("deliveryman")}
+                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 w-full text-left"
+              >
+                Deliveryman
+              </button>
+              <button
+                onClick={() => handleChoiceClick("restaurantOwner")}
+                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 w-full text-left"
+              >
+                Restaurant Owner
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Connection Button */}
         <a href="/auth" className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">

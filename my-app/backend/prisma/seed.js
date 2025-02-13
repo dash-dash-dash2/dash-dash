@@ -28,7 +28,8 @@ async function seed() {
       data: {
         name: 'Admin User',
         email: 'admin@example.com',
-        password: hashedPassword
+        password: hashedPassword,
+        imageUrl: 'admin1.jpg'
       }
     });
 
@@ -36,7 +37,8 @@ async function seed() {
       data: {
         name: 'Super Admin',
         email: 'superadmin@example.com',
-        password: hashedPassword
+        password: hashedPassword,
+        imageUrl: 'admin2.jpg'
       }
     });
 
@@ -77,6 +79,7 @@ async function seed() {
               name: `Restaurant ${i + 1}`,
               cuisineType: cuisineTypes[i],
               location: locations[i],
+              imageUrl: `restaurant${i + 1}.jpg`,
               categories: {
                 create: {
                   categoryId: allCategories[i].id
@@ -140,6 +143,8 @@ async function seed() {
         data: {
           name: `${owner.restaurant.name} Main Menu`,
           restaurantId: owner.restaurant.id,
+          imageUrl: 'menu.jpg',
+          price: 0,
           foods: {
             create: [
               {
