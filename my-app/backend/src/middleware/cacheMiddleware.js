@@ -11,8 +11,10 @@ const cacheMiddleware = (duration) => {
     const cachedResponse = cache.get(key);
 
     if (cachedResponse) {
+      console.log(`Cache HIT for ${key}`);
       return res.send(cachedResponse);
     } else {
+      console.log(`Cache MISS for ${key}`);
       res.sendResponse = res.send;
       res.send = (body) => {
         cache.set(key, body, duration);
