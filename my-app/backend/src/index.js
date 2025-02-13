@@ -4,6 +4,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
+const allrestaurantRoutes = require("./routes/allrestorantRoutes*");
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -27,6 +29,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/allrestaurants", allrestaurantRoutes);
 
 // Socket.io
 io.on("connection", (socket) => {

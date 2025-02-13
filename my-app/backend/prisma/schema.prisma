@@ -59,6 +59,7 @@ model Deliveryman {
 // Restaurant Table (Role-specific fields)
 model Restaurant {
   id          Int                  @id @default(autoincrement())
+  name        String               // Added name field
   cuisineType String
   location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
   createdAt   DateTime             @default(now())
@@ -70,6 +71,7 @@ model Restaurant {
   ratings     Rating[]             // One-to-many relationship with Rating
   categories  CategoryRestaurant[] // Many-to-many relationship with Category
 }
+
 
 // Order Table
 model Order {
