@@ -30,6 +30,7 @@ model User {
   phone         String?
   address       String?
   location      String?
+  imageUrl      String?
   role          Role         @default(CUSTOMER) // Role of the user
   deliverymanId Int?         // Foreign key to Deliveryman (optional)
   restaurantId  Int?         // Foreign key to Restaurant (optional)
@@ -59,7 +60,7 @@ model Deliveryman {
 // Restaurant Table (Role-specific fields)
 model Restaurant {
   id          Int                  @id @default(autoincrement())
-  name        String               // Added name field
+  name        String
   cuisineType String
   location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
   createdAt   DateTime             @default(now())
