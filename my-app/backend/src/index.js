@@ -16,10 +16,13 @@ const ratingRoutes = require("./routes/ratingRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const deliverymanRoutes = require("./routes/deliverymanRoutes");
+const restaurantOwnerRoutes = require("./routes/restaurantOwnerRoutes");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const chatService = require('./services/chatService');
+// const bcrypt = require('bcrypt'); // Import bcrypt
 
 const app = express();
 const httpServer = createServer(app);
@@ -68,6 +71,8 @@ app.use("/api/ratings", ratingRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/deliveryman", deliverymanRoutes);
+app.use("/api/restaurant-owner", restaurantOwnerRoutes);
 
 // Socket.IO Connection Handler
 io.on("connection", (socket) => {
