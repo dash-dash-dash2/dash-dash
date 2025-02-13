@@ -105,7 +105,7 @@ export default function Navbar() {
         </form>
 
         {/* Connection Button */}
-        <a href="/login" className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
+        <a href="/auth" className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
           <User className="w-5 h-5 mr-2" />
           Connect
         </a>
