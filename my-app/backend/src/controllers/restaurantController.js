@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { clearCache } = require('../middleware/cacheMiddleware');
 
 // Create restaurant
 const createRestaurant = async (req, res) => {
@@ -38,6 +39,9 @@ const createRestaurant = async (req, res) => {
       }
     });
 
+    // Clear the restaurants cache when a new restaurant is created
+    clearCache('restaurants');
+    
     res.status(201).json(restaurant);
   } catch (error) {
     console.error("Restaurant creation error:", error);
