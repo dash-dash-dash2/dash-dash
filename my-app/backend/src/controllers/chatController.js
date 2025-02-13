@@ -5,7 +5,7 @@ const chatService = require('../services/chatService');
 // Get chat history for a specific order
 const getOrderChats = async (req, res) => {
   const { orderId } = req.params;
-  
+  console.log(orderId);
   try {
     const messages = await chatService.getRecentMessages(orderId);
     res.status(200).json(messages);
