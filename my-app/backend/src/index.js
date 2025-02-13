@@ -1,12 +1,11 @@
 require('dotenv').config();
 const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
 const cors = require("cors");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 const helmet = require('helmet');
 const compression = require('compression');
 const limiter = require('./middleware/rateLimiter');
-// const cache = require('./config/redis'); // Comment out cache if not using Redis
 const userRoutes = require("./routes/userRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const menuRoutes = require("./routes/menuRoutes");
@@ -19,12 +18,18 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
-const Redis = require('ioredis');
 const chatService = require('./services/chatService');
 
 const app = express();
-const server = http.createServer(app);
+const httpServer = createServer(app);
 
+// Socket.IO setup
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST"]
+  }
+});
 
 // Security middleware
 app.use(helmet());
@@ -150,5 +155,10 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+// Make io accessible to routes
+app.set('io', io);
+
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

@@ -1,6 +1,6 @@
-// // const redis = require('../config/redis');
-// const { PrismaClient } = require('@prisma/client');
-// const prisma = new PrismaClient();
+
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 // class ChatService {
 //   // Store chat message in Redis and Database
