@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import Navbar from "../../components/Navbar";
-import Sidebar from "./Sidebar";
+import Sidebar from "@/components/Sidebar";
 import Category from "@/app/home/component/category";
-import Order from "./order";
+import Order from "@/app/home/component/order";
 
 interface MenuItem {
   name: string;
