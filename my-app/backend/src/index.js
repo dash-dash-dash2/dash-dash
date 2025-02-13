@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const helmet = require('helmet');
 const compression = require('compression');
 const limiter = require('./middleware/rateLimiter');
+const cache = require('./config/cache');
 const userRoutes = require("./routes/userRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const menuRoutes = require("./routes/menuRoutes");
@@ -31,22 +32,15 @@ const io = new Server(httpServer, {
   }
 });
 
-// Security middleware
+// Middleware
+app.use(cors());
 app.use(helmet());
 app.use(compression());
+app.use(express.json());
 app.use(limiter);
 
-// Updated CORS configuration
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL 
-    : ["http://localhost:3000", "http://localhost:3001"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
-
-app.use(express.json());
+// Make cache available throughout the app
+app.set('cache', cache);
 
 // Socket.IO Authentication Middleware
 io.use(async (socket, next) => {

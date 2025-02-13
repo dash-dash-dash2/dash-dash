@@ -1,16 +1,20 @@
 const express = require('express');
-const { getAllRestaurants, getRestaurantById, createRestaurant, updateRestaurant } = require('../controllers/restaurantController');
-const { authenticate } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const { authenticate } = require('../middleware/authMiddleware');
+const { cacheMiddleware } = require('../middleware/cacheMiddleware');
+const {
+  createRestaurant,
+  getAllRestaurants,
+  getRestaurantById,
+  updateRestaurant
+} = require('../controllers/restaurantController');
 
-// Public routes
-router.get('/', getAllRestaurants);
-router.get('/:id', getRestaurantById);
+// Cache GET requests for 5 minutes (300 seconds)
+router.get('/', cacheMiddleware(300), getAllRestaurants);
+router.get('/:id', cacheMiddleware(300), getRestaurantById);
 
-// Protected routes
-router.use(authenticate);
-router.post('/', createRestaurant);
-router.put('/:id', updateRestaurant);
+// No cache for mutations
+router.post('/', authenticate, createRestaurant);
+router.put('/:id', authenticate, updateRestaurant);
 
 module.exports = router; 
