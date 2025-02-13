@@ -20,14 +20,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(() => {
+    // Initialize token from localStorage if it exists
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token')
+    }
+    return null
+  })
 
   const login = async (email: string, password: string) => {
     try {
-      // Implement your login logic here
-      // Example:
-      // const response = await signInWithEmailAndPassword(email, password)
-      // setUser(response.user)
       const response = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: {
@@ -35,10 +37,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
         body: JSON.stringify({ email, password }),
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
+      
       const data = await response.json();
+      
+      // Store token in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
       setToken(data.token);
       setUser(data.user);
-      setUser({ email, id: '1' }) // Temporary mock
     } catch (error) {
       console.error('Login error:', error)
       throw error
@@ -47,7 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Implement your logout logic here
+      // Remove token from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null)
       setToken(null)
     } catch (error) {
