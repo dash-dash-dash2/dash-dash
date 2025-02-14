@@ -9,12 +9,8 @@ CREATE TABLE `User` (
     `location` VARCHAR(191) NULL,
     `imageUrl` VARCHAR(191) NULL,
     `role` ENUM('CUSTOMER', 'DELIVERYMAN', 'RESTAURANT_OWNER', 'ADMIN') NOT NULL DEFAULT 'CUSTOMER',
-<<<<<<<< HEAD:my-app/backend/prisma/migrations/20250213175408_nour/migration.sql
-========
     `banned` BOOLEAN NOT NULL DEFAULT false,
->>>>>>>> 4fcf9dbf5468eabd6d7561b83f9430e927cb643d:my-app/backend/prisma/migrations/20250214084341_final/migration.sql
     `deliverymanId` INTEGER NULL,
-    `restaurantId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -46,10 +42,6 @@ CREATE TABLE `Restaurant` (
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` INTEGER NOT NULL,
 
-<<<<<<<< HEAD:my-app/backend/prisma/migrations/20250213175408_nour/migration.sql
-    UNIQUE INDEX `Restaurant_userId_key`(`userId`),
-========
->>>>>>>> 4fcf9dbf5468eabd6d7561b83f9430e927cb643d:my-app/backend/prisma/migrations/20250214084341_final/migration.sql
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
