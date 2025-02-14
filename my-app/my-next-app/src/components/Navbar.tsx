@@ -100,7 +100,7 @@ export default function Navbar() {
       {/* Navbar JSX */}
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         {/* Logo */}
-        <a href="/" className="text-2xl font-bold text-red-500">
+        <a href="/home" className="text-2xl font-bold text-red-500">
           🍔 FoodZone
         </a>
 

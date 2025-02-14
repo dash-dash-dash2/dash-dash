@@ -4,12 +4,14 @@ const { authenticate } = require("../middleware/authMiddleware");
 const {
   createMenu,
   updateMenu,
-  addFoodItem
+  addFoodItem,
+  getMenusByRestaurantId
 } = require("../controllers/menuController");
 
-router.use(authenticate);
+// router.use(authenticate);
 router.post("/restaurant/:restaurantId/menu", createMenu);
 router.put("/menu/:id", updateMenu);
 router.post("/menu/:menuId/food", addFoodItem);
+router.get('/:restaurantId/', getMenusByRestaurantId);
 
 module.exports = router; 

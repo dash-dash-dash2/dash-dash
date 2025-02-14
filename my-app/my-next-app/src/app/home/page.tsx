@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
+import { useRouter } from "next/navigation";
 
+// Updated interface to include `id`
 interface RestaurantItem {
+  id: string; // Added `id` field
   name: string;
   cuisineType: string;
   location: string;
@@ -12,7 +15,23 @@ interface RestaurantItem {
   imageUrl: string;
 }
 
-const RestaurantCard: React.FC<RestaurantItem> = ({ name, cuisineType, location, averageRating, categories = [], imageUrl }) => {
+// RestaurantCard component with click handler
+const RestaurantCard: React.FC<RestaurantItem> = ({
+  id,
+  name,
+  cuisineType,
+  location,
+  averageRating,
+  categories = [],
+  imageUrl,
+}) => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    console.log(`Clicked restaurant ID: ${id}`); // Log the ID when clicked
+    router.push(`/onerestorant`); // Include the `id` in the URL
+  };
+
   return (
     <div
       style={{
@@ -32,16 +51,38 @@ const RestaurantCard: React.FC<RestaurantItem> = ({ name, cuisineType, location,
         e.currentTarget.style.transform = "none";
         e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
       }}
+      onClick={handleClick} // Added click handler
     >
-      <img src={imageUrl} alt={name} style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px" }} />
-      <h3 style={{ fontSize: "18px", fontWeight: "bold", marginTop: "8px" }}>{name}</h3>
-      <p style={{ fontSize: "14px", color: "#666666", marginBottom: "8px" }}>Cuisine: {cuisineType}</p>
-      <p style={{ fontSize: "14px", color: "#666666", marginBottom: "8px" }}>Location: {location}</p>
+      <img
+        src={imageUrl}
+        alt={name}
+        style={{
+          width: "100%",
+          height: "150px",
+          objectFit: "cover",
+          borderRadius: "8px",
+        }}
+      />
+      <h3 style={{ fontSize: "18px", fontWeight: "bold", marginTop: "8px" }}>
+        {name}
+      </h3>
       <p style={{ fontSize: "14px", color: "#666666", marginBottom: "8px" }}>
-        averageRating: {typeof averageRating === "number" ? `${averageRating} ⭐` : averageRating?.score ? `${averageRating.score} ⭐` : "No rating available"}
+        Cuisine: {cuisineType}
+      </p>
+      <p style={{ fontSize: "14px", color: "#666666", marginBottom: "8px" }}>
+        Location: {location}
+      </p>
+      <p style={{ fontSize: "14px", color: "#666666", marginBottom: "8px" }}>
+        Average Rating:{" "}
+        {typeof averageRating === "number"
+          ? `${averageRating} ⭐`
+          : averageRating?.score
+          ? `${averageRating.score} ⭐`
+          : "No rating available"}
       </p>
       <p style={{ fontSize: "14px", color: "#666666" }}>
-        Categories: {categories.length
+        Categories:{" "}
+        {categories.length
           ? categories.map((cat) => (typeof cat === "string" ? cat : cat.name)).join(", ")
           : "No categories available"}
       </p>
@@ -49,6 +90,7 @@ const RestaurantCard: React.FC<RestaurantItem> = ({ name, cuisineType, location,
   );
 };
 
+// RestaurantList component to fetch and display restaurants
 const RestaurantList: React.FC = () => {
   const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -79,7 +121,16 @@ const RestaurantList: React.FC = () => {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "24px",
+        padding: "24px",
+        backgroundColor: "white", // Set background to white
+        minHeight: "100vh", // Ensure the background covers the full height
+      }}
+    >
       <Navbar />
       <div
         style={{
@@ -88,8 +139,8 @@ const RestaurantList: React.FC = () => {
           gap: "24px",
         }}
       >
-        {restaurants.map((restaurant, index) => (
-          <RestaurantCard key={index} {...restaurant} />
+        {restaurants.map((restaurant) => (
+          <RestaurantCard key={restaurant.id} {...restaurant} /> // Use `id` as the key
         ))}
       </div>
     </div>

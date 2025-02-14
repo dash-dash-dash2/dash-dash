@@ -8,14 +8,16 @@ import Order from "@/app/home/component/order";
 
 interface MenuItem {
   name: string;
-  description: string;
   price: number;
   imageUrl: string;
 }
 
 const ingredientsList = ["Cheese", "Tomatoes", "Lettuce", "Onions", "Bacon", "Mushrooms"];
 
-const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, description, price, imageUrl, onClick }) => {
+const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, price, imageUrl, onClick }) => {
+  // Ensure price is a valid number
+  const formattedPrice = typeof price === "number" ? price.toFixed(2) : "0.00";
+
   return (
     <div
       style={{
@@ -34,13 +36,12 @@ const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ 
         e.currentTarget.style.transform = "none";
         e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
       }}
-      onClick={() => onClick({ name, description, price, imageUrl })}
+      onClick={() => onClick({ name, price, imageUrl })}
     >
       <img src={imageUrl} alt={name} style={{ width: "100%", height: "160px", objectFit: "cover" }} />
       <div style={{ padding: "16px" }}>
         <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px" }}>{name}</h3>
-        <p style={{ fontSize: "14px", color: "#666666", marginBottom: "12px" }}>{description}</p>
-        <p style={{ fontSize: "16px", fontWeight: "bold", color: "#FFB800" }}>${price.toFixed(2)}</p>
+        <p style={{ fontSize: "16px", fontWeight: "bold", color: "#FFB800" }}>${formattedPrice}</p>
       </div>
     </div>
   );
@@ -53,15 +54,32 @@ const Restaurant: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const id = 1;
+
   // Fetch menu items from API
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await axios.get("https://your-api-endpoint.com/menu-items");
-        setMenuItems(response.data);
-        setLoading(false);
+        const response = await axios.get(`http://localhost:5000/api/menus/${id}`);
+        console.log("API Response:", response.data); // Log the response for debugging
+
+        // Ensure the API response is an array
+        if (Array.isArray(response.data)) {
+          // Map the API response to the MenuItem interface
+          const formattedData = response.data.map((item: any) => ({
+            name: item.name || "Unnamed Item", // Default name
+            price: item.price || 0, // Default price
+            imageUrl: item.imageUrl || "https://via.placeholder.com/150", // Default image
+          }));
+
+          setMenuItems(formattedData);
+        } else {
+          setError("Invalid data format received from API");
+        }
       } catch (err) {
         setError("Failed to fetch menu items");
+        console.error(err);
+      } finally {
         setLoading(false);
       }
     };
@@ -84,7 +102,7 @@ const Restaurant: React.FC = () => {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px", backgroundColor: "white" }}>
       <Navbar />
       <div style={{ display: "flex", gap: "24px" }}>
         <Sidebar />
@@ -92,7 +110,13 @@ const Restaurant: React.FC = () => {
           <Category />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
             {menuItems.map((item, index) => (
-              <MenuCard key={index} {...item} onClick={setSelectedItem} />
+              <MenuCard
+                key={index}
+                name={item.name}
+                price={item.price}
+                imageUrl={item.imageUrl}
+                onClick={setSelectedItem}
+              />
             ))}
           </div>
         </div>
@@ -108,7 +132,6 @@ const Restaurant: React.FC = () => {
           <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "12px", width: "400px" }}>
             <h2>{selectedItem.name}</h2>
             <img src={selectedItem.imageUrl} alt={selectedItem.name} style={{ width: "100%", borderRadius: "8px" }} />
-            <p>{selectedItem.description}</p>
             <p style={{ fontSize: "18px", fontWeight: "bold" }}>${selectedItem.price.toFixed(2)}</p>
             <h3>Choose Ingredients:</h3>
             <div>
