@@ -17,4 +17,5 @@ router.use(authenticate);
 router.get("/profile", getUserProfile);
 router.put("/profile", updateProfile);
 
+
 module.exports = router;

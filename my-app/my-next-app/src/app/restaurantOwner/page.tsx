@@ -1,110 +1,137 @@
-"use client"; // Add this line to mark the component as a client component
+"use client";
 
-import axios from 'axios';
-import { useState } from 'react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function RestaurantOwnerForm() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    restaurantName: '',
-    cuisineType: '',
-    location: '',
+interface Credentials {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  address?: string;
+}
+
+export default function RestaurantOwnerRegister() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const [credentials, setCredentials] = useState<Credentials>({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    address: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCredentials((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const response = await axios.post('http://localhost:5000/api/restaurant-owner', formData);
-      alert('Restaurant owner registered successfully!');
-      console.log(response.data);
-    } catch (error) {
-      console.error('Error registering restaurant owner:', error);
-      alert('Failed to register restaurant owner.');
+      const res = await fetch("http://localhost:5000/api/restaurant-owner", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: credentials.name,
+          email: credentials.email,
+          password: credentials.password,
+          phone: credentials.phone || undefined,
+          address: credentials.address || undefined,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
+
+      alert("Restaurant owner registered successfully!");
+      router.push("/restaurantOwner/restaurants");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Restaurant Owner Registration</h2>
-        <div className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-yellow-600 mb-2">Welcome to Dish-Dash</h1>
+          <p className="text-gray-600">Register as a Restaurant Owner</p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-4">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleRegister} className="space-y-6">
           <input
             type="text"
             name="name"
             placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            onChange={handleChange}
+            value={credentials.name}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="email"
             name="email"
             placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            onChange={handleChange}
+            value={credentials.email}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="password"
             name="password"
             placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            onChange={handleChange}
+            value={credentials.password}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
-            type="text"
+            type="tel"
             name="phone"
-            placeholder="Phone Number"
-            value={formData.phone}
+            placeholder="Phone (Optional)"
             onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={credentials.phone}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
-            name="restaurantName"
-            placeholder="Restaurant Name"
-            value={formData.restaurantName}
+            name="address"
+            placeholder="Address (Optional)"
             onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+            value={credentials.address}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
-          <input
-            type="text"
-            name="cuisineType"
-            placeholder="Cuisine Type"
-            value={formData.cuisineType}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={formData.location}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full mt-6 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-        >
-          Register
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50"
+          >
+            {isLoading ? "Creating account..." : "Create Account"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
