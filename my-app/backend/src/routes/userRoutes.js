@@ -14,7 +14,7 @@ router.post("/login", loginUser);
 
 // Protected routes
 router.use(authenticate);
-router.get("/profile", getUserProfile);
+router.get("/profile/:userId", getUserProfile);
 router.put("/profile", updateProfile);
 
 module.exports = router;

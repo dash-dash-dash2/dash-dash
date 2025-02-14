@@ -31,5 +31,8 @@ const registerRestaurantOwner = async (req, res) => {
     res.status(500).json({ error: 'Failed to register restaurant owner' });
   }
 };
+// const getRestaurantOwner = async (req,res)=>{
+
+// }
 
 export { registerRestaurantOwner }; 
