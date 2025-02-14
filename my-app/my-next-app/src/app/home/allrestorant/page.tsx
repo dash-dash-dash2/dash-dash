@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Navbar from "../../components/Navbar";
+import Navbar from "../../../components/Navbar";
 import { useRouter } from "next/navigation";
 
-// Updated interface to include `id`
+// Interface for restaurant data
 interface RestaurantItem {
-  id: string; // Added `id` field
+  id: string;
   name: string;
   cuisineType: string;
   location: string;
@@ -29,7 +29,7 @@ const RestaurantCard: React.FC<RestaurantItem> = ({
 
   const handleClick = () => {
     console.log(`Clicked restaurant ID: ${id}`); // Log the ID when clicked
-    router.push(`/onerestorant`); // Include the `id` in the URL
+    router.push(`/home/onerestorant/${id}`); // Navigate to the restaurant page with the ID
   };
 
   return (
@@ -127,8 +127,8 @@ const RestaurantList: React.FC = () => {
         flexDirection: "column",
         gap: "24px",
         padding: "24px",
-        backgroundColor: "white", // Set background to white
-        minHeight: "100vh", // Ensure the background covers the full height
+        backgroundColor: "white",
+        minHeight: "100vh",
       }}
     >
       <Navbar />

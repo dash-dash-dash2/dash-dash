@@ -1,6 +1,8 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Category from "@/app/home/component/category";
@@ -15,7 +17,6 @@ interface MenuItem {
 const ingredientsList = ["Cheese", "Tomatoes", "Lettuce", "Onions", "Bacon", "Mushrooms"];
 
 const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, price, imageUrl, onClick }) => {
-  // Ensure price is a valid number
   const formattedPrice = typeof price === "number" ? price.toFixed(2) : "0.00";
 
   return (
@@ -48,28 +49,29 @@ const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ 
 };
 
 const Restaurant: React.FC = () => {
+  const { onerestorantid } = useParams(); // Extract the `id` from the URL
+  const hello=useParams()
+  console.log("iddddddddddddddddddddddddddddddddddddddd",hello);
+  const id =onerestorantid
+
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const id = 1;
-
   // Fetch menu items from API
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/menus/${id}`);
-        console.log("API Response:", response.data); // Log the response for debugging
+        console.log("API Response:", response.data);
 
-        // Ensure the API response is an array
         if (Array.isArray(response.data)) {
-          // Map the API response to the MenuItem interface
           const formattedData = response.data.map((item: any) => ({
-            name: item.name || "Unnamed Item", // Default name
-            price: item.price || 0, // Default price
-            imageUrl: item.imageUrl || "https://via.placeholder.com/150", // Default image
+            name: item.name || "Unnamed Item",
+            price: item.price || 0,
+            imageUrl: item.imageUrl || "https://via.placeholder.com/150",
           }));
 
           setMenuItems(formattedData);
@@ -83,9 +85,8 @@ const Restaurant: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchMenuItems();
-  }, []);
+  }, [id]);
 
   const handleIngredientChange = (ingredient: string) => {
     setSelectedIngredients((prev) =>
@@ -93,13 +94,8 @@ const Restaurant: React.FC = () => {
     );
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "24px", backgroundColor: "white" }}>
