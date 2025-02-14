@@ -59,7 +59,7 @@ const createOrder = async (req, res) => {
 
 // Get user's orders
 const getUserOrders = async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user.id; 
   const { status } = req.query;
 
   try {

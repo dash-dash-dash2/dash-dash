@@ -75,6 +75,7 @@ model Restaurant {
   categories  CategoryRestaurant[] // Many-to-many relationship with Category
 }
 
+
 // Order Table
 model Order {
   id            Int            @id @default(autoincrement())
