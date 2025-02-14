@@ -34,7 +34,6 @@ model User {
   role          Role         @default(CUSTOMER) // Role of the user
   banned        Boolean      @default(false) // Add banned field
   deliverymanId Int?         // Foreign key to Deliveryman (optional)
-  restaurantId  Int?         // Foreign key to Restaurant (optional)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   orders        Order[]      // One-to-many relationship with Order
