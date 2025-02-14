@@ -97,24 +97,46 @@ const RestaurantList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRestaurants = async () => {
+    const fetchNearbyRestaurants = async (latitude: number, longitude: number) => {
       try {
-        const response = await fetch("http://localhost:5000/api/restaurants");
+        const response = await fetch(
+          `http://localhost:5000/api/restaurants/nearby?latitude=${latitude}&longitude=${longitude}`
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch restaurant data");
         }
         const data = await response.json();
-        console.log("Fetched restaurants:", data);
+        console.log("Fetched nearby restaurants:", data);
         setRestaurants(data);
       } catch (err) {
-        console.error("Error fetching restaurants:", err);
+        console.error("Error fetching nearby restaurants:", err);
         setError((err as Error).message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRestaurants();
+    // Get user's location
+    const getUserLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            fetchNearbyRestaurants(latitude, longitude);
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+            setError("Unable to retrieve your location.");
+            setLoading(false);
+          }
+        );
+      } else {
+        setError("Geolocation is not supported by this browser.");
+        setLoading(false);
+      }
+    };
+
+    getUserLocation();
   }, []);
 
   if (loading) return <p>Loading restaurants...</p>;
