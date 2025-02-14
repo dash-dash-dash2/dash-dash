@@ -32,6 +32,7 @@ model User {
   location      String?
   imageUrl      String?
   role          Role         @default(CUSTOMER) // Role of the user
+  banned        Boolean      @default(false) // Add banned field
   deliverymanId Int?         // Foreign key to Deliveryman (optional)
   restaurantId  Int?         // Foreign key to Restaurant (optional)
   createdAt     DateTime     @default(now())
@@ -40,7 +41,7 @@ model User {
   ratings       Rating[]     // One-to-many relationship with Rating
   chats         Chat[]       // One-to-many relationship with Chat
   deliveryman   Deliveryman? @relation("UserDeliveryman") // Optional relation to Deliveryman
-  restaurant    Restaurant?  @relation("UserRestaurant")  // Optional relation to Restaurant
+  restaurants   Restaurant[]  @relation("UserRestaurants") // One-to-many relationship with Restaurant
 }
 
 // Deliveryman Table (Role-specific fields)
@@ -66,8 +67,8 @@ model Restaurant {
   imageUrl    String? // Add imageUrl field
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
-  user        User                 @relation("UserRestaurant", fields: [userId], references: [id]) // One-to-one relationship with User
-  userId      Int                  @unique // Foreign key to User
+  user        User                 @relation("UserRestaurants", fields: [userId], references: [id]) // One-to-one relationship with User
+  userId      Int                  // Foreign key to User
   orders      Order[]              // One-to-many relationship with Order
   menus       Menu[]               // One-to-many relationship with Menu
   ratings     Rating[]             // One-to-many relationship with Rating

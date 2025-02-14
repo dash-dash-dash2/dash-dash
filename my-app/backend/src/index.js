@@ -18,6 +18,7 @@ const chatRoutes = require("./routes/chatRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const deliverymanRoutes = require("./routes/deliverymanRoutes");
 const restaurantOwnerRoutes = require("./routes/restaurantOwnerRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
@@ -36,7 +37,13 @@ const io = new Server(httpServer, {
 });
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:3000", // Adjust this to your frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+};
+
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
@@ -73,6 +80,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/deliveryman", deliverymanRoutes);
 app.use("/api/restaurant-owner", restaurantOwnerRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Socket.IO Connection Handler
 io.on("connection", (socket) => {

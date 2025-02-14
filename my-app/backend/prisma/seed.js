@@ -74,7 +74,7 @@ async function seed() {
           password: hashedPassword,
           phone: `+1234567890${i}`,
           role: 'RESTAURANT_OWNER',
-          restaurant: {
+          restaurants: {
             create: {
               name: `Restaurant ${i + 1}`,
               cuisineType: cuisineTypes[i],
@@ -89,7 +89,7 @@ async function seed() {
           }
         },
         include: {
-          restaurant: true
+          restaurants: true
         }
       });
       restaurantOwners.push(owner);
@@ -105,7 +105,8 @@ async function seed() {
           password: hashedPassword,
           phone: `+1987654321${i}`,
           role: 'CUSTOMER',
-          location: locations[i]
+          location: locations[i],
+          banned: i % 2 === 0 // Ban every second customer for testing
         }
       });
       customers.push(customer);
@@ -139,109 +140,111 @@ async function seed() {
 
     // Create menus and foods for each restaurant
     for (const owner of restaurantOwners) {
-      const menu = await prisma.menu.create({
-        data: {
-          name: `${owner.restaurant.name} Main Menu`,
-          restaurantId: owner.restaurant.id,
-          imageUrl: 'menu.jpg',
-          price: 0,
-          foods: {
-            create: [
-              {
-                name: `Special Dish 1 - ${owner.restaurant.name}`,
-                description: `Signature dish from ${owner.restaurant.name}`,
-                price: 15.99,
-                imageUrl: 'dish1.jpg',
-                categories: {
-                  create: {
-                    categoryId: allCategories[0].id
+      for (const restaurant of owner.restaurants) {
+        const menu = await prisma.menu.create({
+          data: {
+            name: `${restaurant.name} Main Menu`,
+            restaurantId: restaurant.id,
+            imageUrl: 'menu.jpg',
+            price: 0,
+            foods: {
+              create: [
+                {
+                  name: 'Special Dish 1',
+                  description: 'Signature dish from ' + restaurant.name,
+                  price: 15.99,
+                  imageUrl: 'dish1.jpg',
+                  categories: {
+                    create: {
+                      categoryId: allCategories[0].id
+                    }
+                  },
+                  supplements: {
+                    create: [
+                      {
+                        name: 'Extra Topping 1',
+                        price: 2.50
+                      },
+                      {
+                        name: 'Special Sauce',
+                        price: 1.50
+                      }
+                    ]
                   }
                 },
-                supplements: {
-                  create: [
-                    {
-                      name: 'Extra Topping 1',
-                      price: 2.50
-                    },
-                    {
-                      name: 'Special Sauce',
-                      price: 1.50
+                {
+                  name: 'Special Dish 2',
+                  description: 'Another specialty from ' + restaurant.name,
+                  price: 18.99,
+                  imageUrl: 'dish2.jpg',
+                  categories: {
+                    create: {
+                      categoryId: allCategories[1].id
                     }
-                  ]
-                }
-              },
-              {
-                name: `Special Dish 2 - ${owner.restaurant.name}`,
-                description: `Another specialty from ${owner.restaurant.name}`,
-                price: 18.99,
-                imageUrl: 'dish2.jpg',
-                categories: {
-                  create: {
-                    categoryId: allCategories[1].id
                   }
                 }
-              }
-            ]
-          }
-        }
-      });
-
-      // Create some orders for each restaurant
-      for (let i = 0; i < 3; i++) {
-        const order = await prisma.order.create({
-          data: {
-            userId: customers[Math.floor(Math.random() * customers.length)].id,
-            restaurantId: owner.restaurant.id,
-            deliverymanId: deliveryPersons[Math.floor(Math.random() * deliveryPersons.length)].deliveryman.id,
-            status: ['Pending', 'Preparing', 'Delivered'][Math.floor(Math.random() * 3)],
-            totalAmount: Math.floor(Math.random() * 100) + 20,
-            history: {
-              create: {
-                status: 'Pending'
-              }
-            },
-            payments: {
-              create: {
-                amount: Math.floor(Math.random() * 100) + 20,
-                paymentMethod: ['Credit Card', 'Debit Card', 'Cash'][Math.floor(Math.random() * 3)],
-                status: ['Pending', 'Completed'][Math.floor(Math.random() * 2)]
-              }
+              ]
             }
           }
         });
 
-        // Create some chats for each order
-        await prisma.chat.create({
-          data: {
-            orderId: order.id,
-            userId: order.userId,
-            deliverymanId: order.deliverymanId,
-            message: `Chat message for order ${order.id}`,
-            sender: 'user'
-          }
-        });
+        // Create some orders for each restaurant
+        for (let i = 0; i < 3; i++) {
+          const order = await prisma.order.create({
+            data: {
+              userId: customers[Math.floor(Math.random() * customers.length)].id,
+              restaurantId: restaurant.id,
+              deliverymanId: deliveryPersons[Math.floor(Math.random() * deliveryPersons.length)].deliveryman.id,
+              status: ['Pending', 'Preparing', 'Delivered'][Math.floor(Math.random() * 3)],
+              totalAmount: Math.floor(Math.random() * 100) + 20,
+              history: {
+                create: {
+                  status: 'Pending'
+                }
+              },
+              payments: {
+                create: {
+                  amount: Math.floor(Math.random() * 100) + 20,
+                  paymentMethod: ['Credit Card', 'Debit Card', 'Cash'][Math.floor(Math.random() * 3)],
+                  status: ['Pending', 'Completed'][Math.floor(Math.random() * 2)]
+                }
+              }
+            }
+          });
 
-        // Create notifications
-        await prisma.notification.create({
-          data: {
-            deliverymanId: order.deliverymanId,
-            orderId: order.id,
-            message: `New order notification for order ${order.id}`,
-            isRead: false
-          }
-        });
-      }
+          // Create some chats for each order
+          await prisma.chat.create({
+            data: {
+              orderId: order.id,
+              userId: order.userId,
+              deliverymanId: order.deliverymanId,
+              message: `Chat message for order ${order.id}`,
+              sender: 'user'
+            }
+          });
 
-      // Create ratings for each restaurant
-      for (const customer of customers) {
-        await prisma.rating.create({
-          data: {
-            userId: customer.id,
-            restaurantId: owner.restaurant.id,
-            score: Math.floor(Math.random() * 5) + 1,
-            comment: `Rating comment from ${customer.name}`
-          }
-        });
+          // Create notifications
+          await prisma.notification.create({
+            data: {
+              deliverymanId: order.deliverymanId,
+              orderId: order.id,
+              message: `New order notification for order ${order.id}`,
+              isRead: false
+            }
+          });
+        }
+
+        // Create ratings for each restaurant
+        for (const customer of customers) {
+          await prisma.rating.create({
+            data: {
+              userId: customer.id,
+              restaurantId: restaurant.id,
+              score: Math.floor(Math.random() * 5) + 1,
+              comment: `Rating comment from ${customer.name}`
+            }
+          });
+        }
       }
     }
 

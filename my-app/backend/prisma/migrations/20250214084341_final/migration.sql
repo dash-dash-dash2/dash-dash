@@ -7,6 +7,11 @@ CREATE TABLE `User` (
     `phone` VARCHAR(191) NULL,
     `address` VARCHAR(191) NULL,
     `location` VARCHAR(191) NULL,
+    `imageUrl` VARCHAR(191) NULL,
+    `role` ENUM('CUSTOMER', 'DELIVERYMAN', 'RESTAURANT_OWNER', 'ADMIN') NOT NULL DEFAULT 'CUSTOMER',
+    `banned` BOOLEAN NOT NULL DEFAULT false,
+    `deliverymanId` INTEGER NULL,
+    `restaurantId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -17,17 +22,13 @@ CREATE TABLE `User` (
 -- CreateTable
 CREATE TABLE `Deliveryman` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(191) NOT NULL,
-    `email` VARCHAR(191) NOT NULL,
-    `password` VARCHAR(191) NOT NULL,
-    `phone` VARCHAR(191) NULL,
     `vehicleType` VARCHAR(191) NOT NULL,
     `isAvailable` BOOLEAN NOT NULL DEFAULT true,
-    `location` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `userId` INTEGER NULL,
 
-    UNIQUE INDEX `Deliveryman_email_key`(`email`),
+    UNIQUE INDEX `Deliveryman_userId_key`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -35,16 +36,13 @@ CREATE TABLE `Deliveryman` (
 CREATE TABLE `Restaurant` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
-    `email` VARCHAR(191) NOT NULL,
-    `password` VARCHAR(191) NOT NULL,
-    `phone` VARCHAR(191) NULL,
-    `address` VARCHAR(191) NULL,
     `cuisineType` VARCHAR(191) NOT NULL,
     `location` VARCHAR(191) NULL,
+    `imageUrl` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `userId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `Restaurant_email_key`(`email`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -150,6 +148,8 @@ CREATE TABLE `Menu` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `restaurantId` INTEGER NOT NULL,
+    `imageUrl` VARCHAR(191) NULL,
+    `price` DOUBLE NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -188,6 +188,7 @@ CREATE TABLE `Admin` (
     `name` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
+    `imageUrl` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -204,6 +205,12 @@ CREATE TABLE `OrderHistory` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Deliveryman` ADD CONSTRAINT `Deliveryman_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Restaurant` ADD CONSTRAINT `Restaurant_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Order` ADD CONSTRAINT `Order_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
