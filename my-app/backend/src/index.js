@@ -8,7 +8,6 @@ const compression = require('compression');
 const limiter = require('./middleware/rateLimiter');
 const cache = require('./config/cache');
 const userRoutes = require("./routes/userRoutes");
-const restaurantRoutes = require("./routes/restaurantRoutes");
 const menuRoutes = require("./routes/menuRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
@@ -19,6 +18,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const deliverymanRoutes = require("./routes/deliverymanRoutes");
 const restaurantOwnerRoutes = require("./routes/restaurantOwnerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const restaurantRoutes = require("./routes/restaurantRoutes");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
@@ -70,7 +70,6 @@ io.use(async (socket, next) => {
 
 // Routes
 app.use("/api/users", userRoutes);
-app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/menus", menuRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/delivery", deliveryRoutes);
@@ -81,6 +80,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/deliveryman", deliverymanRoutes);
 app.use("/api/restaurant-owner", restaurantOwnerRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/restaurants", restaurantRoutes);
 
 // Socket.IO Connection Handler
 io.on("connection", (socket) => {
