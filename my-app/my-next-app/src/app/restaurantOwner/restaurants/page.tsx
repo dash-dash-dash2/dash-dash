@@ -1,17 +1,49 @@
 "use client";
 
-import { useRestaurants } from "@/context/RestaurantContext";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Building2, DollarSign, ListOrdered, MenuSquare } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import axios from "axios";
 
 export default function DashboardPage() {
-  const { restaurants, loading, error } = useRestaurants();
+  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        // Get the token from local storage
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        // Make the API request
+        const response = await axios.get("http://localhost:5000/api/restaurant-owner", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // Set the restaurants state
+        setRestaurants(response.data);
+        
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch restaurants");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
 
   if (loading) return <div>Loading restaurants...</div>;
   if (error) return <div>Error: {error}</div>;
-
+  console.log("tale",restaurants)
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -112,7 +144,7 @@ export default function DashboardPage() {
                       className="flex gap-4 p-4 border rounded-lg hover:bg-gray-50"
                     >
                       <Image
-                        src={restaurant.image || "/placeholder.svg"}
+                        src={restaurant.imageUrl || "/placeholder.svg"}
                         alt={restaurant.name}
                         width={80}
                         height={80}
@@ -122,15 +154,14 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium">{restaurant.name}</h3>
                           <span className="px-2 py-1 text-xs bg-gray-100 rounded-full">
-                            {restaurant.averageRating|| "Inactive"}
+                            {restaurant.averageRating || "Inactive"}
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
-                          {restaurant.cuisineType
-                          }
+                          {restaurant.cuisineType}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
-                          {restaurant.address}
+                          {restaurant.location}
                         </p>
                       </div>
                     </div>
