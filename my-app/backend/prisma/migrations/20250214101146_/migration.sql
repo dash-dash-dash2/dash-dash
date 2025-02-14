@@ -9,6 +9,7 @@ CREATE TABLE `User` (
     `location` VARCHAR(191) NULL,
     `imageUrl` VARCHAR(191) NULL,
     `role` ENUM('CUSTOMER', 'DELIVERYMAN', 'RESTAURANT_OWNER', 'ADMIN') NOT NULL DEFAULT 'CUSTOMER',
+    `banned` BOOLEAN NOT NULL DEFAULT false,
     `deliverymanId` INTEGER NULL,
     `restaurantId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -42,7 +43,6 @@ CREATE TABLE `Restaurant` (
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `Restaurant_userId_key`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
