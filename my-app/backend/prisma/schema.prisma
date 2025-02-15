@@ -33,7 +33,6 @@ model User {
   imageUrl      String?
   role          Role         @default(CUSTOMER) // Role of the user
   banned        Boolean      @default(false) // Add banned field
-  deliverymanId Int?         // Foreign key to Deliveryman (optional)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   orders        Order[]      // One-to-many relationship with Order
