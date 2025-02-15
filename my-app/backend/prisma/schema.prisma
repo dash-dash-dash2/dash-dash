@@ -88,10 +88,11 @@ model Order {
   user          User           @relation(fields: [userId], references: [id])
   restaurant    Restaurant     @relation(fields: [restaurantId], references: [id])
   deliveryman   Deliveryman?   @relation(fields: [deliverymanId], references: [id])
+  orderItems    OrderItem[]    // One-to-many relationship with OrderItem
   chats         Chat[]         // One-to-many relationship with Chat
   payments      Payment[]      // One-to-many relationship with Payment
   notifications Notification[] // One-to-many relationship with Notification
-  history       OrderHistory[]  // One-to-many relationship with OrderHistory
+  orderHistory  OrderHistory[]  // One-to-many relationship with OrderHistory
 }
 
 // Chat Table (Real-time chat between user and driver)
@@ -165,6 +166,7 @@ model Food {
   menu        Menu           @relation(fields: [menuId], references: [id])
   categories  CategoryFood[] // Many-to-many relationship with Category
   supplements Supplement[]   // One-to-many relationship with Supplement
+  orderItems  OrderItem[]    // Add this line to create a relation to OrderItem
 }
 
 // Supplement Table (e.g., extra cheese, sauces)
@@ -230,8 +232,21 @@ model Admin {
 // OrderHistory Table (History of orders)
 model OrderHistory {
   id        Int      @id @default(autoincrement())
-  orderId   Int // Foreign key to Order
-  status    String // e.g., "Pending", "Preparing", "Out for Delivery", "Delivered"
+  orderId   Int      // Foreign key to Order
+  status    String   // e.g., "Pending", "Preparing", "Out for Delivery", "Delivered"
   updatedAt DateTime @default(now())
   order     Order    @relation(fields: [orderId], references: [id])
+}
+
+// OrderItem Table (Items in an order)
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  foodId    Int
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+  food      Food     @relation(fields: [foodId], references: [id])
 }

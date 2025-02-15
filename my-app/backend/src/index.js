@@ -38,7 +38,7 @@ const io = new Server(httpServer, {
 
 // Middleware
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000", // Adjust this to your frontend URL
+  origin: "*", // Adjust this to your frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 };

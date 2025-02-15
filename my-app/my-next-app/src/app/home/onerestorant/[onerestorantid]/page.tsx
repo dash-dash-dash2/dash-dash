@@ -49,11 +49,7 @@ const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ 
 };
 
 const Restaurant: React.FC = () => {
-  const { onerestorantid } = useParams(); // Extract the `id` from the URL
-  const hello=useParams()
-  console.log("iddddddddddddddddddddddddddddddddddddddd",hello);
-  const id =onerestorantid
-
+  const { onerestorantid } = useParams();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
@@ -64,29 +60,16 @@ const Restaurant: React.FC = () => {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/menus/${id}`);
-        console.log("API Response:", response.data);
-
-        if (Array.isArray(response.data)) {
-          const formattedData = response.data.map((item: any) => ({
-            name: item.name || "Unnamed Item",
-            price: item.price || 0,
-            imageUrl: item.imageUrl || "https://via.placeholder.com/150",
-          }));
-
-          setMenuItems(formattedData);
-        } else {
-          setError("Invalid data format received from API");
-        }
+        const response = await axios.get(`http://localhost:5000/api/menus/restaurant/${onerestorantid}`);
+        setMenuItems(response.data);
       } catch (err) {
         setError("Failed to fetch menu items");
-        console.error(err);
       } finally {
         setLoading(false);
       }
     };
     fetchMenuItems();
-  }, [id]);
+  }, [onerestorantid]);
 
   const handleIngredientChange = (ingredient: string) => {
     setSelectedIngredients((prev) =>

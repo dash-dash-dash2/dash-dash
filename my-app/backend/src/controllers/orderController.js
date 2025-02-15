@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 // Create new order
 const createOrder = async (req, res) => {
   const userId = req.user.id;
-  const { restaurantId, items, deliveryAddress, totalAmount } = req.body;
+  const { restaurantId, items, totalAmount } = req.body;
 
   try {
     const order = await prisma.order.create({
@@ -13,32 +13,17 @@ const createOrder = async (req, res) => {
         restaurantId,
         status: 'PENDING',
         totalAmount,
-        deliveryAddress,
         OrderItems: {
           create: items.map(item => ({
             foodId: item.foodId,
             quantity: item.quantity,
             price: item.price,
-            supplements: item.supplements || []
           }))
         }
       },
       include: {
-        OrderItems: {
-          include: {
-            Food: true
-          }
-        },
-        Restaurant: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        }
+        OrderItems: true,
+        Restaurant: true,
       }
     });
 
@@ -71,23 +56,23 @@ const getUserOrders = async (req, res) => {
     const orders = await prisma.order.findMany({
       where,
       include: {
-        OrderItems: {
+        orderItems: {
           include: {
-            Food: true
+            food: true
           }
         },
-        Restaurant: {
+        restaurant: {
           include: {
-            User: {
+            user: {
               select: {
                 name: true
               }
             }
           }
         },
-        Deliveryman: {
+        deliveryman: {
           include: {
-            User: {
+            user: {
               select: {
                 name: true,
                 phone: true
@@ -95,7 +80,7 @@ const getUserOrders = async (req, res) => {
             }
           }
         },
-        OrderHistory: {
+        orderHistory: {
           orderBy: {
             updatedAt: 'desc'
           }

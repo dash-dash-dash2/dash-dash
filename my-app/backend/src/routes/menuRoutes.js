@@ -12,6 +12,6 @@ const {
 router.post("/restaurant/:restaurantId/menu", createMenu);
 router.put("/menu/:id", updateMenu);
 router.post("/menu/:menuId/food", addFoodItem);
-router.get('/:restaurantId/', getMenusByRestaurantId);
+router.get('/restaurant/:restaurantId', getMenusByRestaurantId);
 
 module.exports = router; 

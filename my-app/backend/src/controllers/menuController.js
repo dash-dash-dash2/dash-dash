@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const getMenusByRestaurantId = async (req, res) => {
-  const  id  = req.params.restaurantId;  
+  const id = req.params.restaurantId;
 
   // Input validation
   if (!id || isNaN(parseInt(id))) {
@@ -10,29 +10,22 @@ const getMenusByRestaurantId = async (req, res) => {
   }
 
   try {
-    // Fetch all menus for the restaurant
     const menus = await prisma.menu.findMany({
-      where: {
-        restaurantId: parseInt(id)
-      },
-      include: {
-        restaurant: true,
-        foods: true
-      }
+      where: { restaurantId: parseInt(id) },
+      include: { foods: true }
     });
 
-    // Check if menus were found
     if (!menus || menus.length === 0) {
       return res.status(404).json({ error: "No menus found for this restaurant" });
     }
 
-    // Return the menus
     res.status(200).json(menus);
   } catch (error) {
     console.error("Error fetching menus:", error);
     res.status(500).json({ error: "Failed to fetch menus", details: error.message });
   }
 };
+
 // Create menu
 const createMenu = async (req, res) => {
   const { restaurantId } = req.params;
