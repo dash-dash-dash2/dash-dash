@@ -1,4 +1,3 @@
-'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 import { useAuth } from "@/context/AuthContext"; // Adjust the path based on your directory structure
@@ -10,14 +9,17 @@ interface Order {
 
 interface OrderContextType {
   orders: Order[];
+  activeOrder: Order | null;
   fetchOrders: () => Promise<void>;
   acceptOrder: (orderId: string) => Promise<void>;
+  setActiveOrder: (order: Order | null) => void;
 }
 
 const OrderContext = createContext<OrderContextType | null>(null);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const { token, user } = useAuth();
 
   const fetchOrders = async () => {
@@ -47,7 +49,13 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   }, [token]);
 
   return (
-    <OrderContext.Provider value={{ orders, fetchOrders, acceptOrder }}>
+    <OrderContext.Provider value={{ 
+      orders, 
+      activeOrder,
+      fetchOrders, 
+      acceptOrder,
+      setActiveOrder
+    }}>
       {children}
     </OrderContext.Provider>
   );
