@@ -7,23 +7,31 @@ const createOrder = async (req, res) => {
   const { restaurantId, items, totalAmount } = req.body;
 
   try {
+    // Convert restaurantId to an integer
+    const parsedRestaurantId = parseInt(restaurantId, 10);
+    
+    // Prepare order items data
+    const orderItemsData = items.map(item => {
+      return {
+        menuId: item.menuId, // Reference the menu directly
+        quantity: item.quantity,
+        price: item.price,
+      };
+    });
+
     const order = await prisma.order.create({
       data: {
         userId,
-        restaurantId,
+        restaurantId: parsedRestaurantId, // Use the parsed integer
         status: 'PENDING',
         totalAmount,
-        OrderItems: {
-          create: items.map(item => ({
-            foodId: item.foodId,
-            quantity: item.quantity,
-            price: item.price,
-          }))
+        orderItems: {
+          create: orderItemsData // Use the mapped order items
         }
       },
       include: {
-        OrderItems: true,
-        Restaurant: true,
+        orderItems: true,
+        restaurant: true,
       }
     });
 

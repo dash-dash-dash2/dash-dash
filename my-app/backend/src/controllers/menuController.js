@@ -10,15 +10,27 @@ const getMenusByRestaurantId = async (req, res) => {
   }
 
   try {
+    // Check if the restaurant exists
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: parseInt(id) },
+      select: { id: true } // Only select the restaurant ID
+    });
+
+    // Check if the restaurant exists
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    // Fetch menus for the restaurant
     const menus = await prisma.menu.findMany({
       where: { restaurantId: parseInt(id) },
-      include: { foods: true }
     });
 
     if (!menus || menus.length === 0) {
       return res.status(404).json({ error: "No menus found for this restaurant" });
     }
 
+    console.log("Menus fetched:", menus);
     res.status(200).json(menus);
   } catch (error) {
     console.error("Error fetching menus:", error);
@@ -29,7 +41,7 @@ const getMenusByRestaurantId = async (req, res) => {
 // Create menu
 const createMenu = async (req, res) => {
   const { restaurantId } = req.params;
-  const { name, description } = req.body;
+  const { name, description, price, imageUrl } = req.body;
   const userId = req.user.id;
 
   try {
@@ -48,12 +60,11 @@ const createMenu = async (req, res) => {
     const menu = await prisma.menu.create({
       data: {
         name,
+        description,
+        price,
+        imageUrl,
         restaurantId: parseInt(restaurantId)
       },
-      include: {
-        restaurant: true,
-        foods: true
-      }
     });
 
     res.status(201).json(menu);
@@ -66,11 +77,10 @@ const createMenu = async (req, res) => {
 // Update menu
 const updateMenu = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name, description, price, imageUrl } = req.body;
   const userId = req.user.id;
 
   try {
-    // Check if the menu exists and belongs to the user's restaurant
     const menu = await prisma.menu.findFirst({
       where: {
         id: parseInt(id),
@@ -86,11 +96,7 @@ const updateMenu = async (req, res) => {
 
     const updatedMenu = await prisma.menu.update({
       where: { id: parseInt(id) },
-      data: { name },
-      include: {
-        restaurant: true,
-        foods: true
-      }
+      data: { name, description, price, imageUrl },
     });
 
     res.status(200).json(updatedMenu);

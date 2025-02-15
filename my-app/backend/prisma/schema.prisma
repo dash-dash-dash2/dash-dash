@@ -74,7 +74,6 @@ model Restaurant {
   categories  CategoryRestaurant[] // Many-to-many relationship with Category
 }
 
-
 // Order Table
 model Order {
   id            Int            @id @default(autoincrement())
@@ -104,6 +103,7 @@ model Chat {
   message       String
   sender        String      // "user" or "deliveryman"
   createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   order         Order       @relation(fields: [orderId], references: [id])
   user          User?       @relation(fields: [userId], references: [id]) // Make optional
   deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id]) // Make optional
@@ -139,34 +139,6 @@ model Category {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   restaurants CategoryRestaurant[] // Many-to-many relationship with Restaurant
-  foods       CategoryFood[]       // Many-to-many relationship with Food
-}
-
-// Category-Food Table (Many-to-many relationship)
-model CategoryFood {
-  id         Int      @id @default(autoincrement())
-  categoryId Int // Foreign key to Category
-  foodId     Int // Foreign key to Food
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  category   Category @relation(fields: [categoryId], references: [id])
-  food       Food     @relation(fields: [foodId], references: [id])
-}
-
-// Food Table (Menu items)
-model Food {
-  id          Int            @id @default(autoincrement())
-  name        String
-  description String?
-  price       Float
-  imageUrl    String?
-  menuId      Int // Foreign key to Menu
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  menu        Menu           @relation(fields: [menuId], references: [id])
-  categories  CategoryFood[] // Many-to-many relationship with Category
-  supplements Supplement[]   // One-to-many relationship with Supplement
-  orderItems  OrderItem[]    // Add this line to create a relation to OrderItem
 }
 
 // Supplement Table (e.g., extra cheese, sauces)
@@ -174,23 +146,21 @@ model Supplement {
   id        Int      @id @default(autoincrement())
   name      String
   price     Float
-  foodId    Int // Foreign key to Food
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  food      Food     @relation(fields: [foodId], references: [id])
+  updatedAt DateTime @default(now())
 }
 
 // Menu Table (Restaurant menus)
 model Menu {
-  id           Int        @id @default(autoincrement())
-  name         String
-  restaurantId Int // Foreign key to Restaurant
-  imageUrl     String?   // Add imageUrl field
-  price        Float?    // Make price optional (nullable)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-  foods        Food[]     // One-to-many relationship with Food
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  // Add description field
+  price       Float    // Add price field
+  imageUrl    String?  // Add imageUrl field
+  restaurantId Int     // Foreign key to Restaurant
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id]) // One-to-one relationship with Restaurant
 }
 
 // Rating Table (User ratings for restaurants)
@@ -214,7 +184,7 @@ model Payment {
   paymentMethod String // e.g., "Credit Card", "Debit Card"
   status        String // e.g., "Pending", "Completed"
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime @default(now())
   order         Order    @relation(fields: [orderId], references: [id])
 }
 
@@ -242,11 +212,9 @@ model OrderHistory {
 model OrderItem {
   id        Int      @id @default(autoincrement())
   orderId   Int
-  foodId    Int
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   order     Order    @relation(fields: [orderId], references: [id])
-  food      Food     @relation(fields: [foodId], references: [id])
 }

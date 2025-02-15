@@ -12,11 +12,12 @@ interface MenuItem {
   name: string;
   price: number;
   imageUrl: string;
+  description: string;
 }
 
 const ingredientsList = ["Cheese", "Tomatoes", "Lettuce", "Onions", "Bacon", "Mushrooms"];
 
-const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, price, imageUrl, onClick }) => {
+const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ name, description, price, imageUrl, onClick }) => {
   const formattedPrice = typeof price === "number" ? price.toFixed(2) : "0.00";
 
   return (
@@ -29,19 +30,12 @@ const MenuCard: React.FC<MenuItem & { onClick: (item: MenuItem) => void }> = ({ 
         transition: "transform 0.2s, box-shadow 0.2s",
         cursor: "pointer",
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-4px)";
-        e.currentTarget.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.15)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "none";
-        e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
-      }}
-      onClick={() => onClick({ name, price, imageUrl })}
+      onClick={() => onClick({ name, description, price, imageUrl  })}
     >
       <img src={imageUrl} alt={name} style={{ width: "100%", height: "160px", objectFit: "cover" }} />
       <div style={{ padding: "16px" }}>
         <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px" }}>{name}</h3>
+        <p style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px" }}>{description}</p>
         <p style={{ fontSize: "16px", fontWeight: "bold", color: "#FFB800" }}>${formattedPrice}</p>
       </div>
     </div>
@@ -60,7 +54,12 @@ const Restaurant: React.FC = () => {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/menus/restaurant/${onerestorantid}`);
+        const token = localStorage.getItem("token"); // Adjust this based on your auth setup
+        const response = await axios.get(`http://localhost:5000/api/menus/restaurant/${onerestorantid}`, {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+        });
         setMenuItems(response.data);
       } catch (err) {
         setError("Failed to fetch menu items");
@@ -77,6 +76,44 @@ const Restaurant: React.FC = () => {
     );
   };
 
+  const handleAddToOrder = async () => {
+    if (!selectedItem) return;
+
+    const token = localStorage.getItem("token"); // Adjust this based on your auth setup
+
+    // Log the selected item to check its structure
+    console.log("Selected Item:", selectedItem);
+
+    // Ensure totalAmount is set correctly
+    const orderData = {
+      restaurantId: onerestorantid,
+      items: [
+        {
+          menuId: selectedItem.id, // Use menuId instead of foodId
+          quantity: 1,
+          price: selectedItem.price,
+        },
+      ],
+      totalAmount: selectedItem.price, // Ensure this is set
+    };
+
+    console.log("Order Data:", orderData); // Log the order data for debugging
+
+    try {
+      const response = await axios.post(`http://localhost:5000/api/orders`, orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Order Response:", response.data); // Log the response from the API
+      alert("Order added successfully!");
+      setSelectedItem(null); // Reset selected item after adding to order
+    } catch (error) {
+      console.error("Error adding order:", error.response ? error.response.data : error.message);
+      alert("Failed to add order.");
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
@@ -88,9 +125,9 @@ const Restaurant: React.FC = () => {
         <div style={{ flex: 1 }}>
           <Category />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "24px" }}>
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <MenuCard
-                key={index}
+                key={item.id}
                 name={item.name}
                 price={item.price}
                 imageUrl={item.imageUrl}
@@ -111,7 +148,7 @@ const Restaurant: React.FC = () => {
           <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "12px", width: "400px" }}>
             <h2>{selectedItem.name}</h2>
             <img src={selectedItem.imageUrl} alt={selectedItem.name} style={{ width: "100%", borderRadius: "8px" }} />
-            <p style={{ fontSize: "18px", fontWeight: "bold" }}>${selectedItem.price.toFixed(2)}</p>
+            <p style={{ fontSize: "18px", fontWeight: "bold" }}>${selectedItem.price ? selectedItem.price.toFixed(2) : "0.00"}</p>
             <h3>Choose Ingredients:</h3>
             <div>
               {ingredientsList.map((ingredient) => (
@@ -127,7 +164,7 @@ const Restaurant: React.FC = () => {
             </div>
             <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between" }}>
               <button onClick={() => setSelectedItem(null)} style={{ padding: "8px 12px", cursor: "pointer" }}>Close</button>
-              <button style={{ padding: "8px 12px", backgroundColor: "#FFB800", color: "white", cursor: "pointer" }}>Add to Order</button>
+              <button onClick={handleAddToOrder} style={{ padding: "8px 12px", backgroundColor: "#FFB800", color: "white", cursor: "pointer" }}>Add to Order</button>
             </div>
           </div>
         </div>
