@@ -1,14 +1,15 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Building2, DollarSign, ListOrdered, MenuSquare } from "lucide-react"
-import Image from "next/image"
-import { cn } from "@/lib/utils"
-import axios from "axios"
-import AddRestaurantModal from "./components/AddRestaurantModal" // Import your modal
-import { useRouter } from "next/navigation"
-import Profile from "./components/ownerProfile" // Import the Profile component
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Building2, DollarSign, ListOrdered, MenuSquare } from "lucide-react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
+import axios from "axios";
+import AddRestaurantModal from "./components/AddRestaurantModal";
+import { useRouter } from "next/navigation"; // Import useRouter here
+import Profile from "./components/ownerProfile";
+import AddMenu from "./components/AddMenu";
 
 const Sidebar = ({ selected, setSelected }) => {
   const menuItems = [
@@ -18,7 +19,7 @@ const Sidebar = ({ selected, setSelected }) => {
     { name: "Menu Items", icon: MenuSquare },
     { name: "Analytics", icon: DollarSign },
     { name: "Settings", icon: MenuSquare },
-  ]
+  ];
 
   return (
     <div className="w-64 bg-white border-r">
@@ -33,7 +34,7 @@ const Sidebar = ({ selected, setSelected }) => {
             onClick={() => setSelected(item.name)}
             className={cn(
               "flex items-center gap-2 px-4 py-2 text-sm rounded-lg w-full text-left",
-              selected === item.name ? "bg-red-500 text-white" : "text-gray-700 hover:bg-gray-100",
+              selected === item.name ? "bg-red-500 text-white" : "text-gray-700 hover:bg-gray-100"
             )}
           >
             <item.icon className="h-5 w-5" />
@@ -42,35 +43,32 @@ const Sidebar = ({ selected, setSelected }) => {
         ))}
       </nav>
     </div>
-  )
-}
+  );
+};
 
 const RestaurantList = ({ restaurants }) => {
   const handleUpdate = async (restaurantId: number) => {
     try {
-      // You can add a modal or redirect here for the update functionality
-      console.log("Update restaurant with ID:", restaurantId)
-      // Example: redirect to an update page or open a modal with the restaurant data
+      console.log("Update restaurant with ID:", restaurantId);
     } catch (err) {
-      console.error("Error updating restaurant:", err)
+      console.error("Error updating restaurant:", err);
     }
-  }
+  };
 
   const handleDelete = async (restaurantId: number) => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) throw new Error("No token found")
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
 
       const response = await axios.delete(`http://localhost:5000/api/restaurant-owner/delete/${restaurantId}`, {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
 
-      console.log("Restaurant deleted successfully:", response.data)
-      // Optionally update the state to remove the restaurant from the list
+      console.log("Restaurant deleted successfully:", response.data);
     } catch (err) {
-      console.error("Error deleting restaurant:", err)
+      console.error("Error deleting restaurant:", err);
     }
-  }
+  };
 
   return (
     <Card className="p-6">
@@ -114,8 +112,8 @@ const RestaurantList = ({ restaurants }) => {
         )}
       </div>
     </Card>
-  )
-}
+  );
+};
 
 const RevenueChart = () => (
   <Card className="p-6">
@@ -131,82 +129,81 @@ const RevenueChart = () => (
       ))}
     </div>
   </Card>
-)
+);
 
 const DashboardPage = () => {
-  const router = useRouter()
-  const [restaurants, setRestaurants] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedSection, setSelectedSection] = useState("Dashboard")
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [showAllRestaurants, setShowAllRestaurants] = useState(false) // New state to toggle full list
-  const [menus, setMenus] = useState<any[]>([]) // Renamed to menus
-  const [categories, setCategories] = useState<any[]>([])
-  const [showProfile, setShowProfile] = useState(false)
+  const router = useRouter(); // Now useRouter is defined
+  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedSection, setSelectedSection] = useState("Dashboard");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAllRestaurants, setShowAllRestaurants] = useState(false);
+  const [menus, setMenus] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showAddMenuModal, setShowAddMenuModal] = useState(false);
 
   useEffect(() => {
     const fetchRestaurants = async () => {
       try {
-        const token = localStorage.getItem("token")
-        if (!token) throw new Error("No token found")
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token found");
 
         const response = await axios.get("http://localhost:5000/api/restaurant-owner", {
           headers: { Authorization: `Bearer ${token}` },
-        })
+        });
 
-        setRestaurants(response.data)
+        setRestaurants(response.data);
       } catch (err: any) {
-        setError(err.message || "Failed to fetch restaurants")
+        setError(err.message || "Failed to fetch restaurants");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchRestaurants()
-  }, [])
+    fetchRestaurants();
+  }, []);
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) throw new Error("No token found")
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
 
       const response = await axios.get("http://localhost:5000/api/restaurant-owner", {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
 
-      // Extract unique categories from all restaurants
       const allCategories = response.data.reduce((acc: any[], restaurant: any) => {
         if (restaurant.categories) {
           restaurant.categories.forEach((cat: any) => {
             if (!acc.find((c) => c.id === cat.category.id)) {
-              acc.push(cat.category)
+              acc.push(cat.category);
             }
-          })
+          });
         }
-        return acc
-      }, [])
+        return acc;
+      }, []);
 
-      setCategories(allCategories)
+      setCategories(allCategories);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch categories")
+      setError(err.message || "Failed to fetch categories");
     }
-  }
+  };
 
   useEffect(() => {
-    fetchCategories()
-  }, [restaurants]) // Updated useEffect dependency
+    fetchCategories();
+  }, [restaurants]);
 
   const fetchMenus = async () => {
     try {
-      const token = localStorage.getItem("token")
-      if (!token) throw new Error("No token found")
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
 
       const response = await axios.get("http://localhost:5000/api/restaurant-owner", {
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
 
-      // Extract menus from all restaurants
       const allMenus = response.data.reduce((acc: any[], restaurant: any) => {
         if (restaurant.menus) {
           restaurant.menus.forEach((menu: any) => {
@@ -214,34 +211,33 @@ const DashboardPage = () => {
               acc.push({
                 ...menu,
                 restaurantName: restaurant.name,
-              })
+              });
             }
-          })
+          });
         }
-        return acc
-      }, [])
+        return acc;
+      }, []);
 
-      setMenus(allMenus)
+      setMenus(allMenus);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch menus")
+      setError(err.message || "Failed to fetch menus");
     }
-  }
+  };
 
   useEffect(() => {
-    fetchMenus()
-  }, [restaurants]) // Updated useEffect dependency
+    fetchMenus();
+  }, [restaurants]);
 
-  if (loading) return <div>Loading restaurants...</div>
-  if (error) return <div>Error: {error}</div>
+  if (loading) return <div>Loading restaurants...</div>;
+  if (error) return <div>Error: {error}</div>;
 
-  // Get first 2 restaurants or all based on state
-  const restaurantsToDisplay = showAllRestaurants ? restaurants : restaurants.slice(0, 2)
-  console.log("owner restaurants", restaurants)
+  const restaurantsToDisplay = showAllRestaurants ? restaurants : restaurants.slice(0, 2);
+  console.log("owner restaurants", restaurants);
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    router.push("/auth") // Adjust this route as needed
-  }
+    localStorage.removeItem("token");
+    router.push("/auth"); // Redirect to the auth page
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -257,6 +253,11 @@ const DashboardPage = () => {
               Add Restaurant
             </button>
           )}
+          {selectedSection === "Menu Items" && (
+            <button className="px-4 py-2 bg-green-500 text-white rounded" onClick={() => setShowAddMenuModal(true)}>
+              Add Menu Item
+            </button>
+          )}
         </div>
 
         {/* Display Dashboard Contents */}
@@ -268,7 +269,7 @@ const DashboardPage = () => {
                 { title: "Total Restaurants", value: restaurants.length, icon: Building2 },
                 { title: "Total Revenue", value: "$0.00", icon: DollarSign },
                 { title: "Categories", value: categories.length.toString(), icon: ListOrdered },
-                { title: "Menu Items", value: menus.length.toString(), icon: MenuSquare }, // Updated to reflect menus length
+                { title: "Menu Items", value: menus.length.toString(), icon: MenuSquare },
               ].map((stat, index) => (
                 <Card key={index} className="p-6">
                   <div className="flex items-start gap-4">
@@ -307,7 +308,7 @@ const DashboardPage = () => {
         {/* Display Restaurant List in "Restaurants" section */}
         {selectedSection === "Restaurants" && <RestaurantList restaurants={restaurants} />}
 
-        {/* Add Categories section display */}
+        {/* Display Categories section */}
         {selectedSection === "Categories" && (
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Categories</h2>
@@ -325,7 +326,7 @@ const DashboardPage = () => {
           </Card>
         )}
 
-        {/* Add Menu Items section display */}
+        {/* Display Menu Items section */}
         {selectedSection === "Menu Items" && (
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Restaurant Menus</h2>
@@ -359,6 +360,7 @@ const DashboardPage = () => {
           </Card>
         )}
 
+        {/* Display Settings section */}
         {selectedSection === "Settings" && (
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Settings</h2>
@@ -382,10 +384,20 @@ const DashboardPage = () => {
 
       {/* Add Restaurant Modal */}
       <AddRestaurantModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+      {/* Add Menu Modal */}
+      {showAddMenuModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg">
+            <AddMenu fetchMenus={fetchMenus} restaurantId={restaurants[0]?.id} onClose={() => setShowAddMenuModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
       {showProfile && <Profile onClose={() => setShowProfile(false)} />}
     </div>
-  )
-}
+  );
+};
 
-export default DashboardPage
-
+export default DashboardPage;
