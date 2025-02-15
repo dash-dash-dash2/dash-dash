@@ -6,7 +6,9 @@ const {
   getRestaurantsByOwner,
   addRestaurant,
   updateRestaurant,
-  deleteRestaurant
+  deleteRestaurant,
+  getOwnerProfile,         // Importing getOwnerProfile
+  updateOwnerProfile       // Importing updateOwnerProfile
 } = require('../controllers/restaurantOwnerController');
 
 // Authenticate all routes below
@@ -26,5 +28,11 @@ router.put("/update/:restaurantId", updateRestaurant);
 
 // Route to delete a restaurant
 router.delete("/delete/:restaurantId", deleteRestaurant);
+
+// Route to get the profile of the authenticated owner
+router.get("/profile", getOwnerProfile);
+
+// Route to update the profile of the authenticated owner
+router.put("/profile", updateOwnerProfile);
 
 module.exports = router;

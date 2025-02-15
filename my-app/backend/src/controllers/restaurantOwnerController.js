@@ -202,6 +202,66 @@ const deleteRestaurant = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete restaurant', details: error.message });
   }
 };
+const getOwnerProfile = async (req, res) => {
+  const ownerId = req.user.id;
 
-export { registerRestaurantOwner, getRestaurantsByOwner, addRestaurant, updateRestaurant, deleteRestaurant };
+  try {
+    const owner = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        location: true,
+        imageUrl: true,
+        role: true,
+        banned: true
+      }
+    });
+    
+    if (!owner) {
+      return res.status(404).json({ error: "Owner not found" });
+    }
+    
+    res.status(200).json(owner);
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(500).json({ error: "Failed to fetch profile", details: error.message });
+  }
+};
+const updateOwnerProfile = async (req, res) => {
+  const ownerId = req.user.id;
+  const { name, email, phone, address, location, imageUrl } = req.body;
+
+  try {
+    // Check if owner exists
+    const owner = await prisma.user.findUnique({ where: { id: ownerId } });
+    if (!owner) {
+      return res.status(404).json({ error: "Owner not found" });
+    }
+
+    // Update profile information
+    const updatedOwner = await prisma.user.update({
+      where: { id: ownerId },
+      data: {
+        name,
+        email,
+        phone,
+        address,
+        location,
+        imageUrl
+      }
+    });
+
+    res.status(200).json(updatedOwner);
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ error: "Failed to update profile", details: error.message });
+  }
+};
+
+
+export { registerRestaurantOwner, getRestaurantsByOwner, addRestaurant, updateRestaurant, deleteRestaurant,getOwnerProfile,updateOwnerProfile };
 

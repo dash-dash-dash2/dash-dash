@@ -7,6 +7,8 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import axios from "axios"
 import AddRestaurantModal from "./components/AddRestaurantModal" // Import your modal
+import { useRouter } from "next/navigation"
+import Profile from "./components/ownerProfile" // Import the Profile component
 
 const Sidebar = ({ selected, setSelected }) => {
   const menuItems = [
@@ -132,6 +134,7 @@ const RevenueChart = () => (
 )
 
 const DashboardPage = () => {
+  const router = useRouter()
   const [restaurants, setRestaurants] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -140,6 +143,7 @@ const DashboardPage = () => {
   const [showAllRestaurants, setShowAllRestaurants] = useState(false) // New state to toggle full list
   const [menus, setMenus] = useState<any[]>([]) // Renamed to menus
   const [categories, setCategories] = useState<any[]>([])
+  const [showProfile, setShowProfile] = useState(false)
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -191,7 +195,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     fetchCategories()
-  }, []) // Updated useEffect dependency
+  }, [restaurants]) // Updated useEffect dependency
 
   const fetchMenus = async () => {
     try {
@@ -225,7 +229,7 @@ const DashboardPage = () => {
 
   useEffect(() => {
     fetchMenus()
-  }, []) // Updated useEffect dependency
+  }, [restaurants]) // Updated useEffect dependency
 
   if (loading) return <div>Loading restaurants...</div>
   if (error) return <div>Error: {error}</div>
@@ -233,6 +237,12 @@ const DashboardPage = () => {
   // Get first 2 restaurants or all based on state
   const restaurantsToDisplay = showAllRestaurants ? restaurants : restaurants.slice(0, 2)
   console.log("owner restaurants", restaurants)
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    router.push("/auth") // Adjust this route as needed
+  }
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -348,10 +358,31 @@ const DashboardPage = () => {
             {menus.length === 0 && <p className="text-gray-500 text-sm">No menus found.</p>}
           </Card>
         )}
+
+        {selectedSection === "Settings" && (
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Settings</h2>
+            <div className="space-y-4">
+              <button
+                className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => setShowProfile(true)}
+              >
+                View Profile
+              </button>
+              <button
+                className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Add Restaurant Modal */}
       <AddRestaurantModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      {showProfile && <Profile onClose={() => setShowProfile(false)} />}
     </div>
   )
 }
