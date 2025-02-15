@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, User, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+
+import foodImage from "./food.png";
 
 export default function Navbar() {
   const [search, setSearch] = useState("");
@@ -28,6 +32,15 @@ export default function Navbar() {
       router.push("/restaurantOwner");
     }
   };
+
+  const token = localStorage.getItem("token");
+
+  // Logout Functionality
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove the token from localStorage
+    router.push("/auth"); // Redirect to the login page
+  };
+
 
   return (
     <>
@@ -105,7 +118,10 @@ export default function Navbar() {
         </a>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="relative w-1/3 hidden md:block">
+        <form
+          onSubmit={handleSearch}
+          className="relative w-1/3 hidden md:block"
+        >
           <input
             type="text"
             placeholder="Search food..."
@@ -113,14 +129,20 @@ export default function Navbar() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-red-400"
           />
-          <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          <button
+            type="submit"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2"
+          >
             <Search className="text-gray-500 w-5 h-5" />
           </button>
         </form>
 
         {/* Career Dropdown */}
         <div className="relative">
-          <button onClick={toggleChoices} className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
+          <button
+            onClick={toggleChoices}
+            className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition"
+          >
             Career <ChevronDown className="w-5 h-5 ml-2" />
           </button>
           {showChoices && (
@@ -142,10 +164,42 @@ export default function Navbar() {
         </div>
 
         {/* Connection Button */}
-        <a href="/auth" className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
-          <User className="w-5 h-5 mr-2" />
-          Connect
-        </a>
+        {token ? (
+          <>
+            <Link
+              href="/profile"
+              className="relative flex items-center gap-2 text-white hover:text-red-600 transition-all duration-300 font-semibold px-4 py-2 rounded-full overflow-hidden group bg-gradient-to-b from-yellow-400 to-orange-500"
+
+            >
+              {/* Animated Food Image */}
+              <div className="relative w-8 h-8">
+                <Image
+                  src={foodImage} // Change this to your actual food image path
+                  alt="Food Icon"
+                  width={32}
+                  height={32}
+                  className="absolute inset-0 w-full h-full object-cover rounded-full shadow-lg opacity-0 translate-y-4 transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:rotate-[360deg]"
+                />
+              </div>
+              Profile
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <a
+            href="/auth"
+            className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition"
+          >
+            <User className="w-5 h-5 mr-2" />
+            Connect
+          </a>
+        )}
       </nav>
     </>
   );

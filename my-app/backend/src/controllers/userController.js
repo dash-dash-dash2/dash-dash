@@ -89,7 +89,7 @@ const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "200h" }
     );
 
     const { password: _, ...userWithoutPassword } = user;
@@ -104,17 +104,23 @@ const loginUser = async (req, res) => {
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
+
+///// update profile 
 const updateProfile = async (req, res) => {
   const userId = req.user.id;
-  const { name, phone, address } = req.body;
+  const { name, email, phone, address, role, imageUrl, location } = req.body;
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         name: name || undefined,
+        email: email || undefined,
         phone: phone || undefined,
         address: address || undefined,
+        role: role || undefined,
+        imageUrl: imageUrl || undefined,
+        location: location || undefined,
       },
       select: {
         id: true,
@@ -123,7 +129,8 @@ const updateProfile = async (req, res) => {
         phone: true,
         address: true,
         role: true,
-        createdAt: true
+        imageUrl: true,
+        location: true,
       }
     });
 
@@ -133,6 +140,8 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ error: "Failed to update profile", details: error.message });
   }
 };
+
+
 // Get user profile
 const getUserProfile = async (req, res) => {
   const userId = req.user.id;
@@ -143,7 +152,12 @@ const getUserProfile = async (req, res) => {
       select: {
         id: true,
         name: true,
-        email: true
+        email: true,
+        phone: true,
+        address: true,
+        role: true,
+        imageUrl: true, // Added profile image URL
+        location: true, // Added user location
       }
     });
     
