@@ -4,43 +4,47 @@ const prisma = new PrismaClient();
 // Create new order
 const createOrder = async (req, res) => {
   const userId = req.user.id;
-  const { restaurantId, items, totalAmount } = req.body;
+  const { restaurantId, menuId, quantity, selectedSupplements } = req.body;
 
   try {
     // Convert restaurantId to an integer
     const parsedRestaurantId = parseInt(restaurantId, 10);
     
-    // Prepare order items data
-    const orderItemsData = items.map(item => {
-      return {
-        menuId: item.menuId, // Reference the menu directly
-        quantity: item.quantity,
-        price: item.price,
-      };
+    // Fetch the menu item to get its price
+    const menuItem = await prisma.menu.findUnique({
+      where: { id: menuId },
     });
+
+    if (!menuItem) {
+      return res.status(404).json({ error: "Menu item not found" });
+    }
+
+    // Calculate total price
+    const supplementPrices = await Promise.all(
+      selectedSupplements.map(async (supplementId) => {
+        const supplement = await prisma.supplement.findUnique({
+          where: { id: supplementId },
+        });
+        return supplement ? supplement.price : 0;
+      })
+    );
+
+    const totalSupplementCost = supplementPrices.reduce((acc, price) => acc + price, 0);
+    const totalAmount = (menuItem.price * quantity) + totalSupplementCost + 5; // Add delivery cost
 
     const order = await prisma.order.create({
       data: {
         userId,
-        restaurantId: parsedRestaurantId, // Use the parsed integer
+        restaurantId: parsedRestaurantId,
         status: 'PENDING',
         totalAmount,
-        orderItems: {
-          create: orderItemsData // Use the mapped order items
-        }
+        menuId,
+        quantity,
+        price: menuItem.price,
+        supplements: {
+          connect: selectedSupplements.map(id => ({ id })),
+        },
       },
-      include: {
-        orderItems: true,
-        restaurant: true,
-      }
-    });
-
-    // Create order history entry
-    await prisma.orderHistory.create({
-      data: {
-        orderId: order.id,
-        status: 'PENDING',
-      }
     });
 
     res.status(201).json(order);
@@ -52,56 +56,29 @@ const createOrder = async (req, res) => {
 
 // Get user's orders
 const getUserOrders = async (req, res) => {
-  const userId = req.user.id; 
-  const { status } = req.query;
+  const userId = req.user.id; // Assuming you have user ID from the token
 
   try {
-    const where = { userId };
-    if (status) {
-      where.status = status;
-    }
-
     const orders = await prisma.order.findMany({
-      where,
-      include: {
-        orderItems: {
-          include: {
-            food: true
-          }
-        },
-        restaurant: {
-          include: {
-            user: {
-              select: {
-                name: true
-              }
-            }
-          }
-        },
-        deliveryman: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        },
-        orderHistory: {
-          orderBy: {
-            updatedAt: 'desc'
-          }
-        }
+      where: {
+        userId: userId,
+        status: 'PENDING', // Filter for orders that are voiding
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      include: {
+        restaurant: true, // Include related restaurant data
+        user: true, // Include user if needed
+        deliveryman: true, // Include deliveryman if needed
+        supplements: true, // Include supplements if needed
+      },
     });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ error: "No voiding orders found" });
+    }
 
     res.status(200).json(orders);
   } catch (error) {
-    console.error("Order fetch error:", error);
+    console.error("Error fetching orders:", error);
     res.status(500).json({ error: "Failed to fetch orders", details: error.message });
   }
 };
@@ -115,10 +92,6 @@ const updateOrderStatus = async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        Restaurant: true,
-        Deliveryman: true
-      }
     });
 
     if (!order) {
@@ -134,32 +107,6 @@ const updateOrderStatus = async (req, res) => {
     const updatedOrder = await prisma.order.update({
       where: { id: parseInt(id) },
       data: { status },
-      include: {
-        OrderItems: {
-          include: {
-            Food: true
-          }
-        },
-        Restaurant: {
-          include: {
-            User: {
-              select: {
-                name: true
-              }
-            }
-          }
-        },
-        Deliveryman: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        }
-      }
     });
 
     // Create order history entry

@@ -1,0 +1,60 @@
+menuStyles.css
+
+.menu-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 20px;
+  }
+  
+  .menu-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    padding: 15px;
+    width: 250px; /* Adjust width as needed */
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  
+  .menu-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .menu-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+  .menu-title {
+    font-size: 1.5em;
+    margin: 10px 0;
+  }
+  
+  .menu-description {
+    font-size: 0.9em;
+    color: #555;
+  }
+  
+  .menu-price {
+    font-size: 1.2em;
+    color: #333;
+    margin: 10px 0;
+  }
+  
+  .menu-button {
+    background-color: #FFB800;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .menu-button:hover {
+    background-color: #e6a800;
+  }

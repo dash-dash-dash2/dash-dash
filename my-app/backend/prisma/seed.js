@@ -160,11 +160,11 @@ async function main() {
 
   // Seed Orders
   const orders = [
-    { userEmail: 'john.doe@example.com', restaurantId: restaurantIds['Pizza Palace'], totalAmount: 10.99 },
-    { userEmail: 'jane.smith@example.com', restaurantId: restaurantIds['Sushi World'], totalAmount: 15.99 },
-    { userEmail: 'alice.johnson@example.com', restaurantId: restaurantIds['Taco Town'], totalAmount: 8.99 },
-    { userEmail: 'bob.brown@example.com', restaurantId: restaurantIds['Burger Haven'], totalAmount: 12.99 },
-    { userEmail: 'charlie.white@example.com', restaurantId: restaurantIds['Curry House'], totalAmount: 9.99 }
+    { userEmail: 'john.doe@example.com', restaurantId: restaurantIds['Pizza Palace'], totalAmount: 10.99, menuId: restaurantIds['Pizza Palace'], quantity: 1, price: 10.99 },
+    { userEmail: 'jane.smith@example.com', restaurantId: restaurantIds['Sushi World'], totalAmount: 15.99, menuId: restaurantIds['Sushi World'], quantity: 1, price: 15.99 },
+    { userEmail: 'alice.johnson@example.com', restaurantId: restaurantIds['Taco Town'], totalAmount: 8.99, menuId: restaurantIds['Taco Town'], quantity: 1, price: 8.99 },
+    { userEmail: 'bob.brown@example.com', restaurantId: restaurantIds['Burger Haven'], totalAmount: 12.99, menuId: restaurantIds['Burger Haven'], quantity: 1, price: 12.99 },
+    { userEmail: 'charlie.white@example.com', restaurantId: restaurantIds['Curry House'], totalAmount: 9.99, menuId: restaurantIds['Curry House'], quantity: 1, price: 9.99 }
   ];
 
   for (const order of orders) {
@@ -176,12 +176,9 @@ async function main() {
         restaurantId: order.restaurantId,
         status: 'Pending',
         totalAmount: order.totalAmount,
-        orderItems: {
-          create: {
-            quantity: 1,
-            price: order.totalAmount,
-          },
-        },
+        menuId: order.menuId,
+        quantity: order.quantity,
+        price: order.price,
       },
     });
   }
@@ -245,6 +242,49 @@ async function main() {
       },
     });
   }
+
+  // Seed Supplements
+  const supplement1 = await prisma.supplement.create({
+    data: {
+      name: 'Extra Cheese',
+      price: 1.5,
+    },
+  });
+
+  const supplement2 = await prisma.supplement.create({
+    data: {
+      name: 'Bacon',
+      price: 2.0,
+    },
+  });
+
+  // Seed Ratings
+  const rating1 = await prisma.rating.create({
+    data: {
+      score: 5,
+      comment: 'Best pizza ever!',
+      userId: 1, // Assuming user ID 1 for this example
+      restaurantId: restaurantIds['Pizza Palace'],
+    },
+  });
+
+  const rating2 = await prisma.rating.create({
+    data: {
+      score: 4,
+      comment: 'Great sushi, will come back!',
+      userId: 1, // Assuming user ID 1 for this example
+      restaurantId: restaurantIds['Sushi World'],
+    },
+  });
+
+  // Seed Order History
+  const orderHistory1 = await prisma.orderHistory.create({
+    data: {
+      orderId: 1, // Assuming order ID 1 for this example
+      status: 'Pending',
+      updatedAt: new Date(),
+    },
+  });
 
   console.log('Seeding completed successfully!');
 }

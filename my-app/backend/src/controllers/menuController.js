@@ -21,9 +21,12 @@ const getMenusByRestaurantId = async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
-    // Fetch menus for the restaurant
+    // Fetch menus for the restaurant along with their supplements
     const menus = await prisma.menu.findMany({
       where: { restaurantId: parseInt(id) },
+      include: {
+        supplements: true, // Include supplements
+      },
     });
 
     if (!menus || menus.length === 0) {
