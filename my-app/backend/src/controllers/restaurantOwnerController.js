@@ -1,7 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 
-const prisma = new PrismaClient();
 
 // Register a new restaurant owner
 const registerRestaurantOwner = async (req, res) => {
@@ -95,4 +95,4 @@ const getRestaurantsByOwner = async (req, res) => {
   }
 };
 
-export { registerRestaurantOwner , getRestaurantsByOwner}; 
+module.exports = { registerRestaurantOwner , getRestaurantsByOwner}; 
