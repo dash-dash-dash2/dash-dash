@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { clearCache } = require('../middleware/cacheMiddleware');
+const geolib = require('geolib'); // Import geolib for distance calculations
 
 // Create restaurant
 const createRestaurant = async (req, res) => {
@@ -98,13 +99,17 @@ const getAllRestaurants = async (req, res) => {
   }
 };
 
-// Get restaurant by ID
-const getRestaurantById = async (req, res) => {
-  const { id } = req.params;
+// Get all restaurants near user's location
+const getNearbyRestaurants = async (req, res) => {
+  const { latitude, longitude } = req.query; // Get latitude and longitude from query parameters
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({ error: "Latitude and longitude are required." });
+  }
 
   try {
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: parseInt(id) },
+    // Fetch all restaurants from the database
+    const restaurants = await prisma.restaurant.findMany({
       include: {
         user: {
           select: {
@@ -112,37 +117,35 @@ const getRestaurantById = async (req, res) => {
             email: true,
             phone: true
           }
-        },
-        menus: {
-          include: {
-            foods: true
-          }
-        },
-        ratings: {
-          include: {
-            user: {
-              select: {
-                name: true
-              }
-            }
-          }
         }
       }
     });
 
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    let distance = 5000; // Initial distance in meters
+    let nearbyRestaurants = [];
+
+    // Function to filter restaurants based on distance
+    const filterRestaurantsByDistance = (distance) => {
+      return restaurants.filter(restaurant => {
+        const [lat, lon] = restaurant.location.split(',').map(Number); // Convert location string to numbers
+        const calculatedDistance = geolib.getDistance(
+          { latitude: Number(latitude), longitude: Number(longitude) },
+          { latitude: lat, longitude: lon }
+        );
+        return calculatedDistance <= distance; // Check if within the specified distance
+      });
+    };
+
+    // Search for restaurants until found or maximum distance reached
+    while (nearbyRestaurants.length === 0 && distance <= 20000) { // Maximum distance of 20 km
+      nearbyRestaurants = filterRestaurantsByDistance(distance);
+      distance += 5000; // Increase distance by 5000 meters
     }
 
-    // Calculate average rating
-    const averageRating = restaurant.ratings.length > 0
-      ? restaurant.ratings.reduce((acc, curr) => acc + curr.score, 0) / restaurant.ratings.length
-      : 0;
-
-    res.status(200).json({ ...restaurant, averageRating });
+    res.status(200).json(nearbyRestaurants);
   } catch (error) {
-    console.error("Restaurant fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch restaurant", details: error.message });
+    console.error("Nearby restaurants fetch error:", error);
+    res.status(500).json({ error: "Failed to fetch nearby restaurants", details: error.message });
   }
 };
 
@@ -193,6 +196,6 @@ const updateRestaurant = async (req, res) => {
 module.exports = {
   createRestaurant,
   getAllRestaurants,
-  getRestaurantById,
+  getNearbyRestaurants,
   updateRestaurant
 }; 

@@ -14,12 +14,26 @@ const Order: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // Fetch orders from API
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/orders');
+        // Get the token from local storage
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        // Make the API request
+        const response = await axios.get("http://localhost:5000/api/orders", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });        
         setOrders(response.data);
         setLoading(false);
       } catch (err) {
@@ -29,7 +43,18 @@ const Order: React.FC = () => {
     };
 
     fetchOrders();
+    console.log("order",orders);
   }, []);
+
+  const openModal = (order: Order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+  };
 
   const orderContainerStyle: React.CSSProperties = {
     padding: '24px',
@@ -103,6 +128,28 @@ const Order: React.FC = () => {
     fontWeight: '500',
   };
 
+  const modalStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: '#ffffff',
+    padding: '24px',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    zIndex: 1000,
+  };
+
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -119,8 +166,12 @@ const Order: React.FC = () => {
           <div key={order.id} style={orderItemStyle}>
             <div style={orderDetailsStyle}>
               <span style={orderIdStyle}>Order {order.id}</span>
-              <span style={orderItemsStyle}>{order.items.join(', ')}</span>
-              <span style={orderTotalStyle}>Total: ${order.total.toFixed(2)}</span>
+              <span style={orderItemsStyle}>
+                {Array.isArray(order.items) ? order.items.join(', ') : 'No items'}
+              </span>
+              <span style={orderTotalStyle}>
+                Total: ${typeof order.total === 'number' ? order.total.toFixed(2) : 'N/A'}
+              </span>
             </div>
             <div>
               <span
@@ -132,11 +183,27 @@ const Order: React.FC = () => {
               >
                 {order.status}
               </span>
-              <button style={viewDetailsButtonStyle}>View Details</button>
+              <button style={viewDetailsButtonStyle} onClick={() => openModal(order)}>
+                View Details
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {isModalOpen && selectedOrder && (
+        <>
+          <div style={overlayStyle} onClick={closeModal} />
+          <div style={modalStyle}>
+            <h2>Order Details</h2>
+            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p><strong>Items:</strong> {Array.isArray(selectedOrder.items) ? selectedOrder.items.join(', ') : 'No items'}</p>
+            <p><strong>Total:</strong> ${typeof selectedOrder.total === 'number' ? selectedOrder.total.toFixed(2) : 'N/A'}</p>
+            <p><strong>Status:</strong> {selectedOrder.status}</p>
+            <button onClick={closeModal}>Close</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

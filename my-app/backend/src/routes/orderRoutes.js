@@ -5,13 +5,20 @@ const {
   createOrder,
   getUserOrders,
   updateOrderStatus,
-  getOrderById
+  getOrderById,
+  deleteOrder,
+  getOrderHistory
 } = require("../controllers/orderController");
 
+// Apply authentication middleware
 router.use(authenticate);
-router.post("/", createOrder);
-router.get("/", getUserOrders);
-router.get("/:id", getOrderById);
-router.put("/:id/status", updateOrderStatus);
+
+// Define routes
+router.post("/", createOrder); // Create a new order
+router.get("/", getUserOrders); // Get user's orders
+router.get("/history", getOrderHistory); // Get user's order history
+router.get("/:id", getOrderById); // Get order by ID
+router.put("/:id/status", updateOrderStatus); // Update order status
+router.delete("/:id", deleteOrder); // Delete an order by ID
 
 module.exports = router; 
