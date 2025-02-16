@@ -23,6 +23,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
 const chatService = require('./services/chatService');
+
 // const bcrypt = require('bcrypt'); // Import bcrypt
 
 const app = express();
