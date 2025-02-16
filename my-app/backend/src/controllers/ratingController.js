@@ -40,7 +40,7 @@ const createRating = async (req, res) => {
         comment
       },
       include: {
-        User: {
+        user: {
           select: {
             name: true
           }
@@ -65,7 +65,7 @@ const getRestaurantRatings = async (req, res) => {
         restaurantId: parseInt(restaurantId)
       },
       include: {
-        User: {
+        user: {
           select: {
             name: true
           }

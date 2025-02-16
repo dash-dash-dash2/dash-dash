@@ -3,112 +3,55 @@ const prisma = new PrismaClient();
 
 // Create new order
 const createOrder = async (req, res) => {
-  const userId = req.user.id;
-  const { restaurantId, items, deliveryAddress, totalAmount } = req.body;
+  const { restaurantId, userId, totalAmount, status, deliverymanId } = req.body; // Accept deliverymanId if needed
 
   try {
+    const parsedRestaurantId = parseInt(restaurantId, 10);
+    const parsedUserId = parseInt(userId, 10); // Ensure userId is parsed
+
+    // Create the order in the database
     const order = await prisma.order.create({
       data: {
-        userId,
-        restaurantId,
-        status: 'PENDING',
-        totalAmount,
-        deliveryAddress,
-        OrderItems: {
-          create: items.map(item => ({
-            foodId: item.foodId,
-            quantity: item.quantity,
-            price: item.price,
-            supplements: item.supplements || []
-          }))
-        }
+        restaurantId: parsedRestaurantId,
+        userId: parsedUserId, // Include userId
+        totalAmount: totalAmount, // Include total amount for the order
+        status: status || "PENDING", // Default to "PENDING" if not provided
+        deliverymanId: deliverymanId || null, // Optional deliverymanId
       },
-      include: {
-        OrderItems: {
-          include: {
-            Food: true
-          }
-        },
-        Restaurant: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        }
-      }
-    });
-
-    // Create order history entry
-    await prisma.orderHistory.create({
-      data: {
-        orderId: order.id,
-        status: 'PENDING',
-      }
     });
 
     res.status(201).json(order);
   } catch (error) {
     console.error("Order creation error:", error);
-    res.status(500).json({ error: "Failed to create order", details: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
 // Get user's orders
 const getUserOrders = async (req, res) => {
-  const userId = req.user.id; 
-  const { status } = req.query;
+  const userId = req.user.id; // Assuming you have user ID from the token
 
   try {
-    const where = { userId };
-    if (status) {
-      where.status = status;
-    }
-
     const orders = await prisma.order.findMany({
-      where,
-      include: {
-        OrderItems: {
-          include: {
-            Food: true
-          }
-        },
-        Restaurant: {
-          include: {
-            User: {
-              select: {
-                name: true
-              }
-            }
-          }
-        },
-        Deliveryman: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        },
-        OrderHistory: {
-          orderBy: {
-            updatedAt: 'desc'
-          }
-        }
+      where: {
+        userId: userId,
+        status: 'PENDING', // Filter for orders that are pending
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      include: {
+        restaurant: true, // Include related restaurant data
+        user: true, // Include user if needed
+        deliveryman: true, // Include deliveryman if needed
+        supplements: true, // Include supplements if needed
+      },
     });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ error: "No pending orders found" });
+    }
 
     res.status(200).json(orders);
   } catch (error) {
-    console.error("Order fetch error:", error);
+    console.error("Error fetching orders:", error);
     res.status(500).json({ error: "Failed to fetch orders", details: error.message });
   }
 };
@@ -120,17 +63,18 @@ const updateOrderStatus = async (req, res) => {
   const userId = req.user.id;
 
   try {
+    // Fetch the order to update
     const order = await prisma.order.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        Restaurant: true,
-        Deliveryman: true
-      }
     });
 
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
+
+    // Log user role and order details for debugging
+    console.log("User Role:", req.user.role);
+    console.log("Order Details:", order);
 
     // Verify authorization based on role and status update
     const userRole = req.user.role;
@@ -138,35 +82,10 @@ const updateOrderStatus = async (req, res) => {
       return res.status(403).json({ error: "Not authorized to update this order status" });
     }
 
+    // Update the order status
     const updatedOrder = await prisma.order.update({
       where: { id: parseInt(id) },
       data: { status },
-      include: {
-        OrderItems: {
-          include: {
-            Food: true
-          }
-        },
-        Restaurant: {
-          include: {
-            User: {
-              select: {
-                name: true
-              }
-            }
-          }
-        },
-        Deliveryman: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        }
-      }
     });
 
     // Create order history entry
@@ -184,7 +103,7 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-// Helper function to check authorization for status updates
+// Authorization logic for updating order status
 const isAuthorizedToUpdateStatus = (userRole, order, newStatus) => {
   switch (userRole) {
     case 'RESTAURANT_OWNER':
@@ -192,9 +111,9 @@ const isAuthorizedToUpdateStatus = (userRole, order, newStatus) => {
     case 'DELIVERYMAN':
       return ['PICKED_UP', 'DELIVERING', 'DELIVERED'].includes(newStatus);
     case 'ADMIN':
-      return true;
+      return true; // Admin can update any status
     default:
-      return false;
+      return false; // Other roles are not authorized
   }
 };
 
@@ -207,41 +126,10 @@ const getOrderById = async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id: parseInt(id) },
       include: {
-        OrderItems: {
-          include: {
-            Food: true
-          }
-        },
-        Restaurant: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        },
-        Deliveryman: {
-          include: {
-            User: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        },
-        OrderHistory: {
-          orderBy: {
-            updatedAt: 'desc'
-          }
-        },
-        Chat: {
-          orderBy: {
-            createdAt: 'asc'
-          }
-        }
+        restaurant: true,
+        user: true,
+        deliveryman: true,
+        supplements: true,
       }
     });
 
@@ -250,10 +138,7 @@ const getOrderById = async (req, res) => {
     }
 
     // Check authorization
-    if (order.userId !== userId && 
-        req.user.role !== 'ADMIN' && 
-        order.Restaurant?.userId !== userId && 
-        order.Deliveryman?.userId !== userId) {
+    if (order.userId !== userId && req.user.role !== 'ADMIN') {
       return res.status(403).json({ error: "Not authorized to view this order" });
     }
 
@@ -264,9 +149,64 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// Delete Order
+const deleteOrder = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // First, delete related records (e.g., chats, notifications)
+    await prisma.chat.deleteMany({
+      where: { orderId: parseInt(id) },
+    });
+
+    await prisma.notification.deleteMany({
+      where: { orderId: parseInt(id) },
+    });
+
+    // Now delete the order
+    const order = await prisma.order.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.status(200).json({ message: "Order deleted successfully", order });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ error: "Failed to delete order", details: error.message });
+  }
+};
+
+// Get user's order history
+const getOrderHistory = async (req, res) => {
+  const userId = req.user.id; // Assuming you have user ID from the token
+
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        userId: userId,
+        status: 'SENT', // Filter for completed orders
+      },
+      include: {
+        restaurant: true, // Include related restaurant data
+        supplements: true, // Include supplements if needed
+      },
+    });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ error: "No completed orders found" });
+    }
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error fetching order history:", error);
+    res.status(500).json({ error: "Failed to fetch order history", details: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
   updateOrderStatus,
-  getOrderById
+  getOrderById,
+  deleteOrder,
+  getOrderHistory
 }; 
