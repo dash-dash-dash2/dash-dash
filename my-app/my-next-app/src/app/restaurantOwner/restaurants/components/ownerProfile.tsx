@@ -1,24 +1,20 @@
-"use client"
-
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import axios from "axios"
-import { toast } from "react-hot-toast"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Loader2, User, X } from "lucide-react"
-import Image from "next/image"
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Loader2, User, X } from "lucide-react";
+import Image from "next/image";
 
 interface ProfileData {
-  name: string
-  email: string
-  phone: string
-  address: string
-  location: string
-  imageUrl: string
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  location: string;
+  imageUrl: string;
 }
 
 const Profile = ({ onClose }: { onClose: () => void }) => {
@@ -29,77 +25,113 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
     address: "",
     location: "",
     imageUrl: "",
-  })
-  const [isEditing, setIsEditing] = useState(false)
-  const [updatedProfile, setUpdatedProfile] = useState<ProfileData>(profile)
-  const [isLoading, setIsLoading] = useState(true)
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedProfile, setUpdatedProfile] = useState<ProfileData>(profile);
+  const [isLoading, setIsLoading] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         if (!token) {
-          toast.error("Unauthorized: No token found")
-          return
+          toast.error("Unauthorized: No token found");
+          return;
         }
 
         const response = await axios.get("http://localhost:5000/api/restaurant-owner/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
+        });
 
-        setProfile(response.data)
-        setUpdatedProfile(response.data)
+        setProfile(response.data);
+        setUpdatedProfile(response.data);
       } catch (error) {
-        console.error("Error fetching profile:", error)
-        toast.error(error.response?.data?.message || "Failed to load profile")
+        console.error("Error fetching profile:", error);
+        toast.error(error.response?.data?.message || "Failed to load profile");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchProfile()
-  }, [])
+    fetchProfile();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setUpdatedProfile((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       if (!token) {
-        toast.error("Unauthorized: No token found")
-        return
+        toast.error("Unauthorized: No token found");
+        return;
       }
 
       await axios.put("http://localhost:5000/api/restaurant-owner/profile", updatedProfile, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
-      setProfile(updatedProfile)
-      setIsEditing(false)
-      toast.success("Profile updated successfully")
+      setProfile(updatedProfile);
+      setIsEditing(false);
+      toast.success("Profile updated successfully");
     } catch (error) {
-      console.error("Error updating profile:", error)
-      toast.error(error.response?.data?.message || "Failed to update profile")
+      console.error("Error updating profile:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setUpdatedProfile(profile)
-    setIsEditing(false)
-  }
+    setUpdatedProfile(profile);
+    setIsEditing(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!file) return alert("Please select a file");
+
+    setLoadingImage(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "ml_default"); // Use your preset
+
+    try {
+      const response = await fetch("https://api.cloudinary.com/v1_1/doxjp0kvo/image/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.secure_url) {
+        setUpdatedProfile((prev) => ({ ...prev, imageUrl: data.secure_url }));
+      }
+
+      setLoadingImage(false);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setLoadingImage(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -111,7 +143,7 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -143,6 +175,19 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
                 </div>
               )}
             </div>
+            {isEditing && (
+              <div className="space-y-2">
+                <Label htmlFor="imageUrl">Upload New Profile Picture</Label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full p-2 border rounded-md"
+                />
+                <Button onClick={handleImageUpload} disabled={loadingImage}>
+                  {loadingImage ? "Uploading..." : "Upload Image"}
+                </Button>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
@@ -195,16 +240,6 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
                   disabled={!isEditing}
                 />
               </div>
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="imageUrl">Image URL</Label>
-                <Input
-                  id="imageUrl"
-                  name="imageUrl"
-                  value={isEditing ? updatedProfile.imageUrl : profile.imageUrl}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                />
-              </div>
             </div>
           </div>
         </CardContent>
@@ -229,8 +264,7 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
         </CardFooter>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
-
+export default Profile;
