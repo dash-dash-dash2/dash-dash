@@ -2,8 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body styles */
 body {
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f0f0f0; /* Light background color */
+    color: #333; /* Default text color */
 }
 
 @layer base {
@@ -77,4 +87,104 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.star-rating {
+  font-size: 24px; /* Adjust size of stars */
+  margin-bottom: 10px;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 999; /* Behind the modal */
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 600px;
+    width: 90%; /* Responsive width */
+    max-height: 80%; /* Limit height */
+    overflow-y: auto; /* Scroll if content exceeds max height */
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Header styles */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+/* Close button styles */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #999;
+}
+
+/* List styles */
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* Rating styles */
+.rating {
+    color: #ffcc00; /* Gold color for stars */
+}
+
+/* Additional styles for buttons */
+button {
+    background-color: #a9a9a9; 
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+/* Textarea styles */
+textarea {
+    width: 100%;
+    height: 60px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    resize: none; /* Prevent resizing */
 }

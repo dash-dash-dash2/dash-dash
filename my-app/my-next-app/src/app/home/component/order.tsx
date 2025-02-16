@@ -1,6 +1,7 @@
 "use client"; // Mark this component as a Client Component
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation"; // Use next/navigation for App Router
 
 interface Order {
   id: string;
@@ -11,26 +12,16 @@ interface Order {
 }
 
 const Order: React.FC = () => {
+  const router = useRouter(); // Use the useRouter hook from next/navigation
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // Fetch orders from API
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/orders');
-        setOrders(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch orders');
-        setLoading(false);
-      }
-    };
 
-    fetchOrders();
-  }, []);
 
+  
   const orderContainerStyle: React.CSSProperties = {
     padding: '24px',
     backgroundColor: '#f9fafb',
@@ -103,14 +94,69 @@ const Order: React.FC = () => {
     fontWeight: '500',
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const modalStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: '#ffffff',
+    padding: '24px',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    zIndex: 1000,
+  };
 
-  if (error) {
-    return <div>{error}</div>;
-  }
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
+  };
 
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        const response = await axios.get("http://localhost:5000/api/orders", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setOrders(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to fetch orders");
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  const openModal = (order: Order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  const handlePayment = (order: Order) => {
+    // Navigate to the payment page with order details
+    router.push(`/payment?orderId=${order.id}&totalAmount=${order.total}`);
+  };
+
+  // Styles and JSX remain the same as before
   return (
     <div style={orderContainerStyle}>
       <h2 style={orderHeaderStyle}>Your Orders</h2>
@@ -119,24 +165,50 @@ const Order: React.FC = () => {
           <div key={order.id} style={orderItemStyle}>
             <div style={orderDetailsStyle}>
               <span style={orderIdStyle}>Order {order.id}</span>
-              <span style={orderItemsStyle}>{order.items.join(', ')}</span>
-              <span style={orderTotalStyle}>Total: ${order.total.toFixed(2)}</span>
+              <span style={orderItemsStyle}>
+                {Array.isArray(order.items) ? order.items.join(", ") : "No items"}
+              </span>
+              <span style={orderTotalStyle}>
+                Total: ${typeof order.total === "number" ? order.total.toFixed(2) : "N/A"}
+              </span>
             </div>
             <div>
               <span
                 style={{
                   ...orderStatusStyle,
                   backgroundColor: order.statusColor,
-                  color: '#ffffff',
+                  color: "#ffffff",
                 }}
               >
                 {order.status}
               </span>
-              <button style={viewDetailsButtonStyle}>View Details</button>
+              <button style={viewDetailsButtonStyle} onClick={() => openModal(order)}>
+                View Details
+              </button>
+              <button
+                style={{ ...viewDetailsButtonStyle, backgroundColor: "#0070f3", marginLeft: "8px" }}
+                onClick={() => handlePayment(order)}
+              >
+                Pay Now
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {isModalOpen && selectedOrder && (
+        <>
+          <div style={overlayStyle} onClick={closeModal} />
+          <div style={modalStyle}>
+            <h2>Order Details</h2>
+            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p><strong>Items:</strong> {Array.isArray(selectedOrder.items) ? selectedOrder.items.join(", ") : "No items"}</p>
+            <p><strong>Total:</strong> ${typeof selectedOrder.total === "number" ? selectedOrder.total.toFixed(2) : "N/A"}</p>
+            <p><strong>Status:</strong> {selectedOrder.status}</p>
+            <button onClick={closeModal}>Close</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
