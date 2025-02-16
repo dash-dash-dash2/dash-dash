@@ -115,14 +115,14 @@ async function main() {
     }),
   ]);
 
-  // Seed Orders with only restaurantId, userId, totalAmount, and status
+  // Seed Orders with price, quantity, restaurantId, and userId
   const orders = await Promise.all([
-    prisma.order.create({ data: { userId: users[0].id, restaurantId: restaurants[0].id, totalAmount: 22.98, status: 'Pending' } }),
-    prisma.order.create({ data: { userId: users[1].id, restaurantId: restaurants[1].id, totalAmount: 15.99, status: 'Pending' } }),
-    prisma.order.create({ data: { userId: users[2].id, restaurantId: restaurants[2].id, totalAmount: 26.97, status: 'Pending' } }),
-    prisma.order.create({ data: { userId: users[3].id, restaurantId: restaurants[3].id, totalAmount: 12.99, status: 'Pending' } }),
-    prisma.order.create({ data: { userId: users[4].id, restaurantId: restaurants[4].id, totalAmount: 19.98, status: 'Pending' } }),
-    prisma.order.create({ data: { userId: users[5].id, restaurantId: restaurants[5].id, totalAmount: 11.99, status: 'Pending' } }),
+    prisma.order.create({ data: { userId: users[0].id, restaurantId: restaurants[0].id, totalAmount: 22.98, price: 22.98, quantity: 2, menuId: 1, status: 'Pending' } }),
+    prisma.order.create({ data: { userId: users[1].id, restaurantId: restaurants[1].id, totalAmount: 15.99, price: 15.99, quantity: 1, menuId: 2, status: 'Pending' } }),
+    prisma.order.create({ data: { userId: users[2].id, restaurantId: restaurants[2].id, totalAmount: 26.97, price: 26.97, quantity: 3, menuId: 3, status: 'Pending' } }),
+    prisma.order.create({ data: { userId: users[3].id, restaurantId: restaurants[3].id, totalAmount: 12.99, price: 12.99, quantity: 1, menuId: 4, status: 'Pending' } }),
+    prisma.order.create({ data: { userId: users[4].id, restaurantId: restaurants[4].id, totalAmount: 19.98, price: 19.98, quantity: 2, menuId: 5, status: 'Pending' } }),
+    prisma.order.create({ data: { userId: users[5].id, restaurantId: restaurants[5].id, totalAmount: 11.99, price: 11.99, quantity: 1, menuId: 6, status: 'Pending' } }),
   ]);
 
   // Seed Ratings
