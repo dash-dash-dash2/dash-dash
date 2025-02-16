@@ -1,18 +1,24 @@
 import { useState } from "react";
 import axios from "axios";
 
-const AddMenu = ({ restaurantId, onClose ,fetchMenus}) => {
+const AddMenu = ({ restaurants, onClose, fetchMenus }) => {
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [price, setPrice] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState(""); // State to store selected restaurant ID
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
- 
+
+    if (!selectedRestaurantId) {
+      setError("Please select a restaurant.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -21,7 +27,7 @@ const AddMenu = ({ restaurantId, onClose ,fetchMenus}) => {
       const response = await axios.post(
         "http://localhost:5000/api/restaurant-owner/menu/add",
         {
-          restaurantId,
+          restaurantId: selectedRestaurantId, // Use the selected restaurant ID
           name,
           imageUrl,
           price: parseFloat(price),
@@ -37,9 +43,9 @@ const AddMenu = ({ restaurantId, onClose ,fetchMenus}) => {
       setName("");
       setImageUrl("");
       setPrice("");
-      onClose()
-      fetchMenus()
-      ; // Close the modal after successful submission
+      setSelectedRestaurantId(""); // Reset selected restaurant
+      onClose(); // Close the modal
+      fetchMenus(); // Refresh the menu list
     } catch (err) {
       setError("Failed to add menu item");
     } finally {
@@ -52,6 +58,23 @@ const AddMenu = ({ restaurantId, onClose ,fetchMenus}) => {
       <h2 className="text-xl font-bold mb-4">Add Menu Item</h2>
       {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {/* Dropdown to select a restaurant */}
+        <select
+          value={selectedRestaurantId}
+          onChange={(e) => setSelectedRestaurantId(e.target.value)}
+          className="border p-2 rounded"
+          required
+        >
+          <option value="" disabled>
+            Select a restaurant
+          </option>
+          {restaurants.map((restaurant) => (
+            <option key={restaurant.id} value={restaurant.id}>
+              {restaurant.name}
+            </option>
+          ))}
+        </select>
+
         <input
           type="text"
           placeholder="Menu Name"
@@ -83,6 +106,12 @@ const AddMenu = ({ restaurantId, onClose ,fetchMenus}) => {
           {loading ? "Adding..." : "Add Menu Item"}
         </button>
       </form>
+      <button
+        onClick={onClose}
+        className="bg-blue-500 text-white py-2 rounded hover:bg-blue-600 mt-4"
+      >
+        Close
+      </button>
     </div>
   );
 };
