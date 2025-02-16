@@ -1,18 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const { authenticate } = require("../middleware/authMiddleware");
-const chatController = require("../controllers/chatController");
-const chatLimiter = require('../middleware/rateLimiter');
+const {
+  getChatHistory,
+  sendMessage,
+  getOrderChats
+} = require("../controllers/chatController");
 
-// Apply authentication middleware
 router.use(authenticate);
 
-// Apply rate limiting
-router.use(chatLimiter);
+// Get chat history for a specific order
+router.get("/order/:orderId", getOrderChats);
 
-// Routes
-router.get("/history", chatController.getChatHistory);
-router.get("/order/:orderId", chatController.getOrderChats);
-router.post("/send", chatController.sendMessage);
+// Get all chat history for the authenticated user
+router.get("/history", getChatHistory);
+
+// Send a new message
+router.post("/send", sendMessage);
 
 module.exports = router; 

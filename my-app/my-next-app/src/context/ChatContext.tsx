@@ -1,7 +1,8 @@
 'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '@/lib/axios';
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext"; // Adjust the path based on your directory structure
+
 
 interface Message {
   id: string;
@@ -9,7 +10,6 @@ interface Message {
   senderId: string;
   createdAt: string;
   sender: {
-    id: string;
     name: string;
     imageUrl?: string;
   };
@@ -17,7 +17,6 @@ interface Message {
 
 interface Chat {
   id: string;
-  orderId: string;
   participants: {
     id: string;
     name: string;
@@ -25,14 +24,15 @@ interface Chat {
   }[];
   messages: Message[];
   unreadCount: number;
+  orderId: string;
 }
 
 interface ChatContextType {
   chats: Chat[];
-  activeChat: Chat | null;
-  setActiveChat: (chat: Chat | null) => void;
-  sendMessage: (orderId: string, content: string) => Promise<void>;
-  fetchMessages: (orderId: string) => Promise<void>;
+  activeChat: string | null;
+  setActiveChat: (chatId: string) => void;
+  sendMessage: (chatId: string, content: string) => Promise<void>;
+  fetchMessages: (chatId: string) => Promise<void>;
   fetchChats: () => Promise<void>;
 }
 
@@ -40,8 +40,8 @@ const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chats, setChats] = useState<Chat[]>([]);
-  const [activeChat, setActiveChat] = useState<Chat | null>(null);
-  const { user } = useAuth();
+  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const fetchChats = async () => {
     try {
@@ -52,59 +52,40 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const fetchMessages = async (orderId: string) => {
+  const fetchMessages = async (chatId: string) => {
     try {
-      const response = await api.get(`/chat/order/${orderId}`);
-      setChats(prevChats => 
-        prevChats.map(chat => 
-          chat.orderId === orderId 
-            ? { ...chat, messages: response.data }
-            : chat
-        )
-      );
+      const response = await api.get(`/chat/order/${chatId}`);
+      setChats(prev => prev.map(chat => 
+        chat.id === chatId ? { ...chat, messages: response.data } : chat
+      ));
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
   };
 
-  const sendMessage = async (orderId: string, content: string) => {
+  const sendMessage = async (chatId: string, content: string) => {
     try {
       const response = await api.post('/chat/send', {
-        orderId,
+        orderId: chatId,
         message: content
       });
-
-      setChats(prevChats =>
-        prevChats.map(chat =>
-          chat.orderId === orderId
-            ? {
-                ...chat,
-                messages: [...chat.messages, response.data]
-              }
-            : chat
-        )
-      );
+      
+      setChats(prev => prev.map(chat => 
+        chat.id === chatId 
+          ? { ...chat, messages: [...chat.messages, response.data] }
+          : chat
+      ));
     } catch (error) {
       console.error('Error sending message:', error);
-      throw error;
     }
   };
 
   useEffect(() => {
-    if (user) {
-      fetchChats();
-    }
-  }, [user]);
+    if (token) fetchChats();
+  }, [token]);
 
   return (
-    <ChatContext.Provider value={{
-      chats,
-      activeChat,
-      setActiveChat,
-      sendMessage,
-      fetchMessages,
-      fetchChats
-    }}>
+    <ChatContext.Provider value={{ chats, activeChat, setActiveChat, sendMessage, fetchMessages, fetchChats }}>
       {children}
     </ChatContext.Provider>
   );

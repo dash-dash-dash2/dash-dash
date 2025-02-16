@@ -6,52 +6,25 @@ const chatService = require('../services/chatService');
 const getOrderChats = async (req, res) => {
   const { orderId } = req.params;
   try {
-    const order = await prisma.order.findUnique({
+    const messages = await prisma.message.findMany({
       where: {
-        id: parseInt(orderId)
+        orderId: orderId
       },
       include: {
-        Chat: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                imageUrl: true
-              }
-            },
-            deliveryman: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    imageUrl: true
-                  }
-                }
-              }
-            }
-          },
-          orderBy: {
-            createdAt: 'asc'
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true
           }
         }
+      },
+      orderBy: {
+        createdAt: 'asc'
       }
     });
 
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
-
-    const formattedChats = order.Chat.map(chat => ({
-      id: chat.id,
-      content: chat.message,
-      senderId: chat.userId || chat.deliverymanId,
-      createdAt: chat.createdAt,
-      sender: chat.userId ? chat.user : chat.deliveryman?.user
-    }));
-
-    res.status(200).json(formattedChats);
+    res.status(200).json(messages);
   } catch (error) {
     console.error("Chat fetch error:", error);
     res.status(500).json({ error: "Failed to fetch chats" });
@@ -71,53 +44,48 @@ const getChatHistory = async (req, res) => {
         ]
       },
       include: {
-        Chat: {
+        messages: {
           include: {
-            user: {
+            sender: {
               select: {
                 id: true,
                 name: true,
                 imageUrl: true
               }
-            },
-            deliveryman: {
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                    imageUrl: true
-                  }
-                }
-              }
             }
+          },
+          orderBy: {
+            createdAt: 'asc'
           }
         },
-        user: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true
+          }
+        },
         deliveryman: {
-          include: {
-            user: true
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true
           }
         }
       }
     });
 
+    // Format the response to match the frontend Chat interface
     const chats = orders.map(order => ({
       id: order.id,
       orderId: order.id,
       participants: [
         order.user,
-        order.deliveryman?.user
+        order.deliveryman
       ].filter(Boolean),
-      messages: order.Chat.map(chat => ({
-        id: chat.id,
-        content: chat.message,
-        senderId: chat.userId || chat.deliverymanId,
-        createdAt: chat.createdAt,
-        sender: chat.userId ? chat.user : chat.deliveryman?.user
-      })),
-      unreadCount: order.Chat.filter(
-        chat => (chat.userId !== userId && chat.deliverymanId !== userId) && !chat.isRead
+      messages: order.messages,
+      unreadCount: order.messages.filter(
+        msg => msg.senderId !== userId && !msg.read
       ).length
     }));
 
@@ -134,15 +102,14 @@ const sendMessage = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const newChat = await prisma.chat.create({
+    const newMessage = await prisma.message.create({
       data: {
-        orderId: parseInt(orderId),
-        userId,
-        message,
-        sender: req.user.role.toLowerCase()
+        content: message,
+        senderId: userId,
+        orderId: orderId
       },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             name: true,
@@ -152,19 +119,10 @@ const sendMessage = async (req, res) => {
       }
     });
 
-    // Format the response to match the Message interface
-    const formattedMessage = {
-      id: newChat.id,
-      content: newChat.message,
-      senderId: newChat.userId,
-      createdAt: newChat.createdAt,
-      sender: newChat.user
-    };
-
     // Emit socket event
-    req.app.get('io').to(`order-${orderId}`).emit('newMessage', formattedMessage);
+    req.app.get('io').to(`order-${orderId}`).emit('newMessage', newMessage);
 
-    res.status(201).json(formattedMessage);
+    res.status(201).json(newMessage);
   } catch (error) {
     console.error("Message send error:", error);
     res.status(500).json({ error: "Failed to send message" });

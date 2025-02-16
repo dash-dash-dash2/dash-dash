@@ -5,7 +5,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { RestaurantProvider } from "@/context/RestaurantContext";
 import { ChatProvider } from "@/context/ChatContext";
-import { OrderProvider } from "@/context/OrderContext";
+import { SessionProvider } from "next-auth/react";
+import {OrderProvider} from "@/context/OrderContext"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,14 +25,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <ChatProvider>
-            <OrderProvider>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <SessionProvider>
+          <AuthProvider>
+            <ChatProvider>
+              <OrderProvider>
               <RestaurantProvider>{children}</RestaurantProvider>
-            </OrderProvider>
-          </ChatProvider>
-        </AuthProvider>
+              </OrderProvider>
+            </ChatProvider>
+          </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );
