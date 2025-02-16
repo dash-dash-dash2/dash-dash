@@ -55,9 +55,6 @@ CREATE TABLE `Order` (
     `totalAmount` DOUBLE NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
-    `menuId` INTEGER NOT NULL,
-    `quantity` INTEGER NOT NULL,
-    `price` DOUBLE NOT NULL,
     `deliveryCost` DOUBLE NOT NULL DEFAULT 5,
 
     PRIMARY KEY (`id`)

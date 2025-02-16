@@ -87,17 +87,12 @@ model Order {
   user          User         @relation(fields: [userId], references: [id])
   restaurant    Restaurant   @relation(fields: [restaurantId], references: [id])
   deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id])
-
-  // New fields for order items
-  menuId       Int // Reference to the menu item
-  quantity     Int // Quantity of the menu item
-  price        Float // Price of the menu item
-  supplements  Supplement[]   @relation("OrderSupplements")
-  deliveryCost Float          @default(5) // Fixed delivery cost
-  Chat         Chat[]
-  Notification Notification[]
-  Payment      Payment[]
-  OrderHistory OrderHistory[]
+  deliveryCost  Float        @default(5) // Fixed delivery cost
+  supplements   Supplement[] @relation("OrderSupplements") // Add this line for the relation
+  Chat          Chat[]
+  Notification  Notification[]
+  Payment       Payment[]
+  OrderHistory  OrderHistory[]
 }
 
 // Chat Table (Real-time chat between user and driver)
@@ -152,7 +147,7 @@ model Supplement {
   id     Int     @id @default(autoincrement())
   name   String
   price  Float
-  orders Order[] @relation("OrderSupplements")
+  orders Order[] @relation("OrderSupplements") // Relation to Order
   menus  Menu[]  @relation("MenuSupplements") // Define the relationship with Menu
 }
 

@@ -44,15 +44,14 @@ const getMenusByRestaurantId = async (req, res) => {
 // Create menu
 const createMenu = async (req, res) => {
   const { restaurantId } = req.params;
-  const { name, description, price, imageUrl } = req.body;
-  const userId = req.user.id;
+  const { name, description, price, imageUrl, supplementIds } = req.body;
 
   try {
     // Check if the restaurant exists and belongs to the user
     const restaurant = await prisma.restaurant.findFirst({
       where: {
         id: parseInt(restaurantId),
-        userId: userId
+        userId: req.user.id
       }
     });
 
@@ -66,7 +65,10 @@ const createMenu = async (req, res) => {
         description,
         price,
         imageUrl,
-        restaurantId: parseInt(restaurantId)
+        restaurantId: parseInt(restaurantId),
+        supplements: {
+          connect: supplementIds.map(id => ({ id }))
+        }
       },
     });
 
