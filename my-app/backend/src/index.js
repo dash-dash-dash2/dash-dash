@@ -36,17 +36,20 @@ const io = new Server(httpServer, {
   }
 });
 
-// Middleware
+// CORS configuration
 const corsOptions = {
-  origin: "*", // Adjust this to your frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false // Set to false since we're using token-based auth
 };
 
 app.use(cors(corsOptions));
+
+// Other middleware
+app.use(express.json());
 app.use(helmet());
 app.use(compression());
-app.use(express.json());
 app.use(limiter);
 
 // Make cache available throughout the app

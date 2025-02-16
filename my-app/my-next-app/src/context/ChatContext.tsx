@@ -1,82 +1,110 @@
 'use client'
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
-import { useAuth } from "@/context/AuthContext"; // Adjust the path based on your directory structure
-
+import api from '@/lib/axios';
+import { useAuth } from "@/context/AuthContext";
 
 interface Message {
   id: string;
   content: string;
   senderId: string;
   createdAt: string;
-  // Add other message properties
+  sender: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
 }
 
 interface Chat {
   id: string;
-  participants: any[];
+  orderId: string;
+  participants: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  }[];
   messages: Message[];
   unreadCount: number;
 }
 
 interface ChatContextType {
   chats: Chat[];
-  activeChat: string | null;
-  setActiveChat: (chatId: string) => void;
-  sendMessage: (chatId: string, content: string) => Promise<void>;
-  fetchMessages: (chatId: string) => Promise<void>;
+  activeChat: Chat | null;
+  setActiveChat: (chat: Chat | null) => void;
+  sendMessage: (orderId: string, content: string) => Promise<void>;
+  fetchMessages: (orderId: string) => Promise<void>;
+  fetchChats: () => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chats, setChats] = useState<Chat[]>([]);
-  const [activeChat, setActiveChat] = useState<string | null>(null);
-  const { token } = useAuth();
+  const [activeChat, setActiveChat] = useState<Chat | null>(null);
+  const { user } = useAuth();
 
   const fetchChats = async () => {
     try {
-      const response = await axios.get('/api/chats', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setChats(response.data.chats);
+      const response = await api.get('/chat/history');
+      setChats(response.data);
     } catch (error) {
       console.error('Error fetching chats:', error);
     }
   };
 
-  const fetchMessages = async (chatId: string) => {
+  const fetchMessages = async (orderId: string) => {
     try {
-      const response = await axios.get(`/api/chats/${chatId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setChats(prev => prev.map(chat => 
-        chat.id === chatId ? { ...chat, messages: response.data.messages } : chat
-      ));
+      const response = await api.get(`/chat/order/${orderId}`);
+      setChats(prevChats => 
+        prevChats.map(chat => 
+          chat.orderId === orderId 
+            ? { ...chat, messages: response.data }
+            : chat
+        )
+      );
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
   };
 
-  const sendMessage = async (chatId: string, content: string) => {
+  const sendMessage = async (orderId: string, content: string) => {
     try {
-      const response = await axios.post(`/api/chats/${chatId}/messages`, { content }, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await api.post('/chat/send', {
+        orderId,
+        message: content
       });
-      setChats(prev => prev.map(chat => 
-        chat.id === chatId ? { ...chat, messages: [...chat.messages, response.data.message] } : chat
-      ));
+
+      setChats(prevChats =>
+        prevChats.map(chat =>
+          chat.orderId === orderId
+            ? {
+                ...chat,
+                messages: [...chat.messages, response.data]
+              }
+            : chat
+        )
+      );
     } catch (error) {
       console.error('Error sending message:', error);
+      throw error;
     }
   };
 
   useEffect(() => {
-    if (token) fetchChats();
-  }, [token]);
+    if (user) {
+      fetchChats();
+    }
+  }, [user]);
 
   return (
-    <ChatContext.Provider value={{ chats, activeChat, setActiveChat, sendMessage, fetchMessages }}>
+    <ChatContext.Provider value={{
+      chats,
+      activeChat,
+      setActiveChat,
+      sendMessage,
+      fetchMessages,
+      fetchChats
+    }}>
       {children}
     </ChatContext.Provider>
   );

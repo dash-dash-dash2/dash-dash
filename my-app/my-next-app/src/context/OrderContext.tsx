@@ -4,7 +4,30 @@ import { useAuth } from "@/context/AuthContext"; // Adjust the path based on you
 
 interface Order {
   id: string;
-  // Add order properties
+  restaurant: {
+    latitude: number;
+    longitude: number;
+    name: string;
+  };
+  deliveryLocation: {
+    lat: number;
+    lng: number;
+    address: string;
+  };
+  menuItem: {
+    name: string;
+    description: string;
+    price: number;
+  };
+  customer: {
+    name: string;
+  };
+  User: {
+    address: {
+      latitude: number;
+      longitude: number;
+    };
+  };
 }
 
 interface OrderContextType {
@@ -24,10 +47,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('/api/orders', {
+      const response = await axios.get('/api/delivery/available', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setOrders(response.data.orders);
+      setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
     }
@@ -35,9 +58,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   const acceptOrder = async (orderId: string) => {
     try {
-      await axios.post(`/api/orders/${orderId}/accept`, { driverId: user?.id }, {
+      const response = await axios.post(`/api/delivery/${orderId}/accept`, null, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      setActiveOrder(response.data);
       setOrders(prev => prev.filter(order => order.id !== orderId));
     } catch (error) {
       console.error('Error accepting order:', error);
@@ -45,8 +69,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (token) fetchOrders();
-  }, [token]);
+    if (token && user?.role === 'DRIVER') fetchOrders();
+  }, [token, user]);
 
   return (
     <OrderContext.Provider value={{ 

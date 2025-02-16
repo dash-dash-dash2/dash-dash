@@ -1,12 +1,14 @@
 'use client'
 
-import { createContext, useContext, ReactNode, useState } from 'react'
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import api from '@/lib/axios'
 
 export interface User {
   id: string;
   email: string;
-  role: 'ADMIN' | 'DRIVER' | 'USER';
+  role: 'ADMIN' | 'DRIVER' | 'CUSTOMER';
+  name: string;
   // ... other user properties
 }
 
@@ -23,49 +25,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(() => {
-    // Initialize token from localStorage if it exists
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('token')
-    }
-    return null
-  })
+  const [token, setToken] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    // Check for stored auth data on mount
+    const storedToken = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken)
+      setUser(JSON.parse(storedUser))
+      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
+    }
+  }, [])
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-      
-      const data = await response.json();
-      
-      // Store token in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      console.log("User role:", data.user.role);
-      setToken(data.token);
-      setUser(data.user);
+      const response = await api.post('/users/login', { email, password })
+      const { token, user } = response.data
 
-      // Add role-based redirection
-      switch (data.user.role) {
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(user))
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
+      setToken(token)
+      setUser(user)
+
+      switch (user.role) {
         case 'ADMIN':
-          router.push('/admin/dashboard');
-          break;
-        case 'USER':
-          router.push('/');
-          break;
+          router.push('/admin/dashboard')
+          break
+        case 'CUSTOMER':
+          router.push('/home/allrestorant')
+          break
         case 'DRIVER':
-          router.push('/driver');
+          router.push('/driver')
+          break
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -74,27 +70,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    try {
-      // Remove token from localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null)
-      setToken(null)
-    } catch (error) {
-      console.error('Logout error:', error)
-      throw error
-    }
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    delete api.defaults.headers.common['Authorization']
+    setUser(null)
+    setToken(null)
+    router.push('/auth')
   }
 
-  const updateUser = (newUserData: User) => {
-    setUser(prev => ({ ...prev, ...newUserData }));
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user', JSON.stringify(newUserData));
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user, token }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      logout,
+      updateUser: setUser,
+      isAuthenticated: !!user,
+      token
+    }}>
       {children}
     </AuthContext.Provider>
   )
@@ -102,9 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
-  console.log(context)
-  return context 
+  return context
 } 

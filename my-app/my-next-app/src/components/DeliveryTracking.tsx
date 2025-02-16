@@ -84,15 +84,16 @@ const DeliveryTracking = () => {
             googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
             onLoad={() => setIsMapsLoaded(true)}
           >
-            <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={{
-                lat: activeOrder.restaurant.latitude,
-                lng: activeOrder.restaurant.longitude
-              }}
-              zoom={12}
-              onLoad={map => setMap(map)}
-            >
+            
+<GoogleMap
+  mapContainerStyle={containerStyle}
+  center={{
+    lat: activeOrder.restaurant.latitude,
+    lng: activeOrder.restaurant.longitude,
+  }}
+  zoom={12}
+  onLoad={map => setMap(map)}
+>
               {directions && (
                 <DirectionsRenderer
                   directions={directions}
@@ -120,14 +121,14 @@ const DeliveryTracking = () => {
 
               {/* Delivery Location Marker */}
               <Marker
-                position={{
-                  lat: activeOrder.deliveryLocation.lat,
-                  lng: activeOrder.deliveryLocation.lng
-                }}
-                icon={{
-                  url: '/delivery-marker.png',
-                  scaledSize: new window.google.maps.Size(40, 40)
-                }}
+  position={{
+    lat: activeOrder.User.address.latitude,
+    lng: activeOrder.User.address.longitude,
+  }}
+  icon={{
+    url: '/delivery-marker.png',
+    scaledSize: new window.google.maps.Size(40, 40),
+  }}
               />
             </GoogleMap>
           </LoadScript>
