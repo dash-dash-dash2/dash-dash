@@ -5,6 +5,7 @@ import Navbar from "../../../components/Navbar";
 import { useRouter } from "next/navigation";
 import ReviewsPopup from './ReviewsPopup'; // Import the ReviewsPopup component
 import Footer from "@/components/Footer";
+import { Review } from "@/types/index"; // Import the Review type
 
 // Interface for restaurant data
 interface RestaurantItem {
@@ -102,8 +103,17 @@ const RestaurantCard: React.FC<RestaurantItem & { onRatingAdded: (newRating: any
   onRatingAdded
 }) => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
-  const [showReviews, setShowReviews] = useState<boolean>(false); // State for reviews popup
+  const [showReviews, setShowReviews] = useState<boolean>(false);
   const router = useRouter();
+
+  // Convert ratings to Review type
+  const reviews: Review[] = ratings.map(rating => ({
+    id: Math.random(), // You might want to add proper IDs in your data
+    score: rating.score,
+    comment: rating.comment || '', // Provide default empty string for undefined comments
+    user: rating.user,
+    createdAt: new Date().toISOString() // You might want to add proper dates in your data
+  }));
 
   const handleClick = () => {
     if (!showPopup) {
@@ -111,8 +121,6 @@ const RestaurantCard: React.FC<RestaurantItem & { onRatingAdded: (newRating: any
       router.push(`/home/onerestorant/${id}`);
     }
   };
-
- 
 
   return (
     <div
@@ -177,7 +185,7 @@ const RestaurantCard: React.FC<RestaurantItem & { onRatingAdded: (newRating: any
       )}
       {showReviews && (
         <ReviewsPopup
-          reviews={ratings} // Pass the ratings as reviews
+          reviews={reviews}
           onClose={() => setShowReviews(false)}
         />
       )}

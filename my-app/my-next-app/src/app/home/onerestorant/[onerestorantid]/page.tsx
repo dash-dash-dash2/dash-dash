@@ -35,6 +35,20 @@ interface CartItem {
   selectedSupplements: number[];
 }
 
+interface OrderItem {
+  menuId: number;
+  quantity: number;
+  price: number;
+}
+
+interface OrderDetails extends Order {
+  menuItems: {
+    id: number;
+    name: string;
+    price: number;
+  }[];
+}
+
 const RestaurantOrdersPage: React.FC = () => {
   const { onerestorantid } = useParams();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -50,7 +64,7 @@ const RestaurantOrdersPage: React.FC = () => {
   const [newOrderCount, setNewOrderCount] = useState<number>(0); // Counter for new orders
   const [orderHistory, setOrderHistory] = useState<Order[]>([]); // State for order history
   const [cart, setCart] = useState<CartItem[]>([]); // State for cart items
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null); // State for selected order details
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetails | null>(null); // State for selected order details
   const [showCartModal, setShowCartModal] = useState<boolean>(false); // State for cart modal visibility
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
@@ -113,7 +127,14 @@ const RestaurantOrdersPage: React.FC = () => {
 
     const fetchData = async () => {
       setLoading(true); // Set loading to true before fetching
-      await Promise.all([fetchMenuItems(), fetchOrders(), fetchOrderHistory()]);
+      await fetchMenuItems();
+      
+      // Only fetch orders if there are existing orders
+      if (orders.length > 0) {
+        await fetchOrders();
+      }
+      
+      fetchOrderHistory();
       loadCartFromLocalStorage();
       setLoading(false); // Set loading to false after both fetches
     };
@@ -182,6 +203,9 @@ const RestaurantOrdersPage: React.FC = () => {
   const handleSelectItem = (item: MenuItem) => {
     setSelectedItem(item);
     setSelectedSupplements([]); // Reset selected supplements when a new item is selected
+    setSelectedMenuId(item.id); // Set selected menu ID
+    setSelectedPrice(item.price); // Set selected price
+    setSelectedQuantity(1); // Reset quantity to 1
   };
 
   const handleConfirmTotal = async () => {
@@ -237,41 +261,94 @@ const RestaurantOrdersPage: React.FC = () => {
   };
 
   const handleCheckout = async () => {
-    const token = localStorage.getItem("token");
-    const userId = user.id // Retrieve user ID from local storage
-
-    if (!userId) {
-      Swal.fire("Error", "User ID is not available. Please log in.", "error");
-      return; // Exit the function if user ID is not found
-    }
-
-    const totalAmount = calculateTotal() + 5; // Add delivery cost of $5
-    const orderData = {
-      restaurantId: onerestorantid,
-      userId: userId,
-      totalAmount: totalAmount,
-      status: "PENDING", // Set initial status to "PENDING"
-      menuId: selectedMenuId, // Assuming you have a selected menu item ID
-      quantity: selectedQuantity, // Assuming you have a selected quantity
-      price: selectedPrice, // Assuming you have the price of the selected menu item
-    };
-
-    console.log("Order Data:", orderData); // Log the order data being sent
-
     try {
-      const response = await axios.post("http://localhost:5000/api/orders", orderData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const token = localStorage.getItem('token');
+      
+      // Transform cart items into order items
+      const orderItems = cart.map(item => {
+        const menuItem = menuItems.find(menu => menu.id === item.menuId);
+        return {
+          menuId: item.menuId,
+          quantity: item.quantity,
+          price: menuItem?.price || 0
+        };
       });
-      Swal.fire("Success", "Order created successfully!", "success");
-      setCart([]); // Clear cart after order creation
-      localStorage.removeItem("cart"); // Remove cart from local storage
-      setShowCartModal(false); // Close cart modal
+
+      const totalAmount = calculateTotal();
+
+      const orderData = {
+        restaurantId: parseInt(onerestorantid as string),
+        items: orderItems,
+        totalAmount,
+        deliveryCost: 5.00
+      };
+
+      const response = await axios.post(
+        'http://localhost:5000/api/orders',
+        orderData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 201) {
+        setCart([]);
+        localStorage.removeItem('cart');
+        
+        await getOrders(); // Refresh orders after successful creation
+        
+        Swal.fire({
+          title: 'Success!',
+          text: 'Your order has been placed successfully',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+
+        setShowCartModal(false);
+      }
     } catch (error) {
-      console.error("Error creating order:", error);
-      Swal.fire("Error", "Failed to create order", "error");
+      console.error('Error creating order:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to create order. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
     }
+  };
+
+  const getOrders = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/api/orders', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await getOrders(); // Refresh orders after deletion
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      Swal.fire('Error', 'Failed to delete order', 'error');
+    }
+  };
+
+  const toggleOrdersModal = () => {
+    setShowOrdersModal(!showOrdersModal);
   };
 
   if (loading) {
@@ -308,10 +385,10 @@ const RestaurantOrdersPage: React.FC = () => {
             ))}
           </div>
           <h2>Order History</h2>
-          {orderHistory.length === 0 ? (
+          {orders.length === 0 ? (
             <p>No completed orders found.</p>
           ) : (
-            orderHistory.map((order) => (
+            orders.map((order) => (
               <div key={order.id} className={styles.orderCard}>
                 <h3>Order ID: {order.id}</h3>
                 <p>Restaurant: {order.restaurant.name}</p>
