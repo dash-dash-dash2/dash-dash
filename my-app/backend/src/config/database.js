@@ -1,21 +1,18 @@
 const { PrismaClient } = require('@prisma/client');
 
+// Create a single PrismaClient instance and export it
 const prisma = new PrismaClient({
   datasources: {
     db: {
       url: process.env.DATABASE_URL,
     },
   },
-  // Connection pooling configuration
-  connection: {
-    pool: {
-      min: 2,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      acquireTimeoutMillis: 30000,
-    },
-  },
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+
+// Handle shutdown gracefully
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
 });
 
 module.exports = prisma; 
