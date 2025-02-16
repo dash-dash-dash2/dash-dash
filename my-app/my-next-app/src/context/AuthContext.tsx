@@ -1,17 +1,20 @@
 'use client'
 
 import { createContext, useContext, ReactNode, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-interface User {
-  id?: string
-  email?: string
-  // Add other user properties as needed
+export interface User {
+  id: string;
+  email: string;
+  role: 'ADMIN' | 'DRIVER' | 'USER';
+  // ... other user properties
 }
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  updateUser: (user: User) => void
   isAuthenticated: boolean
   token: string | null
 }
@@ -27,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return null
   })
+  const router = useRouter()
 
   const login = async (email: string, password: string) => {
     try {
@@ -48,9 +52,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Store token in localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
+      console.log("User role:", data.user.role);
       setToken(data.token);
       setUser(data.user);
+
+      // Add role-based redirection
+      switch (data.user.role) {
+        case 'ADMIN':
+          router.push('/admin/dashboard');
+          break;
+        case 'USER':
+          router.push('/');
+          break;
+        case 'DRIVER':
+          router.push('/driver');
+      }
     } catch (error) {
       console.error('Login error:', error)
       throw error
@@ -70,8 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateUser = (newUserData: User) => {
+    setUser(prev => ({ ...prev, ...newUserData }));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(newUserData));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, token }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user, token }}>
       {children}
     </AuthContext.Provider>
   )
