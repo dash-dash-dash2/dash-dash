@@ -22,6 +22,20 @@ export interface Rating {
 export interface Category {
   id: number;
   name: string;
+  cuisineType: string;
+  location: string;
+  imageUrl: string;
+  rating: number;
+  deliveryTime: string;
+  minimumOrder: number;
+  deliveryCost: number;
+  isOpen: boolean;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  menus: Menu[];
 }
 
 export interface Menu {
@@ -64,6 +78,12 @@ export interface RestaurantOrder {
     quantity: number;
     menu: Menu;
   }>;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+  restaurantId: number;
+  supplements: Supplement[];
 }
 
 export interface Order {
@@ -100,6 +120,16 @@ export interface Supplement {
   name: string;
   price: number;
 }
+
+
+export type OrderStatus = 
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'PREPARING'
+  | 'READY_FOR_PICKUP'
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED'
+  | 'CANCELLED';
 
 export interface Review {
   id: number;
