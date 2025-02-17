@@ -18,7 +18,7 @@ const ChatSidebar = () => {
     setActiveChat(chatId);
   };
 
-  const renderChatItem = (chat: any) => {
+  const renderChatItem = (chat: any, index: number) => {
     // Determine the other party's name based on user role
     const otherPartyName = user?.role === 'DELIVERYMAN' 
       ? chat.user?.name 
@@ -26,7 +26,7 @@ const ChatSidebar = () => {
 
     return (
       <div
-        key={chat.orderId}
+        key={`chat-${chat.orderId}-${index}`}
         className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
           activeChat === chat.orderId ? 'bg-blue-50' : ''
         }`}
@@ -69,7 +69,7 @@ const ChatSidebar = () => {
         </div>
       </div>
       <div className="overflow-y-auto h-[calc(100vh-200px)]">
-        {chats.map(renderChatItem)}
+        {chats.map((chat, index) => renderChatItem(chat, index))}
       </div>
     </div>
   );

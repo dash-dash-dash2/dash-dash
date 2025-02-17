@@ -128,20 +128,25 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
       );
       
-      // Add the new message to the existing chat
-      const newMessage = response.data;
-      setChats(prev => {
-        const chatIndex = prev.findIndex(chat => chat.orderId.toString() === orderId);
+      // Update the specific chat's messages
+      setChats(prevChats => {
+        const chatIndex = prevChats.findIndex(chat => chat.orderId === parseInt(orderId));
         if (chatIndex === -1) {
-          // If chat doesn't exist, add it
-          return [...prev, newMessage];
+          // If chat doesn't exist, create new chat with the message
+          return [...prevChats, {
+            id: Date.now(),
+            orderId: parseInt(orderId),
+            messages: [response.data]
+          }];
         }
-        // Update existing chat
-        return prev.map(chat => 
-          chat.orderId.toString() === orderId 
-            ? { ...chat, messages: [...chat.messages, newMessage] }
-            : chat
-        );
+
+        // Update existing chat's messages
+        const updatedChats = [...prevChats];
+        updatedChats[chatIndex] = {
+          ...updatedChats[chatIndex],
+          messages: [...updatedChats[chatIndex].messages, response.data]
+        };
+        return updatedChats;
       });
     } catch (error) {
       console.error('Error sending message:', error);
