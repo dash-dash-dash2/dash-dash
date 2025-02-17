@@ -1,13 +1,14 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
+import { getRecentMessages, saveMessage } from '../services/chatService.js';
+
 const prisma = new PrismaClient();
-const chatService = require('../services/chatService');
 
 // Get chat history for a specific order
 const getOrderChats = async (req, res) => {
   const { orderId } = req.params;
   console.log(orderId);
   try {
-    const messages = await chatService.getRecentMessages(orderId);
+    const messages = await getRecentMessages(orderId);
     res.status(200).json(messages);
   } catch (error) {
     console.error("Chat fetch error:", error);
@@ -15,9 +16,13 @@ const getOrderChats = async (req, res) => {
   }
 };
 
-// Get all chat history for the authenticated user
+// Get chat history for the authenticated user
 const getChatHistory = async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user?.id; // Use optional chaining
+
+  if (!userId) {
+    return res.status(401).json({ error: "User not authenticated" });
+  }
 
   try {
     const chats = await prisma.chat.findMany({
@@ -59,7 +64,7 @@ const getChatHistory = async (req, res) => {
     res.status(200).json(chats);
   } catch (error) {
     console.error("Chat history fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch chat history", details: error.message });
+    res.status(500).json({ error: "Failed to fetch chat history" });
   }
 };
 
@@ -69,12 +74,21 @@ const sendMessage = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const chat = await chatService.saveMessage(
-      orderId,
-      userId,
-      message,
-      req.user.role.toLowerCase()
-    );
+    const chat = await prisma.chat.create({
+      data: {
+        orderId: parseInt(orderId),
+        userId,
+        message,
+        sender: req.user.name || req.user.email,
+      },
+      include: {
+        user: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
 
     // Emit socket event
     req.app.get('io').to(`order-${orderId}`).emit('newMessage', chat);
@@ -86,7 +100,7 @@ const sendMessage = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getOrderChats,
   getChatHistory,
   sendMessage

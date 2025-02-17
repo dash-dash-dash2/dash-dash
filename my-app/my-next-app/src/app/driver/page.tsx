@@ -8,6 +8,8 @@ import ChatSidebar from '../../components/chat/ChatSideBar';
 import ChatWindow from '../../components/chat/ChatWindow';
 import Navbar from '../../components/Navbarr/Navbar'; // Ensure Navbar is correctly imported
 import Orders from '../../components/orders/Orders'; // Uncomment when implementing Orders component
+import OrdersList from '@/components/OrdersList';
+import { OrderProvider } from '@/context/OrderContext';
 
 export default function HomePage() {
     const { user } = useAuth();
@@ -76,10 +78,11 @@ export default function HomePage() {
                         </div>
                     </div>
                 ) : (
-                        // Uncomment when Orders component is ready
-                    <div className="flex h-[calc(100vh-180px)]">
-                        {/* Orders content goes here */}
-                        <Orders />
+                    <div className="container mx-auto px-4">
+                        <h1 className="text-2xl font-bold mb-6">Available Orders</h1>
+                        <OrderProvider>
+                            <OrdersList />
+                        </OrderProvider>
                     </div>
                 )}
             </div>

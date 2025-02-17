@@ -1,11 +1,12 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const {
+import { authenticate } from "../middleware/authMiddleware.js";
+import {
   createMenu,
   updateMenu,
+  addFoodItem,
   getMenusByRestaurantId
-} = require("../controllers/menuController");
+} from "../controllers/menuController.js";
 
 // Apply authentication middleware to all routes
 router.use(authenticate);
@@ -14,5 +15,6 @@ router.use(authenticate);
 router.post("/restaurant/:restaurantId/menu", createMenu);
 router.put("/menu/:id", updateMenu);
 router.get('/restaurant/:restaurantId', getMenusByRestaurantId);
+router.post("/:menuId/food", addFoodItem);
 
-module.exports = router; 
+export default router; 

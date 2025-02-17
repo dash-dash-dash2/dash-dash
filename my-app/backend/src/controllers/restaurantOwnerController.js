@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client';
   import bcrypt from 'bcrypt';
 
-  const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-  // Register a new restaurant owner
-  const registerRestaurantOwner = async (req, res) => {
-    const { name, email, password, phone, restaurantName, cuisineType, location } = req.body;
+// Register a new restaurant owner
+const registerRestaurantOwner = async (req, res) => {
+  const { name, email, password, phone, restaurantName, cuisineType, location } = req.body;
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -99,30 +99,30 @@ import { PrismaClient } from '@prisma/client';
     console.log("User ID from request:", userId);
     console.log("Request body:", req.body);
 
-    const { name, cuisineType, location, imageUrl } = req.body;
+  const { name, cuisineType, location, imageUrl } = req.body;
 
-    try {
-      if (!userId) {
-        return res.status(401).json({ error: "Unauthorized: No user ID found" });
-      }
+  try {
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: No user ID found" });
+    }
 
-      const owner = await prisma.user.findUnique({
-        where: { id: userId },
-      });
+    const owner = await prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-      if (!owner || owner.role !== "RESTAURANT_OWNER") {
-        return res.status(403).json({ error: "Only restaurant owners can add restaurants" });
-      }
+    if (!owner || owner.role !== "RESTAURANT_OWNER") {
+      return res.status(403).json({ error: "Only restaurant owners can add restaurants" });
+    }
 
-      const restaurant = await prisma.restaurant.create({
-        data: {
-          name,
-          cuisineType,
-          location,
-          imageUrl,
-          userId,
-        },
-      });
+    const restaurant = await prisma.restaurant.create({
+      data: {
+        name,
+        cuisineType,
+        location,
+        imageUrl,
+        userId,
+      },
+    });
 
       console.log("Restaurant created successfully:", restaurant);
       res.status(201).json(restaurant);
@@ -196,98 +196,108 @@ import { PrismaClient } from '@prisma/client';
   const getOwnerProfile = async (req, res) => {
     const ownerId = req.user.id;
 
-    try {
-      const owner = await prisma.user.findUnique({
-        where: { id: ownerId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          address: true,
-          location: true,
-          imageUrl: true,
-          role: true,
-          banned: true
-        }
-      });
-      
-      if (!owner) {
-        return res.status(404).json({ error: "Owner not found" });
+  try {
+    const owner = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        location: true,
+        imageUrl: true,
+        role: true,
+        banned: true
       }
-      
-      res.status(200).json(owner);
-    } catch (error) {
-      console.error("Profile fetch error:", error);
-      res.status(500).json({ error: "Failed to fetch profile", details: error.message });
+    });
+    
+    if (!owner) {
+      return res.status(404).json({ error: "Owner not found" });
     }
-  };
-  const updateOwnerProfile = async (req, res) => {
-    const ownerId = req.user.id;
-    const { name, email, phone, address, location, imageUrl } = req.body;
+    
+    res.status(200).json(owner);
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(500).json({ error: "Failed to fetch profile", details: error.message });
+  }
+};
 
-    try {
-      // Check if owner exists
-      const owner = await prisma.user.findUnique({ where: { id: ownerId } });
-      if (!owner) {
-        return res.status(404).json({ error: "Owner not found" });
-      }
+const updateOwnerProfile = async (req, res) => {
+  const ownerId = req.user.id;
+  const { name, email, phone, address, location, imageUrl } = req.body;
 
-      // Update profile information
-      const updatedOwner = await prisma.user.update({
-        where: { id: ownerId },
-        data: {
-          name,
-          email,
-          phone,
-          address,
-          location,
-          imageUrl
-        }
-      });
-
-      res.status(200).json(updatedOwner);
-    } catch (error) {
-      console.error("Profile update error:", error);
-      res.status(500).json({ error: "Failed to update profile", details: error.message });
+  try {
+    // Check if owner exists
+    const owner = await prisma.user.findUnique({ where: { id: ownerId } });
+    if (!owner) {
+      return res.status(404).json({ error: "Owner not found" });
     }
-  };
-  const addMenu = async (req, res) => {
-    const userId = req.user.id; // Authenticated owner's ID
-    const { restaurantId, name, imageUrl, price } = req.body;
-  
-    try {
-      // Check if the restaurant exists and belongs to the authenticated owner
-      const restaurant = await prisma.restaurant.findUnique({
-        where: { id: Number(restaurantId) },
-        select: { userId: true },
-      });
-  
-      if (!restaurant) {
-        return res.status(404).json({ error: 'Restaurant not found' });
+
+    // Update profile information
+    const updatedOwner = await prisma.user.update({
+      where: { id: ownerId },
+      data: {
+        name,
+        email,
+        phone,
+        address,
+        location,
+        imageUrl
       }
-  
-      if (restaurant.userId !== userId) {
-        return res.status(403).json({ error: 'You are not authorized to add a menu to this restaurant' });
-      }
-  
-      // Create the menu item
-      const menu = await prisma.menu.create({
-        data: {
-          name,
-          imageUrl,
-          price,
-          restaurantId: Number(restaurantId),
-        },
-      });
-  
-      res.status(201).json(menu);
-    } catch (error) {
-      console.error('Error adding menu:', error);
-      res.status(500).json({ error: 'Failed to add menu', details: error.message });
+    });
+
+    res.status(200).json(updatedOwner);
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ error: "Failed to update profile", details: error.message });
+  }
+};
+
+const addMenu = async (req, res) => {
+  const userId = req.user.id; // Authenticated owner's ID
+  const { restaurantId, name, imageUrl, price } = req.body;
+
+  try {
+    // Check if the restaurant exists and belongs to the authenticated owner
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: Number(restaurantId) },
+      select: { userId: true },
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
     }
-  };
 
+    if (restaurant.userId !== userId) {
+      return res.status(403).json({ error: 'You are not authorized to add a menu to this restaurant' });
+    }
 
-  export { registerRestaurantOwner, getRestaurantsByOwner, addRestaurant, updateRestaurant, deleteRestaurant,getOwnerProfile,updateOwnerProfile,addMenu };
+    // Create the menu item
+    const menu = await prisma.menu.create({
+      data: {
+        name,
+        imageUrl,
+        price,
+        restaurantId: Number(restaurantId),
+      },
+    });
+
+    res.status(201).json(menu);
+  } catch (error) {
+    console.error('Error adding menu:', error);
+    res.status(500).json({ error: 'Failed to add menu', details: error.message });
+  }
+};
+
+export {
+  registerRestaurantOwner,
+  getRestaurantsByOwner,
+  addRestaurant,
+  updateRestaurant,
+  deleteRestaurant,
+  getOwnerProfile,
+  updateOwnerProfile,
+  addMenu
+};
 
