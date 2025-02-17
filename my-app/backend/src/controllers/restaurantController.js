@@ -1,7 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from '@prisma/client';
+import { clearCache } from '../middleware/cacheMiddleware.js';
+import geolib from 'geolib';
+
 const prisma = new PrismaClient();
-const { clearCache } = require('../middleware/cacheMiddleware');
-const geolib = require('geolib'); // Import geolib for distance calculations
 
 // Create restaurant
 const createRestaurant = async (req, res) => {
@@ -193,7 +194,7 @@ const updateRestaurant = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createRestaurant,
   getAllRestaurants,
   getNearbyRestaurants,

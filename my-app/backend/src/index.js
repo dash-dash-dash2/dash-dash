@@ -1,40 +1,46 @@
-require('dotenv').config();
-const express = require("express");
-const cors = require("cors");
-const { createServer } = require("http");
-const { Server } = require("socket.io");
-const helmet = require('helmet');
-const compression = require('compression');
-const limiter = require('./middleware/rateLimiter');
-const cache = require('./config/cache');
-const userRoutes = require("./routes/userRoutes");
-const menuRoutes = require("./routes/menuRoutes");
-const orderRoutes = require("./routes/orderRoutes");
-const deliveryRoutes = require("./routes/deliveryRoutes");
-const ratingRoutes = require("./routes/ratingRoutes");
-const notificationRoutes = require("./routes/notificationRoutes");
-const chatRoutes = require("./routes/chatRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
-const deliverymanRoutes = require("./routes/deliverymanRoutes");
-const restaurantOwnerRoutes = require("./routes/restaurantOwnerRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const restaurantRoutes = require("./routes/restaurantRoutes");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const jwt = require("jsonwebtoken");
-const chatService = require('./services/chatService');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import helmet from 'helmet';
+import compression from 'compression';
+import limiter from './middleware/rateLimiter.js';
+import cache from './config/cache.js';
+import userRoutes from './routes/userRoutes.js';
+import menuRoutes from './routes/menuRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import deliveryRoutes from './routes/deliveryRoutes.js';
+import ratingRoutes from './routes/ratingRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import deliverymanRoutes from './routes/deliverymanRoutes.js';
+import restaurantOwnerRoutes from './routes/restaurantOwnerRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import restaurantRoutes from './routes/restaurantRoutes.js';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import { getRecentMessages, saveMessage } from './services/chatService.js';
+import { authenticateToken } from './middleware/authMiddleware.js';
 // const bcrypt = require('bcrypt'); // Import bcrypt
 
+const prisma = new PrismaClient();
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.IO setup with CORS
+// Socket.IO setup with better connection handling
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
-  }
+  },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
 });
 
 // Middleware
@@ -54,8 +60,20 @@ app.set('cache', cache);
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
+  socket.on("disconnect", (reason) => {
+    console.log("Client disconnected:", socket.id, "Reason:", reason);
+  });
+
+  socket.on("error", (error) => {
+    console.error("Socket error:", error);
+  });
+
+  socket.on("reconnect_attempt", () => {
+    console.log("Client attempting to reconnect");
+  });
+
+  socket.on("reconnect", () => {
+    console.log("Client reconnected successfully");
   });
 
   // Handle order status updates
@@ -77,6 +95,34 @@ app.use("/api/deliveryman", deliverymanRoutes);
 app.use("/api/restaurant-owner", restaurantOwnerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/restaurants", restaurantRoutes);
+
+// Add this route to handle order fetching
+app.get('/api/orders', authenticateToken, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: 'PENDING'
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        orderItems: {
+          include: {
+            menu: true
+          }
+        },
+        restaurant: true,
+        user: true,
+        deliveryman: true
+      }
+    });
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: 'Error fetching orders' });
+  }
+});
 
 // Make io available in routes
 app.set('io', io);

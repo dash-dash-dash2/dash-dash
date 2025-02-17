@@ -1,12 +1,13 @@
-const express = require("express");
-const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const {
+import express from "express";
+import { authenticate } from "../middleware/authMiddleware.js";
+import {
   createPayment,
   getPaymentStatus,
   getPaymentHistory,
   processStripeWebhook
-} = require("../controllers/paymentController");
+} from "../controllers/paymentController.js";
+
+const router = express.Router();
 
 // Public route for Stripe webhook
 router.post("/webhook", express.raw({ type: 'application/json' }), processStripeWebhook);
@@ -15,7 +16,7 @@ router.post("/webhook", express.raw({ type: 'application/json' }), processStripe
 router.use(authenticate);
 
 // Create a new payment
-router.post("/create", createPayment);
+router.post("/", createPayment);
 
 // Get payment status
 router.get("/status/:paymentId", getPaymentStatus);
@@ -23,4 +24,4 @@ router.get("/status/:paymentId", getPaymentStatus);
 // Get payment history
 router.get("/history", getPaymentHistory);
 
-module.exports = router; 
+export default router; 

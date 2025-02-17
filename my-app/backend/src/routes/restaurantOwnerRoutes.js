@@ -1,45 +1,31 @@
-const express = require("express");
-const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const { 
+import express from "express";
+import { authenticate } from "../middleware/authMiddleware.js";
+import {
   registerRestaurantOwner,
   getRestaurantsByOwner,
   addRestaurant,
   updateRestaurant,
   deleteRestaurant,
-  getOwnerProfile,         // Importing getOwnerProfile
-  updateOwnerProfile,      // Importing updateOwnerProfile
-  addMenu                  // Importing addMenu
-} = require('../controllers/restaurantOwnerController');
-const { getRestaurantOrders } = require('../controllers/orderController');
+  getOwnerProfile,
+  updateOwnerProfile,
+  addMenu
+} from '../controllers/restaurantOwnerController.js';
+import { getRestaurantOrders } from '../controllers/orderController.js';
+
+const router = express.Router();
+
 // Authenticate all routes below
 router.use(authenticate);
 
-// Route for registering a restaurant owner
-router.post('/', registerRestaurantOwner);
-
-// Route to get all restaurants by the authenticated owner
-router.get("/", getRestaurantsByOwner);
-
-// Route to add a new restaurant
-router.post("/add", addRestaurant);
-
-// Route to update an existing restaurant
-router.put("/update/:restaurantId", updateRestaurant);
-
-// Route to delete a restaurant
-router.delete("/delete/:restaurantId", deleteRestaurant);
-
-// Route to get the profile of the authenticated owner
+// Routes
+router.post('/register', registerRestaurantOwner);
+router.get("/restaurants", getRestaurantsByOwner);
+router.post("/restaurants", addRestaurant);
+router.put("/restaurants/:id", updateRestaurant);
+router.delete("/restaurants/:id", deleteRestaurant);
 router.get("/profile", getOwnerProfile);
-
-// Route to update the profile of the authenticated owner
 router.put("/profile", updateOwnerProfile);
-
-// Route to add a menu item to a restaurant
-router.post("/menu/add", addMenu);
-
-// Orders routes
+router.post("/menu", addMenu);
 router.get("/orders", getRestaurantOrders);
 
-module.exports = router;
+export default router;

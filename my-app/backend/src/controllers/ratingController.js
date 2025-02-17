@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Create rating
@@ -131,7 +131,7 @@ const updateRating = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createRating,
   getRestaurantRatings,
   updateRating

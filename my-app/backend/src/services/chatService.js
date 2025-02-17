@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import prisma from '../config/database.js';
 
 // class ChatService {
 //   // Store chat message in Redis and Database
@@ -88,3 +87,57 @@ const prisma = new PrismaClient();
 // }
 
 // module.exports = new ChatService(); 
+
+const getRecentMessages = async (orderId) => {
+  try {
+    const messages = await prisma.chat.findMany({
+      where: {
+        orderId: parseInt(orderId)
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        user: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+    return messages;
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    throw error;
+  }
+};
+
+ const saveMessage = async (orderId, userId, message, role) => {
+  try {
+    const chat = await prisma.chat.create({
+      data: {
+        orderId: parseInt(orderId),
+        userId,
+        message,
+        senderRole: role
+      },
+      include: {
+        user: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+    return chat;
+  } catch (error) {
+    console.error("Error saving message:", error);
+    throw error;
+  }
+};
+
+// Create a default export with all the service methods
+export {
+  getRecentMessages,
+  saveMessage
+}; 

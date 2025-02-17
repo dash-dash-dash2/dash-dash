@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient({
   datasources: {
@@ -6,16 +6,7 @@ const prisma = new PrismaClient({
       url: process.env.DATABASE_URL,
     },
   },
-  // Connection pooling configuration
-  connection: {
-    pool: {
-      min: 2,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      acquireTimeoutMillis: 30000,
-    },
-  },
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 });
 
-module.exports = prisma; 
+export default prisma; 

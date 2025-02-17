@@ -1,94 +1,107 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+'use client'
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from "@/context/AuthContext"; // Adjust the path based on your directory structure
 
+interface User {
+  id: string;
+  name: string;
+  role: 'CUSTOMER' | 'DELIVERYMAN' | 'RESTAURANT_OWNER' | 'ADMIN';
+}
+
 interface Order {
   id: string;
+  orderItems: {
+    id: string;
+    quantity: number;
+    price: number;
+    menu: {
+      name: string;
+      price: number;
+      description: string;
+    };
+  }[];
+  status: string;
+  total: number;
   restaurant: {
+    name: string;
     latitude: number;
     longitude: number;
+  };
+  user: {
     name: string;
+    address: {
+      latitude: number;
+      longitude: number;
+      address: string;
+    };
   };
   deliveryLocation: {
     lat: number;
     lng: number;
     address: string;
   };
-  menuItem: {
-    name: string;
-    description: string;
-    price: number;
-  };
-  customer: {
-    name: string;
-  };
-  User: {
-    address: {
-      latitude: number;
-      longitude: number;
-    };
-  };
+  // Add other order properties as needed
 }
 
 interface OrderContextType {
   orders: Order[];
-  activeOrder: Order | null;
+  loading: boolean;
+  error: string | null;
   fetchOrders: () => Promise<void>;
-  acceptOrder: (orderId: string) => Promise<void>;
+  activeOrder: Order | null;
   setActiveOrder: (order: Order | null) => void;
 }
 
-const OrderContext = createContext<OrderContextType | null>(null);
+const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
-export const OrderProvider = ({ children }: { children: ReactNode }) => {
+export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const { token, user } = useAuth();
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('/api/delivery/available', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      setLoading(true);
+      const response = await axios.get(`http://localhost:5000/api/orders`);
       setOrders(response.data);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
-  };
-
-  const acceptOrder = async (orderId: string) => {
-    try {
-      const response = await axios.post(`/api/delivery/${orderId}/accept`, null, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setActiveOrder(response.data);
-      setOrders(prev => prev.filter(order => order.id !== orderId));
-    } catch (error) {
-      console.error('Error accepting order:', error);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch orders');
+      console.error('Error fetching orders:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token && user?.role === 'DRIVER') fetchOrders();
-  }, [token, user]);
+    fetchOrders();
+    // Set up polling to refresh orders every 30 seconds
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <OrderContext.Provider value={{ 
       orders, 
+      loading, 
+      error, 
+      fetchOrders,
       activeOrder,
-      fetchOrders, 
-      acceptOrder,
-      setActiveOrder
+      setActiveOrder 
     }}>
       {children}
     </OrderContext.Provider>
   );
-};
+}
 
-export const useOrders = () => {
+export function useOrders() {
   const context = useContext(OrderContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useOrders must be used within an OrderProvider');
   }
+  console.log(context);
   return context;
-}; 
+} 
