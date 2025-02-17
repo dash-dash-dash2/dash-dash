@@ -414,6 +414,7 @@ const RestaurantOrdersPage: React.FC = () => {
     setNotifications([]);
   };
 
+
   if (loading) {
     return <div>Loading...</div>; // Show loading indicator
   }
