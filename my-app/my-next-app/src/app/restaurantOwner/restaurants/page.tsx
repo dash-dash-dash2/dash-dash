@@ -22,6 +22,7 @@ import DeleteRestaurantModal from "./components/DeleteRestaurantModal"
 import { Button } from "@/components/ui/button"
 import type { Rating } from "@/types" // Add this import
 import type { Category } from "@/types" // Add this import
+import { Analytics } from "./components/Analytics"
 
 // Update Restaurant interface
 interface Restaurant {
@@ -47,9 +48,9 @@ const Sidebar: React.FC<SidebarProps> = ({ selected, setSelected }) => {
   const menuItems = [
     { name: "Dashboard", icon: Building2 },
     { name: "Restaurants", icon: Building2 },
-    { name: "Categories", icon: ListOrdered },
     { name: "Menu Items", icon: MenuSquare },
     { name: "Orders", icon: DollarSign },
+    { name: "Analytics", icon: ListOrdered }, // Added Analytics option
     { name: "Settings", icon: MenuSquare },
   ]
 
@@ -113,25 +114,18 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium">{restaurant.name}</h3>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleUpdateClick(restaurant)}
-                      className="bg-blue-500 text-white" // Add this line to change the button color
-                    >
-                      Update
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteClick(restaurant)}
-                    >
-                      Delete
-                    </Button>
+                    <h3 className="font-medium">{restaurant.name}</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUpdateClick(restaurant)}
+                        className="bg-blue-500 text-white"
+                      >
+                        Update
+                      </Button>
+                    </div>
                   </div>
-                </div>
                 <p className="text-sm text-gray-500 mt-1">{restaurant.cuisineType}</p>
                 <p className="text-xs text-gray-400 mt-1">{restaurant.location}</p>
               </div>
@@ -525,7 +519,7 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-6">
               {[
                 { title: "Total Restaurants", value: restaurants.length, icon: Building2 },
-                { title: "Total Revenue", value: "$0.00", icon: DollarSign },
+               
                 { title: "Categories", value: categories.length.toString(), icon: ListOrdered },
                 { title: "Menu Items", value: menus.length.toString(), icon: MenuSquare },
               ].map((stat, index) => (
@@ -565,6 +559,8 @@ const DashboardPage = () => {
   
         {/* Display Restaurant List in "Restaurants" section */}
         {selectedSection === "Restaurants" && <RestaurantList restaurants={restaurants} />}
+  {/* Display Analytics section */}
+{selectedSection === "Analytics" && <Analytics />}
   
         {/* Display Categories section */}
         {selectedSection === "Categories" && (
