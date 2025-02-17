@@ -101,7 +101,14 @@ const RestaurantOrdersPage: React.FC = () => {
         setNewOrderCount(response.data.length); // Set initial order count
       } catch (err) {
         setError("Failed to fetch orders");
-        console.error(err);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to fetch orders. Please try again later.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -158,6 +165,27 @@ const RestaurantOrdersPage: React.FC = () => {
           ...prev,
           `Order ID ${data.orderId} status updated to: ${data.status}`,
         ]);
+
+        // Show SweetAlert notification
+        Swal.fire({
+          title: 'Order Status Updated',
+          text: `Order ID ${data.orderId} status updated to: ${data.status}`,
+          icon: 'info',
+          confirmButtonText: 'OK'
+        });
+      });
+
+      socket.on("newOrder", (newOrder) => {
+        // Add the new order to the state
+        setOrders((prevOrders) => [...prevOrders, newOrder]);
+
+        // Show SweetAlert notification for the new order
+        Swal.fire({
+          title: 'New Order Received',
+          text: `Order ID ${newOrder.id} has been added.`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
       });
 
       socket.on("disconnect", () => {

@@ -44,6 +44,9 @@ const createOrder = async (req, res) => {
         }
       });
 
+      // Emit the new order event
+      req.app.get('io').emit('newOrder', newOrder);
+
       return newOrder;
     });
 
