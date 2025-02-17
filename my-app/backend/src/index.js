@@ -96,7 +96,7 @@ io.on("connection", (socket) => {
   socket.on("updateOrderStatus", (data) => {
     const { orderId, status } = data;
     io.to(`order_${orderId}`).emit("orderStatusUpdate", {
-      orderId,
+        orderId, 
       status
     });
   });

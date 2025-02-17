@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from "@/context/AuthContext"; // Adjust the path based on your directory structure
-import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -53,8 +52,6 @@ interface OrderContextType {
   fetchOrders: () => Promise<void>;
   activeOrder: Order | null;
   setActiveOrder: (order: Order | null) => void;
-  acceptOrder: (orderId: string) => Promise<void>;
-  currentOrder: Order | null;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -64,8 +61,6 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
-  const router = useRouter();
 
   const fetchOrders = async () => {
     try {
@@ -81,30 +76,6 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const acceptOrder = async (orderId: string) => {
-    try {
-      const response = await fetch(`/api/delivery/orders/${orderId}/accept`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to accept order');
-      }
-
-      const acceptedOrder = await response.json();
-      setCurrentOrder(acceptedOrder);
-      
-      // Navigate to the delivery tracking page
-      router.push(`/driver/delivery/${orderId}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to accept order');
-      throw err;
-    }
-  };
-
   useEffect(() => {
     fetchOrders();
     // Set up polling to refresh orders every 30 seconds
@@ -112,19 +83,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  const value = {
-    orders,
-    loading,
-    error,
-    fetchOrders,
-    activeOrder,
-    setActiveOrder,
-    acceptOrder,
-    currentOrder
-  };
-
   return (
-    <OrderContext.Provider value={value}>
+    <OrderContext.Provider value={{ 
+      orders, 
+      loading, 
+      error, 
+      fetchOrders,
+      activeOrder,
+      setActiveOrder 
+    }}>
       {children}
     </OrderContext.Provider>
   );

@@ -162,45 +162,32 @@ const isAuthorizedToUpdateStatus = (userRole, order, newStatus) => {
 // Get order by ID
 const getOrderById = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
   try {
     const order = await prisma.order.findUnique({
       where: { id: parseInt(id) },
       include: {
-        orderItems: {
-          include: {
-            menu: true
-          }
-        },
         restaurant: true,
-        user: {
-          select: {
-            name: true,
-            address: true,
-            phone: true
-          }
-        },
-        deliveryman: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                phone: true
-              }
-            }
-          }
-        }
+        user: true,
+        deliveryman: true,
+        supplements: true,
       }
     });
 
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    res.json(order);
+    // Check authorization
+    if (order.userId !== userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: "Not authorized to view this order" });
+    }
+
+    res.status(200).json(order);
   } catch (error) {
-    console.error('Error fetching order:', error);
-    res.status(500).json({ error: 'Failed to fetch order' });
+    console.error("Order fetch error:", error);
+    res.status(500).json({ error: "Failed to fetch order", details: error.message });
   }
 };
 
