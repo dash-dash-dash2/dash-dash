@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       'mycdn.com', // Custom CDN
       'assets.example.com', 
       'images.pexels.com',
+      'res.cloudinary.com',
     ],
   },  
 };
