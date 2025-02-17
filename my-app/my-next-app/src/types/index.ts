@@ -15,6 +15,7 @@ export interface Restaurant {
     email: string;
   };
   menus: Menu[];
+  ratings: Review[];
 }
 
 export interface Menu {
@@ -65,7 +66,7 @@ export interface Supplement {
 
 export type OrderStatus = 
   | 'PENDING'
-  | 'CONFIRMED'
+  | 'ACCEPTED'
   | 'PREPARING'
   | 'READY_FOR_PICKUP'
   | 'OUT_FOR_DELIVERY'
@@ -80,4 +81,31 @@ export interface Review {
     name: string;
   };
   createdAt: string;
+}
+
+export interface RestaurantOrder {
+  id: number;
+  status: OrderStatus;
+  totalAmount: number;
+  createdAt: string;
+  orderItems: {
+    id: number;
+    quantity: number;
+    price: number;
+    menu: {
+      name: string;
+      description: string;
+    };
+  }[];
+  user: {
+    name: string;
+    address: string;
+  };
+  deliveryman?: {
+    id: number;
+    user: {
+      name: string;
+      phone: string;
+    };
+  };
 } 

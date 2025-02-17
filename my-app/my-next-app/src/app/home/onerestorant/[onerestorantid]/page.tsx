@@ -9,6 +9,7 @@ import Category from "@/app/home/component/category";
 import Swal from "sweetalert2"; // Import SweetAlert2 for popups
 import styles from './RestaurantOrdersPage.module.css'; // Import CSS module for styling
 import { FaShoppingCart } from 'react-icons/fa'; // Import cart icon
+import { io } from "socket.io-client"; // Import Socket.IO client
 
 interface MenuItem {
   name: string;
@@ -70,6 +71,7 @@ const RestaurantOrdersPage: React.FC = () => {
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+  const [notifications, setNotifications] = useState<string[]>([]); // State for notifications
 
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -137,6 +139,34 @@ const RestaurantOrdersPage: React.FC = () => {
       fetchOrderHistory();
       loadCartFromLocalStorage();
       setLoading(false); // Set loading to false after both fetches
+
+      // Socket.IO connection
+      const socket = io("http://localhost:5000"); // Use Socket.IO client
+
+      socket.on("connect", () => {
+        console.log("Socket.IO connection established");
+      });
+
+      socket.on("orderStatusUpdate", (data) => {
+        // Handle order status update
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === data.orderId ? { ...order, status: data.status } : order
+          )
+        );
+        setNotifications((prev) => [
+          ...prev,
+          `Order ID ${data.orderId} status updated to: ${data.status}`,
+        ]);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket.IO connection closed");
+      });
+
+      return () => {
+        socket.disconnect(); // Clean up the Socket.IO connection on component unmount
+      };
     };
 
     fetchData();
@@ -351,6 +381,11 @@ const RestaurantOrdersPage: React.FC = () => {
     setShowOrdersModal(!showOrdersModal);
   };
 
+  // Function to clear notifications
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
   if (loading) {
     return <div>Loading...</div>; // Show loading indicator
   }
@@ -400,6 +435,22 @@ const RestaurantOrdersPage: React.FC = () => {
           
           <h3>Total: ${calculateTotal().toFixed(2)}</h3>
           <button onClick={() => console.log("Proceed to Checkout")}>Checkout</button>
+          {/* Notifications Section */}
+          {notifications.length > 0 && (
+            <div className={styles.notifications}>
+              <h2>Notifications</h2>
+              <ul>
+                {notifications.map((notification, index) => (
+                  <li key={index} className={styles.notificationItem}>
+                    {notification}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={clearNotifications} className={styles.clearButton}>
+                Clear Notifications
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {showOrdersModal && (

@@ -28,22 +28,20 @@ const chatService = require('./services/chatService');
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.IO setup
+// Socket.IO setup with CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
   }
 });
 
 // Middleware
-const corsOptions = {
-  origin: "*", // Adjust this to your frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-};
-
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true
+}));
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
@@ -52,20 +50,18 @@ app.use(limiter);
 // Make cache available throughout the app
 app.set('cache', cache);
 
-// Socket.IO Authentication Middleware
-io.use(async (socket, next) => {
-  const token = socket.handshake.auth.token;
-  if (!token) {
-    return next(new Error("Authentication error"));
-  }
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.user = decoded;
-    next();
-  } catch (err) {
-    next(new Error("Authentication error"));
-  }
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+
+  // Handle order status updates
+  socket.on("orderStatusUpdate", (data) => {
+    io.emit("orderStatusUpdate", data);
+  });
 });
 
 // Routes
@@ -82,73 +78,8 @@ app.use("/api/restaurant-owner", restaurantOwnerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/restaurants", restaurantRoutes);
 
-// Socket.IO Connection Handler
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.user.id}`);
-
-  // Join user's personal room
-  socket.join(`user-${socket.user.id}`);
-
-  // Handle joining order room for chat
-  socket.on("joinOrderRoom", (orderId) => {
-    socket.join(`order-${orderId}`);
-  });
-
-  // Handle chat messages
-  socket.on("sendMessage", async (data) => {
-    try {
-      const { orderId, message } = data;
-      
-      const chat = await prisma.chat.create({
-        data: {
-          orderId: parseInt(orderId),
-          userId: socket.user.id,
-          message,
-          sender: socket.user.role.toLowerCase()
-        },
-        include: {
-          user: {
-            select: {
-              name: true
-            }
-          }
-        }
-      });
-
-      io.to(`order-${orderId}`).emit("newMessage", chat);
-    } catch (error) {
-      console.error("Socket chat error:", error);
-      socket.emit("error", "Failed to send message");
-    }
-  });
-
-  // Handle location updates for delivery tracking
-  socket.on("updateLocation", async (data) => {
-    try {
-      const { orderId, location } = data;
-      
-      if (socket.user.role !== "DELIVERYMAN") {
-        return socket.emit("error", "Unauthorized");
-      }
-
-      const locationData = await chatService.updateDeliveryLocation(
-        socket.user.id,
-        orderId,
-        location
-      );
-
-      io.to(`order-${orderId}`).emit("locationUpdate", locationData);
-    } catch (error) {
-      console.error("Socket location error:", error);
-      socket.emit("error", "Failed to update location");
-    }
-  });
-
-  // Handle disconnection
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.user.id}`);
-  });
-});
+// Make io available in routes
+app.set('io', io);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -161,9 +92,6 @@ if (!process.env.JWT_SECRET) {
   console.error('JWT_SECRET is not defined in environment variables');
   process.exit(1);
 }
-
-// Make io accessible to routes
-app.set('io', io);
 
 const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
