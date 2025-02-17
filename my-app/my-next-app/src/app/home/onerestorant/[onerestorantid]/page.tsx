@@ -5,7 +5,6 @@ import axios from "axios";
 import { useParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
-import Category from "@/app/home/component/category";
 import Swal from "sweetalert2"; // Import SweetAlert2 for popups
 import styles from './RestaurantOrdersPage.module.css'; // Import CSS module for styling
 import { FaShoppingCart } from 'react-icons/fa'; // Import cart icon
@@ -436,7 +435,6 @@ const RestaurantOrdersPage: React.FC = () => {
               {cart.length > 0 && <span className={styles.notificationCount}>{cart.length}</span>}
             </div>
           </header>
-          <Category />
           <div className={styles.menuGrid}>
             {menuItems.map((item) => (
               <div key={item.id} className={styles.menuCard}>

@@ -98,7 +98,8 @@ model OrderItem {
   order       Order       @relation(fields: [orderId], references: [id])
   menu        Menu        @relation("MenuOrderItems", fields: [menuId], references: [id])
   supplements Supplement[] @relation("OrderItemSupplements")
-
+  
+}
 
 // Chat Table (Real-time chat between user and driver)
 model Chat {

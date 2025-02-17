@@ -20,6 +20,7 @@ const restaurantOwnerRoutes = require("./routes/restaurantOwnerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const CategoryRoutes = require("./routes/CategoryRoutes");
+const CategoryRestaurant = require("./routes/categoryRestaurantroutes");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
@@ -79,6 +80,7 @@ app.use("/api/restaurant-owner", restaurantOwnerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/Category", CategoryRoutes);
+app.use("/api/CategoryRestaurant", CategoryRestaurant);
 
 
 // Make io available in routes
