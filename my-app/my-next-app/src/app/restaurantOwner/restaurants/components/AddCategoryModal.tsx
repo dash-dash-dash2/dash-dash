@@ -1,12 +1,27 @@
-import { useState } from "react";
-import axios from "axios";
-import Swal from "sweetalert2";
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import axios from "axios"
+import { toast } from "react-hot-toast"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog"
 
 interface AddCategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onCategoryAdded: () => void;
-  restaurantId: number;
+  isOpen: boolean
+  onClose: () => void
+  onCategoryAdded: () => void
+  restaurantId: number
 }
 
 export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
@@ -15,13 +30,15 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   onCategoryAdded,
   restaurantId,
 }) => {
-  const [categoryName, setCategoryName] = useState("");
+  const [categoryName, setCategoryName] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+    setLoading(true)
+
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token")
       await axios.post(
         "http://localhost:5000/api/categories",
         {
@@ -30,62 +47,54 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+        },
+      )
 
-      onCategoryAdded();
-      onClose();
-      setCategoryName("");
-      
-      Swal.fire({
-        title: "Success",
-        text: "Category added successfully",
-        icon: "success",
-      });
+      onCategoryAdded()
+      onClose()
+      setCategoryName("")
+      toast.success("Category added successfully")
     } catch (error) {
-      console.error("Error adding category:", error);
-      Swal.fire({
-        title: "Error",
-        text: "Failed to add category",
-        icon: "error",
-      });
+      console.error("Error adding category:", error)
+      toast.error("Failed to add category")
+    } finally {
+      setLoading(false)
     }
-  };
-
-  if (!isOpen) return null;
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-4">Add New Category</h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add New Category</DialogTitle>
+          <DialogDescription>Create a new category for your restaurant menu.</DialogDescription>
+        </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Category Name</label>
-            <input
-              type="text"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="categoryName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="categoryName"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="col-span-3"
+                required
+              />
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-            >
-              Add Category
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
-            </button>
-          </div>
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Adding..." : "Add Category"}
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
-  );
-};
+      </DialogContent>
+    </Dialog>
+  )
+}
+

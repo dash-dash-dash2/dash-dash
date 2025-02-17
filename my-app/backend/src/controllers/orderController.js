@@ -47,6 +47,7 @@ const createOrder = async (req, res) => {
       // Emit the new order event
       req.app.get('io').emit('newOrder', newOrder);
 
+
       return newOrder;
     });
 
@@ -225,6 +226,7 @@ const getOrderHistory = async (req, res) => {
       where: {
         userId: userId,
         status: "PENDING"
+
       },
       include: {
         restaurant: true,

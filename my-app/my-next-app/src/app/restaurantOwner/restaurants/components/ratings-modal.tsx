@@ -22,6 +22,10 @@ interface RatingsModalProps {
 export function RatingsModal({ isOpen, onClose, ratings, restaurantName }: RatingsModalProps) {
   if (!isOpen) return null
 
+  const averageScore = ratings.length > 0 
+    ? Math.round(ratings.reduce((acc, r) => acc + r.score, 0) / ratings.length)
+    : 0;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-lg p-6 relative">
@@ -38,11 +42,7 @@ export function RatingsModal({ isOpen, onClose, ratings, restaurantName }: Ratin
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.round(ratings.reduce((acc, r) => acc + r.score, 0) / ratings.length)
-                        ? "fill-primary text-primary"
-                        : "fill-muted text-muted-foreground"
-                    }`}
+                    className={`w-5 h-5 ${i < averageScore ? "fill-primary text-primary" : "fill-muted text-muted-foreground"}`}
                   />
                 ))}
               </div>
@@ -64,9 +64,7 @@ export function RatingsModal({ isOpen, onClose, ratings, restaurantName }: Ratin
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${
-                            i < rating.score ? "fill-primary text-primary" : "fill-muted text-muted-foreground"
-                          }`}
+                          className={`w-4 h-4 ${i < rating.score ? "fill-primary text-primary" : "fill-muted text-muted-foreground"}`}
                         />
                       ))}
                     </div>

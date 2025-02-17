@@ -57,8 +57,8 @@ model Restaurant {
   cuisineType String
   location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
   imageUrl    String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   user        User                 @relation("UserRestaurants", fields: [userId], references: [id]) // One-to-one relationship with User
   userId      Int                  // Foreign key to User
   orders      Order[]              // One-to-many relationship with Order
