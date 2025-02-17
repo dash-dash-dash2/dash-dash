@@ -24,8 +24,13 @@ export default function ProfilePage() {
 
   // Fetch user profile data
   const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    console.log("Token retrieved:", token);
+    if (!token) {
+      console.error("No token found. User might not be logged in.");
+      return;
+    }
     try {
-      const token = localStorage.getItem("token");
       const response = await axios.get("http://localhost:5000/api/users/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });

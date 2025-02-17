@@ -38,7 +38,7 @@ export default function Navbar() {
   // Logout Functionality
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove the token from localStorage
-    router.push("/auth"); // Redirect to the login page
+    router.push("/home/allrestorant"); // Redirect to the login page
   };
 
 

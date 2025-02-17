@@ -1,197 +1,215 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { uploadImage } from "@/app/utils/cloudinary";
-import Navbar from "@/components/Navbar";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
-interface UserProfile {
-  id: string;
+interface Credentials {
   name: string;
   email: string;
-  phone: string;
-  address: string;
-  role: string;
-  imageUrl: string;
-  location: string;
+  password: string;
+  phone?: string;
+  address?: string;
 }
 
-export default function ProfilePage() {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState<Partial<UserProfile>>({});
-  const [imageFile, setImageFile] = useState<File | null>(null);
+export default function AuthPage() {
+  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { user, login, logout, isAuthenticated } = useAuth();
 
-  // Fetch user profile data
-  const fetchProfile = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProfile(response.data);
-      setFormData(response.data);
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
-    }
-  };
+  const [credentials, setCredentials] = useState<Credentials>({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    address: "",
+  });
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle image upload
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const imageUrl = await uploadImage(file);
-      setFormData((prev) => ({ ...prev, imageUrl }));
+    if (isAuthenticated) {
+      router.push("/home/allrestorant");
     }
+  }, [isAuthenticated, router]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCredentials((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.put("http://localhost:5000/api/users/profile", formData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch("http://localhost:5000/api/users/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: credentials.name,
+          email: credentials.email,
+          password: credentials.password,
+          phone: credentials.phone || undefined,
+          address: credentials.address || undefined,
+        }),
       });
-      setProfile(response.data);
-      setEditMode(false);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (!profile) return <div>Loading...</div>;
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await login(credentials.email, credentials.password);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white py-8">
-        <Navbar />
-        <div className="max-w-4xl mx-auto bg-gradient-to-b from-white to-yellow-400 p-6 rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold text-center mb-6 text-orange-500 text-bold">Profile</h1>
-
-        {/* Profile Image */}
-        <div className="flex justify-center mb-6">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden">
-            <img
-              src={formData.imageUrl || profile.imageUrl || "/default-avatar.png"}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-            {editMode && (
-              <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <span className="text-white text-lg">Upload</span>
-              </label>
-            )}
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-yellow-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-yellow-600 mb-2">Welcome to Dish-Dash</h1>
+          <p className="text-gray-600">Your favorite food delivery service</p>
         </div>
 
-        {/* Profile Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name || ""}
-              onChange={handleInputChange}
-              disabled={!editMode}
-              className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 text-gray-700"
-            />
-          </div>
+        <div className="flex space-x-1 bg-yellow-100 p-1 rounded-lg mb-8">
+          <button
+            className={`w-1/2 py-2.5 text-sm font-medium rounded-md transition-all duration-300 ${
+              activeTab === "login" ? "bg-yellow-500 text-white shadow" : "text-yellow-700 hover:bg-yellow-200"
+            }`}
+            onClick={() => setActiveTab("login")}
+          >
+            Sign In
+          </button>
+          <button
+            className={`w-1/2 py-2.5 text-sm font-medium rounded-md transition-all duration-300 ${
+              activeTab === "register" ? "bg-yellow-500 text-white shadow" : "text-yellow-700 hover:bg-yellow-200"
+            }`}
+            onClick={() => setActiveTab("register")}
+          >
+            Sign Up
+          </button>
+        </div>
 
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-4">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {isAuthenticated ? (
           <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Email</label>
+            <p>Welcome, {user?.email}</p>
+            <button onClick={logout}>Logout</button>
+          </div>
+        ) : activeTab === "login" ? (
+          <form onSubmit={handleLogin} className="space-y-6">
             <input
               type="email"
               name="email"
-              value={formData.email || ""}
-              onChange={handleInputChange}
-              disabled={!editMode}
-              className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 text-gray-700"
+              placeholder="Email"
+              required
+              onChange={handleChange}
+              value={credentials.email}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
             />
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Phone</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+              onChange={handleChange}
+              value={credentials.password}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50"
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-6">
             <input
               type="text"
-              name="phone"
-              value={formData.phone || ""}
-              onChange={handleInputChange}
-              disabled={!editMode}
-              className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 text-gray-700"
+              name="name"
+              placeholder="Full Name"
+              required
+              onChange={handleChange}
+              value={credentials.name}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
             />
-          </div>
-
-          <div>
-            <label className="block text-lg text-bold font-medium text-orange-500 text-bold">Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              required
+              onChange={handleChange}
+              value={credentials.email}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required
+              onChange={handleChange}
+              value={credentials.password}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
+            />
+            <input
+              type="tel"
+              name="phone"
+              placeholder="Phone (Optional)"
+              onChange={handleChange}
+              value={credentials.phone}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
+            />
             <input
               type="text"
               name="address"
-              value={formData.address || ""}
-              onChange={handleInputChange}
-              disabled={!editMode}
-              className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 text-gray-700"
+              placeholder="Address (Optional)"
+              onChange={handleChange}
+              value={credentials.address}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-black font-bold"
             />
-          </div>
-
-          <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Location</label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location || ""}
-              onChange={handleInputChange}
-              disabled={!editMode}
-              className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 text-gray-700"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4">
-            {editMode ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setEditMode(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                >
-                  Save
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditMode(true)}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Edit Profile
-              </button>
-            )}
-          </div>
-        </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-yellow-500 text-white py-2 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 disabled:opacity-50"
+            >
+              {isLoading ? "Creating account..." : "Create Account"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

@@ -3,21 +3,20 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const authenticate = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Get token from Authorization header
+  const token = req.headers['authorization']?.split(' ')[1]; // Extract token from Bearer header
+
+  console.log('Token received:', token); // Log the received token
 
   if (!token) {
-    console.error("No token provided");
-    return res.status(401).json({ error: "No token provided" });
+    return res.status(403).send('Token is required for authentication');
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      console.error("Failed to authenticate token:", err);
-      return res.status(403).json({ error: "Failed to authenticate token" });
+      return res.status(401).send('Failed to authenticate token');
     }
-
-    req.user = decoded; // Attach user information to the request
-    next(); // Proceed to the next middleware or route handler
+    req.user = decoded; // Save decoded user info to request
+    next();
   });
 };
 

@@ -11,6 +11,8 @@ const {
 // Public route for Stripe webhook
 router.post("/webhook", express.raw({ type: 'application/json' }), processStripeWebhook);
 
+
+
 // Protected routes
 router.use(authenticate);
 
@@ -21,6 +23,8 @@ router.post("/create", createPayment);
 router.get("/status/:paymentId", getPaymentStatus);
 
 // Get payment history
+
 router.get("/history", getPaymentHistory);
+
 
 module.exports = router; 
