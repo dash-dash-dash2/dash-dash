@@ -16,6 +16,19 @@ import { RestaurantOrder, OrderStatus } from "@/types"
 import Swal from "sweetalert2"
 import { io, Socket } from "socket.io-client"
 
+interface Restaurant {
+  id: number;
+  name: string;
+  address: string;
+  imageUrl?: string;
+  ratings?: Rating[];
+  categories?: Category[];
+}
+
+interface RestaurantListProps {
+  restaurants: Restaurant[];
+}
+
 const Sidebar = ({ selected, setSelected }) => {
     const menuItems = [
       { name: "Dashboard", icon: Building2 },
@@ -51,8 +64,8 @@ const Sidebar = ({ selected, setSelected }) => {
     )
   }
 
-  const RestaurantList = ({ restaurants }) => {
-    const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
+    const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
 
     const handleUpdate = async (restaurantId: number) => {
       try {

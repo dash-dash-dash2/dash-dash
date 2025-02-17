@@ -83,3 +83,4 @@ export function RatingsModal({ isOpen, onClose, ratings, restaurantName }: Ratin
     </div>
   )
 }
+

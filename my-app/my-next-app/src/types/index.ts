@@ -1,32 +1,69 @@
 export interface Restaurant {
   id: number;
   name: string;
-  cuisineType: string;
-  location: string;
-  imageUrl: string;
+  address: string;
+  imageUrl?: string;
+  ratings?: Rating[];
+  categories?: Category[];
+}
+
+export interface Rating {
+  id: number;
   rating: number;
-  deliveryTime: string;
-  minimumOrder: number;
-  deliveryCost: number;
-  isOpen: boolean;
+  comment: string;
+  userId: number;
+  restaurantId: number;
+  createdAt: string;
   user: {
-    id: number;
     name: string;
-    email: string;
   };
-  menus: Menu[];
-  ratings: Review[];
+}
+
+export interface Category {
+  id: number;
+  name: string;
 }
 
 export interface Menu {
   id: number;
   name: string;
-  description: string;
   price: number;
-  imageUrl: string;
-  category: string;
+  description: string;
+  imageUrl?: string;
   restaurantId: number;
-  supplements: Supplement[];
+  restaurantName?: string;
+}
+
+export type OrderStatus = 
+  | 'PENDING'
+  | 'ACCEPTED'
+  | 'PREPARING'
+  | 'READY_FOR_PICKUP'
+  | 'PICKED_UP'
+  | 'DELIVERING'
+  | 'DELIVERED'
+  | 'CANCELLED';
+
+export interface RestaurantOrder {
+  id: number;
+  status: OrderStatus;
+  totalAmount: number;
+  createdAt: string;
+  restaurant: {
+    id: number;
+    name: string;
+  };
+  user: {
+    id: number;
+    name: string;
+    address: string;
+    phone: string;
+  };
+  orderItems: Array<{
+    id: number;
+    quantity: number;
+    menu: Menu;
+  }>;
 }
 
 export interface Order {
@@ -64,15 +101,6 @@ export interface Supplement {
   price: number;
 }
 
-export type OrderStatus = 
-  | 'PENDING'
-  | 'ACCEPTED'
-  | 'PREPARING'
-  | 'READY_FOR_PICKUP'
-  | 'OUT_FOR_DELIVERY'
-  | 'DELIVERED'
-  | 'CANCELLED';
-
 export interface Review {
   id: number;
   score: number;
@@ -81,31 +109,4 @@ export interface Review {
     name: string;
   };
   createdAt: string;
-}
-
-export interface RestaurantOrder {
-  id: number;
-  status: OrderStatus;
-  totalAmount: number;
-  createdAt: string;
-  orderItems: {
-    id: number;
-    quantity: number;
-    price: number;
-    menu: {
-      name: string;
-      description: string;
-    };
-  }[];
-  user: {
-    name: string;
-    address: string;
-  };
-  deliveryman?: {
-    id: number;
-    user: {
-      name: string;
-      phone: string;
-    };
-  };
 } 

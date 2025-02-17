@@ -97,6 +97,7 @@ model OrderItem {
   price       Float
   order       Order       @relation(fields: [orderId], references: [id])
   menu        Menu        @relation("MenuOrderItems", fields: [menuId], references: [id])
+  supplements Supplement[] @relation("OrderItemSupplements")
 }
 
 // Chat Table (Real-time chat between user and driver)
@@ -167,6 +168,7 @@ model Menu {
   updatedAt    DateTime     @updatedAt
   restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
   orderItems   OrderItem[]  @relation("MenuOrderItems")
+  supplements  Supplement[]  @relation("MenuSupplements")
 }
 
 // Rating Table (User ratings for restaurants)
