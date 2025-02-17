@@ -5,25 +5,9 @@ const chatService = require('../services/chatService');
 // Get chat history for a specific order
 const getOrderChats = async (req, res) => {
   const { orderId } = req.params;
+  console.log(orderId);
   try {
-    const messages = await prisma.message.findMany({
-      where: {
-        orderId: orderId
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    });
-
+    const messages = await chatService.getRecentMessages(orderId);
     res.status(200).json(messages);
   } catch (error) {
     console.error("Chat fetch error:", error);
@@ -36,63 +20,46 @@ const getChatHistory = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const orders = await prisma.order.findMany({
+    const chats = await prisma.chat.findMany({
       where: {
         OR: [
           { userId },
-          { deliverymanId: userId }
+          {
+            order: {
+              OR: [
+                { userId },
+                { deliveryman: { userId } }
+              ]
+            }
+          }
         ]
       },
+      orderBy: {
+        createdAt: 'desc'
+      },
       include: {
-        messages: {
-          include: {
-            sender: {
-              select: {
-                id: true,
-                name: true,
-                imageUrl: true
-              }
-            }
-          },
-          orderBy: {
-            createdAt: 'asc'
-          }
-        },
+        order: true,
         user: {
           select: {
-            id: true,
-            name: true,
-            imageUrl: true
+            name: true
           }
         },
         deliveryman: {
           select: {
-            id: true,
-            name: true,
-            imageUrl: true
+            user: {
+              select: {
+                name: true
+              }
+            }
           }
         }
       }
     });
 
-    // Format the response to match the frontend Chat interface
-    const chats = orders.map(order => ({
-      id: order.id,
-      orderId: order.id,
-      participants: [
-        order.user,
-        order.deliveryman
-      ].filter(Boolean),
-      messages: order.messages,
-      unreadCount: order.messages.filter(
-        msg => msg.senderId !== userId && !msg.read
-      ).length
-    }));
-
     res.status(200).json(chats);
   } catch (error) {
     console.error("Chat history fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch chat history" });
+    res.status(500).json({ error: "Failed to fetch chat history", details: error.message });
   }
 };
 
@@ -102,27 +69,17 @@ const sendMessage = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const newMessage = await prisma.message.create({
-      data: {
-        content: message,
-        senderId: userId,
-        orderId: orderId
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true
-          }
-        }
-      }
-    });
+    const chat = await chatService.saveMessage(
+      orderId,
+      userId,
+      message,
+      req.user.role.toLowerCase()
+    );
 
     // Emit socket event
-    req.app.get('io').to(`order-${orderId}`).emit('newMessage', newMessage);
+    req.app.get('io').to(`order-${orderId}`).emit('newMessage', chat);
 
-    res.status(201).json(newMessage);
+    res.status(201).json(chat);
   } catch (error) {
     console.error("Message send error:", error);
     res.status(500).json({ error: "Failed to send message" });

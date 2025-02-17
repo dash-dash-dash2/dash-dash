@@ -1,6 +1,27 @@
 export interface Restaurant {
   id: number;
   name: string;
+  address: string;
+  imageUrl?: string;
+  ratings?: Rating[];
+  categories?: Category[];
+}
+
+export interface Rating {
+  id: number;
+  rating: number;
+  comment: string;
+  userId: number;
+  restaurantId: number;
+  createdAt: string;
+  user: {
+    name: string;
+  };
+}
+
+export interface Category {
+  id: number;
+  name: string;
   cuisineType: string;
   location: string;
   imageUrl: string;
@@ -20,6 +41,43 @@ export interface Restaurant {
 export interface Menu {
   id: number;
   name: string;
+  price: number;
+  description: string;
+  imageUrl?: string;
+  restaurantId: number;
+  restaurantName?: string;
+}
+
+export type OrderStatus = 
+  | 'PENDING'
+  | 'ACCEPTED'
+  | 'PREPARING'
+  | 'READY_FOR_PICKUP'
+  | 'PICKED_UP'
+  | 'DELIVERING'
+  | 'DELIVERED'
+  | 'CANCELLED';
+
+export interface RestaurantOrder {
+  id: number;
+  status: OrderStatus;
+  totalAmount: number;
+  createdAt: string;
+  restaurant: {
+    id: number;
+    name: string;
+  };
+  user: {
+    id: number;
+    name: string;
+    address: string;
+    phone: string;
+  };
+  orderItems: Array<{
+    id: number;
+    quantity: number;
+    menu: Menu;
+  }>;
   description: string;
   price: number;
   imageUrl: string;
@@ -62,6 +120,7 @@ export interface Supplement {
   name: string;
   price: number;
 }
+
 
 export type OrderStatus = 
   | 'PENDING'

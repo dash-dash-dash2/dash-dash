@@ -1,4 +1,5 @@
-const prisma = require('./src/config/database');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 beforeAll(async () => {
   // Connect to test database

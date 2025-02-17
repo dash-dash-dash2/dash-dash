@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, ChangeEvent, use } from "react";
-import api from '@/lib/axios';
+import axios from "axios";
 import Navbar from "@/components/Navbar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,9 +31,11 @@ const Profile: React.FC = () => {
 
   const [file, setFile] = useState<File | null>(null);
 
+
+
   const getProfile = async() =>{
     try {
-      const response = await api.get("/users/profile")
+      const response = await axios.get("http://localhost:5000/api/users/profile")
       console.log("getProfile", response)
 
     } catch(err) {
@@ -43,7 +45,6 @@ const Profile: React.FC = () => {
   }
 
   useEffect(() => {
-    // First load data from localStorage
     const userString = localStorage.getItem("user");
     if (userString) {
       const userData: User = JSON.parse(userString);
@@ -58,33 +59,7 @@ const Profile: React.FC = () => {
         imageUrl: userData.imageUrl || "",
       });
     }
-
-    // Then fetch updated data from the server
-    const fetchProfile = async () => {
-      try {
-        const response = await api.get("/users/profile");
-        const serverData = response.data;
-        
-        // Update both user and formData with server data
-        setUser(serverData);
-        setFormData({
-          id: serverData.id,
-          name: serverData.name,
-          email: serverData.email,
-          phone: serverData.phone || "",
-          address: serverData.address || "",
-          location: serverData.location || "",
-          imageUrl: serverData.imageUrl || "",
-        });
-        
-        // Update localStorage with the latest data
-        localStorage.setItem("user", JSON.stringify(serverData));
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-      }
-    };
-
-    fetchProfile();
+    getProfile()
   }, []);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -94,6 +69,14 @@ const Profile: React.FC = () => {
       [name]: value,
     }));
   };
+
+
+ //////////////////// 
+  // const [upload, setupload] = useState(false)
+
+  // console.log("upload", upload)
+
+  ////////////////////////////////////////
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -108,7 +91,16 @@ const Profile: React.FC = () => {
       formData.append("file", selectedFile);
 
       try {
-        const response = await api.post("/upload", formData);
+        const response = await axios.post(
+          "http://localhost:5000/api/upload",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
 
         // Set the image URL in formData
         setFormData((prevData) => ({
@@ -139,13 +131,18 @@ const Profile: React.FC = () => {
     }
   };
 
+  
+
   const uploadImageToCloudinary = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "ml_default"); // Replace with your Cloudinary upload preset
     
     try {
-      const response = await api.post("/upload", formData);
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/dpqkzgd5z/image/upload", // Replace with your Cloudinary cloud name
+        formData
+      );
 
       // setupload(true)
 
@@ -169,23 +166,42 @@ const Profile: React.FC = () => {
       const updatedUserData = { ...formData, imageUrl };
 
       // Send the update request using Axios
-      const response = await api.put("/users/profile", updatedUserData);
+      const response = await axios.put(
+        "http://localhost:5000/api/users/profile",
+        updatedUserData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-      if (response.status === 200) {
-        setUser(response.data.user);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        setEditMode(false);
-        toast.success("Profile updated successfully!");
+      if (response.status !== 200) {
+        throw new Error("Failed to update user");
       }
+
+      const updatedUser = response.data;
+
+      // Update local state and localStorage
+      setUser(updatedUser.user);
+      localStorage.setItem("user", JSON.stringify(updatedUser.user));
+      setEditMode(false);
+      alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile. Please try again.");
+      alert("Failed to update profile. Please try again.");
     }
   };
 
   if (!user) {
     return <div className="text-center text-yellow-500">Loading...</div>;
   }
+
+  
+
+
+ 
 
   return (
     <>

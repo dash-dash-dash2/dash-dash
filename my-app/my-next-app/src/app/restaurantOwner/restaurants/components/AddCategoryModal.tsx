@@ -1,67 +1,91 @@
-import { useState } from 'react'
-import axios from 'axios'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import axios from "axios";
+import Swal from "sweetalert2";
 
 interface AddCategoryModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onCategoryAdded: () => void
-  restaurantId: number
+  isOpen: boolean;
+  onClose: () => void;
+  onCategoryAdded: () => void;
+  restaurantId: number;
 }
 
-export function AddCategoryModal({ isOpen, onClose, onCategoryAdded, restaurantId }: AddCategoryModalProps) {
-  const [categoryName, setCategoryName] = useState('')
+export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
+  isOpen,
+  onClose,
+  onCategoryAdded,
+  restaurantId,
+}) => {
+  const [categoryName, setCategoryName] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    
     try {
-      const token = localStorage.getItem('token')
-      if (!token) throw new Error('No token found')
-
+      const token = localStorage.getItem("token");
       await axios.post(
-        'http://localhost:5000/api/restaurant-owner/category/add',
-        { name: categoryName, restaurantId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+        "http://localhost:5000/api/categories",
+        {
+          name: categoryName,
+          restaurantId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      onCategoryAdded()
-      onClose()
-      setCategoryName('')
+      onCategoryAdded();
+      onClose();
+      setCategoryName("");
+      
+      Swal.fire({
+        title: "Success",
+        text: "Category added successfully",
+        icon: "success",
+      });
     } catch (error) {
-      console.error('Error adding category:', error)
+      console.error("Error adding category:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to add category",
+        icon: "error",
+      });
     }
-  }
+  };
 
-  if (!isOpen) return null; // Don't render the modal if it's closed
+  if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Add New Category</h2>
-          <p>Enter the name of the new category you want to add to your restaurant.</p>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full">
+        <h2 className="text-2xl font-bold mb-4">Add New Category</h2>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Category Name</label>
+            <input
+              type="text"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              className="w-full p-2 border rounded"
+              required
+            />
           </div>
-          <div className="flex justify-end">
-            <Button type="submit">Add Category</Button>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+            >
+              Add Category
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
