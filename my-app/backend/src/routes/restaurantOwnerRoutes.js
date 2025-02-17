@@ -11,7 +11,7 @@ const {
   updateOwnerProfile,      // Importing updateOwnerProfile
   addMenu                  // Importing addMenu
 } = require('../controllers/restaurantOwnerController');
-
+const { getRestaurantOrders } = require('../controllers/orderController');
 // Authenticate all routes below
 router.use(authenticate);
 
@@ -38,5 +38,8 @@ router.put("/profile", updateOwnerProfile);
 
 // Route to add a menu item to a restaurant
 router.post("/menu/add", addMenu);
+
+// Orders routes
+router.get("/orders", getRestaurantOrders);
 
 module.exports = router;

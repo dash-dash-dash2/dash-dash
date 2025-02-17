@@ -5,6 +5,8 @@ import axios from "axios";
 import { uploadImage } from "@/app/utils/cloudinary";
 import Navbar from "@/components/Navbar";
 
+import defaultProfileImage from "@/app/default-profile.jpg";
+
 interface UserProfile {
   id: string;
   name: string;
@@ -31,9 +33,12 @@ export default function ProfilePage() {
       return;
     }
     try {
-      const response = await axios.get("http://localhost:5000/api/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        "http://localhost:5000/api/users/profile",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setProfile(response.data);
       setFormData(response.data);
     } catch (error) {
@@ -66,9 +71,13 @@ export default function ProfilePage() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.put("http://localhost:5000/api/users/profile", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put(
+        "http://localhost:5000/api/users/profile",
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setProfile(response.data);
       setEditMode(false);
     } catch (error) {
@@ -80,18 +89,28 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-white py-8">
-        <Navbar />
-        <div className="max-w-4xl mx-auto bg-gradient-to-b from-white to-yellow-400 p-6 rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold text-center mb-6 text-orange-500 text-bold">Profile</h1>
+      <Navbar />
+      <div className="max-w-4xl mx-auto bg-gradient-to-b from-white to-yellow-400 p-6 rounded-lg shadow-md">
+        <h1 className="text-4xl font-bold text-center mb-6 text-orange-500 text-bold">
+          Profile
+        </h1>
 
         {/* Profile Image */}
         <div className="flex justify-center mb-6">
           <div className="relative w-32 h-32 rounded-full overflow-hidden">
-            <img
-              src={formData.imageUrl || profile.imageUrl || "/default-avatar.png"}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
+            {formData.imageUrl || profile.imageUrl ? (
+              <img
+                src={formData.imageUrl || profile.imageUrl}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-white flex items-center justify-center">
+                <span className="text-gray-500 text-sm text-center">
+                  No Profile Picture
+                </span>
+              </div>
+            )}
             {editMode && (
               <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer">
                 <input
@@ -109,7 +128,9 @@ export default function ProfilePage() {
         {/* Profile Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Name</label>
+            <label className="block text-lg font-medium text-orange-500 text-bold">
+              Name
+            </label>
             <input
               type="text"
               name="name"
@@ -121,7 +142,9 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Email</label>
+            <label className="block text-lg font-medium text-orange-500 text-bold">
+              Email
+            </label>
             <input
               type="email"
               name="email"
@@ -133,7 +156,9 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Phone</label>
+            <label className="block text-lg font-medium text-orange-500 text-bold">
+              Phone
+            </label>
             <input
               type="text"
               name="phone"
@@ -145,7 +170,9 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-lg text-bold font-medium text-orange-500 text-bold">Address</label>
+            <label className="block text-lg text-bold font-medium text-orange-500 text-bold">
+              Address
+            </label>
             <input
               type="text"
               name="address"
@@ -157,7 +184,9 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-lg font-medium text-orange-500 text-bold">Location</label>
+            <label className="block text-lg font-medium text-orange-500 text-bold">
+              Location
+            </label>
             <input
               type="text"
               name="location"

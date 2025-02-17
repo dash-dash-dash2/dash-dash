@@ -7,8 +7,10 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Category from "@/app/home/component/category";
 import Swal from "sweetalert2"; // Import SweetAlert2 for popups
-import styles from './RestaurantOrdersPage.module.css'; // Import CSS module for styling
-import { FaShoppingCart } from 'react-icons/fa'; // Import cart icon
+import styles from "./RestaurantOrdersPage.module.css"; // Import CSS module for styling
+import { FaShoppingCart } from "react-icons/fa"; // Import cart icon
+import { io } from "socket.io-client"; // Import Socket.IO client
+import Link from "next/link";
 
 interface MenuItem {
   name: string;
@@ -35,6 +37,20 @@ interface CartItem {
   selectedSupplements: number[];
 }
 
+interface OrderItem {
+  menuId: number;
+  quantity: number;
+  price: number;
+}
+
+interface OrderDetails extends Order {
+  menuItems: {
+    id: number;
+    name: string;
+    price: number;
+  }[];
+}
+
 const RestaurantOrdersPage: React.FC = () => {
   const { onerestorantid } = useParams();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -50,22 +66,29 @@ const RestaurantOrdersPage: React.FC = () => {
   const [newOrderCount, setNewOrderCount] = useState<number>(0); // Counter for new orders
   const [orderHistory, setOrderHistory] = useState<Order[]>([]); // State for order history
   const [cart, setCart] = useState<CartItem[]>([]); // State for cart items
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null); // State for selected order details
+  const [selectedOrderDetails, setSelectedOrderDetails] =
+    useState<OrderDetails | null>(null); // State for selected order details
   const [showCartModal, setShowCartModal] = useState<boolean>(false); // State for cart modal visibility
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+  const [notifications, setNotifications] = useState<string[]>([]); // State for notifications
+
+  const [isDeliverySelected, setIsDeliverySelected] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`http://localhost:5000/api/menus/restaurant/${onerestorantid}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `http://localhost:5000/api/menus/restaurant/${onerestorantid}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setMenuItems(response.data);
       } catch (err) {
         setError("Failed to fetch menu items");
@@ -85,18 +108,28 @@ const RestaurantOrdersPage: React.FC = () => {
         setNewOrderCount(response.data.length); // Set initial order count
       } catch (err) {
         setError("Failed to fetch orders");
-        console.error(err);
+        Swal.fire({
+          title: "Error",
+          text: "Failed to fetch orders. Please try again later.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
     const fetchOrderHistory = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await axios.get("http://localhost:5000/api/orders/history", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:5000/api/orders/history",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setOrderHistory(response.data); // Set order history
       } catch (err) {
         console.error("Failed to fetch order history", err);
@@ -113,9 +146,67 @@ const RestaurantOrdersPage: React.FC = () => {
 
     const fetchData = async () => {
       setLoading(true); // Set loading to true before fetching
-      await Promise.all([fetchMenuItems(), fetchOrders(), fetchOrderHistory()]);
+      await fetchMenuItems();
+
+      // Only fetch orders if there are existing orders
+      if (orders.length > 0) {
+        await fetchOrders();
+      }
+
+      fetchOrderHistory();
       loadCartFromLocalStorage();
       setLoading(false); // Set loading to false after both fetches
+
+      // Socket.IO connection
+      const socket = io("http://localhost:5000"); // Use Socket.IO client
+
+      socket.on("connect", () => {
+        console.log("Socket.IO connection established");
+      });
+
+      socket.on("orderStatusUpdate", (data) => {
+        // Handle order status update
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === data.orderId
+              ? { ...order, status: data.status }
+              : order
+          )
+        );
+        setNotifications((prev) => [
+          ...prev,
+          `Order ID ${data.orderId} status updated to: ${data.status}`,
+        ]);
+
+        // Show SweetAlert notification
+        Swal.fire({
+          title: "Order Status Updated",
+          text: `Order ID ${data.orderId} status updated to: ${data.status}`,
+          icon: "info",
+          confirmButtonText: "OK",
+        });
+      });
+
+      socket.on("newOrder", (newOrder) => {
+        // Add the new order to the state
+        setOrders((prevOrders) => [...prevOrders, newOrder]);
+
+        // Show SweetAlert notification for the new order
+        Swal.fire({
+          title: "New Order Received",
+          text: `Order ID ${newOrder.id} has been added.`,
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Socket.IO connection closed");
+      });
+
+      return () => {
+        socket.disconnect(); // Clean up the Socket.IO connection on component unmount
+      };
     };
 
     fetchData();
@@ -123,11 +214,17 @@ const RestaurantOrdersPage: React.FC = () => {
 
   const handleSupplementChange = (supplementId: number) => {
     setSelectedSupplements((prev) =>
-      prev.includes(supplementId) ? prev.filter(id => id !== supplementId) : [...prev, supplementId]
+      prev.includes(supplementId)
+        ? prev.filter((id) => id !== supplementId)
+        : [...prev, supplementId]
     );
   };
 
-  const handleAddToCart = (menuId: number, quantity: number, selectedSupplements: number[]) => {
+  const handleAddToCart = (
+    menuId: number,
+    quantity: number,
+    selectedSupplements: number[]
+  ) => {
     const newCartItem: CartItem = { menuId, quantity, selectedSupplements };
     const updatedCart = [...cart, newCartItem];
     setCart(updatedCart);
@@ -136,7 +233,7 @@ const RestaurantOrdersPage: React.FC = () => {
   };
 
   const handleQuantityChange = (menuId: number, newQuantity: number) => {
-    const updatedCart = cart.map(item => 
+    const updatedCart = cart.map((item) =>
       item.menuId === menuId ? { ...item, quantity: newQuantity } : item
     );
     setCart(updatedCart);
@@ -144,7 +241,7 @@ const RestaurantOrdersPage: React.FC = () => {
   };
 
   const handleDeleteFromCart = (menuId: number) => {
-    const updatedCart = cart.filter(item => item.menuId !== menuId);
+    const updatedCart = cart.filter((item) => item.menuId !== menuId);
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart)); // Update local storage
     Swal.fire("Success", "Item removed from cart!", "success");
@@ -152,7 +249,7 @@ const RestaurantOrdersPage: React.FC = () => {
 
   const calculateTotal = () => {
     const subtotal = cart.reduce((total, item) => {
-      const menuItem = menuItems.find(menu => menu.id === item.menuId);
+      const menuItem = menuItems.find((menu) => menu.id === item.menuId);
       return total + (menuItem ? menuItem.price * item.quantity : 0);
     }, 0);
     const deliveryCost = 5; // Fixed delivery cost
@@ -182,6 +279,9 @@ const RestaurantOrdersPage: React.FC = () => {
   const handleSelectItem = (item: MenuItem) => {
     setSelectedItem(item);
     setSelectedSupplements([]); // Reset selected supplements when a new item is selected
+    setSelectedMenuId(item.id); // Set selected menu ID
+    setSelectedPrice(item.price); // Set selected price
+    setSelectedQuantity(1); // Reset quantity to 1
   };
 
   const handleConfirmTotal = async () => {
@@ -190,12 +290,14 @@ const RestaurantOrdersPage: React.FC = () => {
 
     // Show SweetAlert with total and delivery cost
     const result = await Swal.fire({
-      title: 'Confirm Total',
-      text: `Total Amount: $${totalAmount.toFixed(2)} (Delivery Cost: $${deliveryCost})`,
-      icon: 'info',
+      title: "Confirm Total",
+      text: `Total Amount: $${totalAmount.toFixed(
+        2
+      )} (Delivery Cost: $${deliveryCost})`,
+      icon: "info",
       showCancelButton: true,
-      confirmButtonText: 'Confirm',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
     });
 
     if (result.isConfirmed) {
@@ -203,12 +305,16 @@ const RestaurantOrdersPage: React.FC = () => {
         const token = localStorage.getItem("token");
 
         // Update all orders' status to "sent"
-        const updatePromises = orders.map(order => 
-          axios.put(`http://localhost:5000/api/orders/${order.id}/status`, { status: 'SENT' }, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+        const updatePromises = orders.map((order) =>
+          axios.put(
+            `http://localhost:5000/api/orders/${order.id}/status`,
+            { status: "SENT" },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
         );
 
         await Promise.all(updatePromises); // Wait for all update requests to complete
@@ -224,11 +330,14 @@ const RestaurantOrdersPage: React.FC = () => {
   const handleViewOrderDetails = async (orderId: number) => {
     const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`http://localhost:5000/api/orders/${orderId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        `http://localhost:5000/api/orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setSelectedOrderDetails(response.data); // Set the selected order details
     } catch (err) {
       console.error("Failed to fetch order details", err);
@@ -237,41 +346,99 @@ const RestaurantOrdersPage: React.FC = () => {
   };
 
   const handleCheckout = async () => {
-    const token = localStorage.getItem("token");
-    const userId = user.id // Retrieve user ID from local storage
-
-    if (!userId) {
-      Swal.fire("Error", "User ID is not available. Please log in.", "error");
-      return; // Exit the function if user ID is not found
-    }
-
-    const totalAmount = calculateTotal() + 5; // Add delivery cost of $5
-    const orderData = {
-      restaurantId: onerestorantid,
-      userId: userId,
-      totalAmount: totalAmount,
-      status: "PENDING", // Set initial status to "PENDING"
-      menuId: selectedMenuId, // Assuming you have a selected menu item ID
-      quantity: selectedQuantity, // Assuming you have a selected quantity
-      price: selectedPrice, // Assuming you have the price of the selected menu item
-    };
-
-    console.log("Order Data:", orderData); // Log the order data being sent
-
     try {
-      const response = await axios.post("http://localhost:5000/api/orders", orderData, {
+      const token = localStorage.getItem("token");
+
+      // Transform cart items into order items
+      const orderItems = cart.map((item) => {
+        const menuItem = menuItems.find((menu) => menu.id === item.menuId);
+        return {
+          menuId: item.menuId,
+          quantity: item.quantity,
+          price: menuItem?.price || 0,
+        };
+      });
+
+      const totalAmount = calculateTotal();
+
+      const orderData = {
+        restaurantId: parseInt(onerestorantid as string),
+        items: orderItems,
+        totalAmount,
+        deliveryCost: 5.0,
+      };
+
+      const response = await axios.post(
+        "http://localhost:5000/api/orders",
+        orderData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        setCart([]);
+        localStorage.removeItem("cart");
+
+        await getOrders(); // Refresh orders after successful creation
+
+        Swal.fire({
+          title: "Success!",
+          text: "Your order has been placed successfully",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+
+        setShowCartModal(false);
+      }
+    } catch (error) {
+      console.error("Error creating order:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to create order. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+  const getOrders = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/orders", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      Swal.fire("Success", "Order created successfully!", "success");
-      setCart([]); // Clear cart after order creation
-      localStorage.removeItem("cart"); // Remove cart from local storage
-      setShowCartModal(false); // Close cart modal
+      setOrders(response.data);
     } catch (error) {
-      console.error("Error creating order:", error);
-      Swal.fire("Error", "Failed to create order", "error");
+      console.error("Error fetching orders:", error);
     }
+  };
+
+  const handleDeleteOrder = async (orderId: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await getOrders(); // Refresh orders after deletion
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      Swal.fire("Error", "Failed to delete order", "error");
+    }
+  };
+
+  const toggleOrdersModal = () => {
+    setShowOrdersModal(!showOrdersModal);
+  };
+
+  // Function to clear notifications
+  const clearNotifications = () => {
+    setNotifications([]);
   };
 
   if (loading) {
@@ -290,28 +457,42 @@ const RestaurantOrdersPage: React.FC = () => {
         <div className={styles.main}>
           <header className={styles.header}>
             <h1 className={styles.title}>Menu</h1>
-            <div className={styles.cartIcon} onClick={() => setShowCartModal(true)}>
+            <div
+              className={styles.cartIcon}
+              onClick={() => setShowCartModal(true)}
+            >
               <FaShoppingCart size={30} />
-              {cart.length > 0 && <span className={styles.notificationCount}>{cart.length}</span>}
+              {cart.length > 0 && (
+                <span className={styles.notificationCount}>{cart.length}</span>
+              )}
             </div>
           </header>
           <Category />
           <div className={styles.menuGrid}>
             {menuItems.map((item) => (
               <div key={item.id} className={styles.menuCard}>
-                <img src={item.imageUrl} alt={item.name} className={styles.menuImage} />
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className={styles.menuImage}
+                />
                 <h3 className={styles.menuName}>{item.name}</h3>
                 <p className={styles.menuDescription}>{item.description}</p>
                 <p className={styles.menuPrice}>${item.price.toFixed(2)}</p>
-                <button className={styles.selectButton} onClick={() => handleSelectItem(item)}>Select</button>
+                <button
+                  className={styles.selectButton}
+                  onClick={() => handleSelectItem(item)}
+                >
+                  Select
+                </button>
               </div>
             ))}
           </div>
           <h2>Order History</h2>
-          {orderHistory.length === 0 ? (
+          {orders.length === 0 ? (
             <p>No completed orders found.</p>
           ) : (
-            orderHistory.map((order) => (
+            orders.map((order) => (
               <div key={order.id} className={styles.orderCard}>
                 <h3>Order ID: {order.id}</h3>
                 <p>Restaurant: {order.restaurant.name}</p>
@@ -320,9 +501,30 @@ const RestaurantOrdersPage: React.FC = () => {
               </div>
             ))
           )}
-          
+
           <h3>Total: ${calculateTotal().toFixed(2)}</h3>
-          <button onClick={() => console.log("Proceed to Checkout")}>Checkout</button>
+          <button onClick={() => console.log("Proceed to Checkout")}>
+            Checkout
+          </button>
+          {/* Notifications Section */}
+          {notifications.length > 0 && (
+            <div className={styles.notifications}>
+              <h2>Notifications</h2>
+              <ul>
+                {notifications.map((notification, index) => (
+                  <li key={index} className={styles.notificationItem}>
+                    {notification}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={clearNotifications}
+                className={styles.clearButton}
+              >
+                Clear Notifications
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {showOrdersModal && (
@@ -333,28 +535,57 @@ const RestaurantOrdersPage: React.FC = () => {
               <p>No orders found.</p>
             ) : (
               currentOrders.map((order) => {
-                const menuItem = menuItems.find(item => item.id === order.menuId);
+                const menuItem = menuItems.find(
+                  (item) => item.id === order.menuId
+                );
                 return (
                   <div key={order.id} className={styles.orderCard}>
-                    <img src={menuItem?.imageUrl} alt={menuItem?.name} className={styles.orderImage} />
+                    <img
+                      src={menuItem?.imageUrl}
+                      alt={menuItem?.name}
+                      className={styles.orderImage}
+                    />
                     <div>
                       <h3>{menuItem?.name}</h3>
                       <p>Quantity: {order.quantity}</p>
                       <p>Total: ${order.totalAmount.toFixed(2)}</p>
-                      <button className={styles.deleteButton} onClick={() => handleDeleteOrder(order.id)}>Delete</button>
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => handleDeleteOrder(order.id)}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 );
               })
             )}
-            <h3 className={styles.totalPrice}>Total Price: ${calculateTotal().toFixed(2)}</h3>
-            <button className={styles.confirmTotalButton} onClick={handleConfirmTotal}>Confirm Total</button>
+            <h3 className={styles.totalPrice}>
+              Total Price: ${calculateTotal().toFixed(2)}
+            </h3>
+            <button
+              className={styles.confirmTotalButton}
+              onClick={handleConfirmTotal}
+            >
+              Confirm Total
+            </button>
             <div className={styles.pagination}>
-              <button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
-              <span>Page {currentPage} of {totalPages}</span>
-              <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
+              <button onClick={handlePrevPage} disabled={currentPage === 1}>
+                Previous
+              </button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
             </div>
-            <button className={styles.closeButton} onClick={toggleOrdersModal}>Close</button>
+            <button className={styles.closeButton} onClick={toggleOrdersModal}>
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -362,8 +593,14 @@ const RestaurantOrdersPage: React.FC = () => {
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <h2>{selectedItem.name}</h2>
-            <img src={selectedItem.imageUrl} alt={selectedItem.name} className={styles.modalImage} />
-            <p className={styles.modalPrice}>${selectedItem.price.toFixed(2)}</p>
+            <img
+              src={selectedItem.imageUrl}
+              alt={selectedItem.name}
+              className={styles.modalImage}
+            />
+            <p className={styles.modalPrice}>
+              ${selectedItem.price.toFixed(2)}
+            </p>
             <h3>Choose Quantity:</h3>
             <input
               type="number"
@@ -388,12 +625,54 @@ const RestaurantOrdersPage: React.FC = () => {
               <p>No supplements available for this menu item.</p>
             )}
             <h3>Order Summary:</h3>
-            <p>Menu Price: ${selectedItem.price.toFixed(2)} x {quantity} = ${(selectedItem.price * quantity).toFixed(2)}</p>
-            <p>Supplements Cost: ${selectedSupplements.reduce((acc, id) => acc + (selectedItem.supplements.find(s => s.id === id)?.price || 0), 0).toFixed(2)}</p>
-            <p>Total Amount: ${((selectedItem.price * quantity) + selectedSupplements.reduce((acc, id) => acc + (selectedItem.supplements.find(s => s.id === id)?.price || 0), 0)).toFixed(2)}</p>
+            <p>
+              Menu Price: ${selectedItem.price.toFixed(2)} x {quantity} = $
+              {(selectedItem.price * quantity).toFixed(2)}
+            </p>
+            <p>
+              Supplements Cost: $
+              {selectedSupplements
+                .reduce(
+                  (acc, id) =>
+                    acc +
+                    (selectedItem.supplements.find((s) => s.id === id)?.price ||
+                      0),
+                  0
+                )
+                .toFixed(2)}
+            </p>
+            <p>
+              Total Amount: $
+              {(
+                selectedItem.price * quantity +
+                selectedSupplements.reduce(
+                  (acc, id) =>
+                    acc +
+                    (selectedItem.supplements.find((s) => s.id === id)?.price ||
+                      0),
+                  0
+                )
+              ).toFixed(2)}
+            </p>
             <div className={styles.modalActions}>
-              <button className={styles.closeButton} onClick={() => setSelectedItem(null)}>Close</button>
-              <button className={styles.addButton} onClick={() => handleAddToCart(selectedItem.id, quantity, selectedSupplements)}>Add to Cart</button>
+              <button
+                className={styles.closeButton}
+                onClick={() => setSelectedItem(null)}
+              >
+                Close
+              </button>
+              <button
+                className={styles.addButton}
+                onClick={() =>
+                  handleAddToCart(
+                    selectedItem.id,
+                    quantity,
+                    selectedSupplements
+                  )
+                }
+              >
+                Add to Cart
+              </button>
             </div>
           </div>
         </div>
@@ -407,21 +686,26 @@ const RestaurantOrdersPage: React.FC = () => {
             <p>Status: {selectedOrderDetails.status}</p>
             <p>Total Amount: ${selectedOrderDetails.totalAmount.toFixed(2)}</p>
             <h3>Menu Items:</h3>
-            {selectedOrderDetails.menuItems.map(item => (
+            {selectedOrderDetails.menuItems.map((item) => (
               <div key={item.id}>
-                <p>{item.name} - ${item.price.toFixed(2)}</p>
+                <p>
+                  {item.name} - ${item.price.toFixed(2)}
+                </p>
               </div>
             ))}
             <h3>Supplements:</h3>
-            {selectedOrderDetails.supplements.map(supplement => (
+            {selectedOrderDetails.supplements.map((supplement) => (
               <div key={supplement.id}>
-                <p>{supplement.name} - ${supplement.price.toFixed(2)}</p>
+                <p>
+                  {supplement.name} - ${supplement.price.toFixed(2)}
+                </p>
               </div>
             ))}
             <button onClick={() => setSelectedOrderDetails(null)}>Close</button>
           </div>
         </div>
       )}
+      const [isDeliverySelected, setIsDeliverySelected] = useState(false);
       {showCartModal && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
@@ -430,10 +714,16 @@ const RestaurantOrdersPage: React.FC = () => {
               <p>No items in cart.</p>
             ) : (
               cart.map((cartItem, index) => {
-                const menuItem = menuItems.find(item => item.id === cartItem.menuId);
+                const menuItem = menuItems.find(
+                  (item) => item.id === cartItem.menuId
+                );
                 return (
                   <div key={index} className={styles.orderCard}>
-                    <img src={menuItem?.imageUrl} alt={menuItem?.name} className={styles.cartItemImage} />
+                    <img
+                      src={menuItem?.imageUrl}
+                      alt={menuItem?.name}
+                      className={styles.cartItemImage}
+                    />
                     <div className={styles.cartItemDetails}>
                       <h3>{menuItem?.name}</h3>
                       <p>Price: ${menuItem?.price.toFixed(2)}</p>
@@ -441,19 +731,62 @@ const RestaurantOrdersPage: React.FC = () => {
                         type="number"
                         value={cartItem.quantity}
                         min="1"
-                        onChange={(e) => handleQuantityChange(cartItem.menuId, Number(e.target.value))}
+                        onChange={(e) =>
+                          handleQuantityChange(
+                            cartItem.menuId,
+                            Number(e.target.value)
+                          )
+                        }
                         className={styles.quantityInput}
                       />
-                      <button className={styles.removeButton} onClick={() => handleDeleteFromCart(cartItem.menuId)}>Remove</button>
+                      <button
+                        className={styles.removeButton}
+                        onClick={() => handleDeleteFromCart(cartItem.menuId)}
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
                 );
               })
             )}
-            <h3 style={{ fontWeight: 'bold' }}>Total: ${calculateTotal().toFixed(2)}</h3>
-            <h4 style={{ fontWeight: 'bold' }}>Delivery Cost: $5.00</h4>
-            <button className={styles.checkoutButton} onClick={handleCheckout}>Checkout</button>
-            <button className={styles.closeButton} onClick={() => setShowCartModal(false)}>Close</button>
+            <h3 style={{ fontWeight: "bold" }}>
+              Total: ${calculateTotal().toFixed(2)}
+            </h3>
+
+            {/* Delivery Selection */}
+            <label>
+              <input
+                type="checkbox"
+                checked={isDeliverySelected}
+                onChange={() => setIsDeliverySelected(!isDeliverySelected)}
+              />
+              Select delivery (Adds $5.00)
+            </label>
+
+            {isDeliverySelected && (
+              <h4 style={{ fontWeight: "bold" }}>Delivery Cost: $5.00</h4>
+            )}
+
+            <Link
+              href={{
+                pathname: "/payment",
+                query: {
+                  orderId: cart.length > 0 ? cart[0].menuId : 0, // Example: Use the first item's menuId as orderId
+                  totalAmount: (
+                    calculateTotal() + (isDeliverySelected ? 5 : 0)
+                  ).toFixed(2), // Include delivery cost only if selected
+                },
+              }}
+            >
+              <button className={styles.checkoutButton}>Checkout</button>
+            </Link>
+            <button
+              className={styles.closeButton}
+              onClick={() => setShowCartModal(false)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
