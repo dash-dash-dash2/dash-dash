@@ -57,8 +57,9 @@ model Restaurant {
   cuisineType String
   location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
   imageUrl    String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  isDeleted   Boolean             @default(false)  // Add this field
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   user        User                 @relation("UserRestaurants", fields: [userId], references: [id]) // One-to-one relationship with User
   userId      Int                  // Foreign key to User
   orders      Order[]              // One-to-many relationship with Order
@@ -98,7 +99,8 @@ model OrderItem {
   order       Order       @relation(fields: [orderId], references: [id])
   menu        Menu        @relation("MenuOrderItems", fields: [menuId], references: [id])
   supplements Supplement[] @relation("OrderItemSupplements")
-
+  
+}
 
 // Chat Table (Real-time chat between user and driver)
 model Chat {
