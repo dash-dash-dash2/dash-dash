@@ -1,226 +1,88 @@
-"use client"; // Mark this component as a Client Component
-import React from 'react';
+"use client";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+interface Category {
+  id: number;
+  name: string;
+  icon: string;
+}
 
 const Category: React.FC = () => {
-  const categorySectionStyle: React.CSSProperties = {
-    marginBottom: '32px',
-  };
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categoryHeaderStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '16px',
-  };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
 
-  const categoryTitleStyle: React.CSSProperties = {
-    fontSize: '20px',
-    fontWeight: 'bold',
-  };
+        const response = await axios.get("http://localhost:5000/api/Category/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  const viewAllLinkStyle: React.CSSProperties = {
-    color: '#FFB800',
-    fontSize: '14px',
-    textDecoration: 'none',
-  };
+        setCategories(response.data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setError("Failed to fetch categories");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const categoryListStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: '16px',
-    overflowX: 'auto',
-    paddingBottom: '16px',
-  };
-
-  const categoryItemStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: '100px',
-    borderRadius: '12px',
-    backgroundColor: '#ffffff',
-    padding: '16px',
-    transition: 'background-color 0.2s, color 0.2s',
-    cursor: 'pointer',
-  };
-
-  const categoryItemHoverStyle: React.CSSProperties = {
-    backgroundColor: '#FFB800',
-    color: '#ffffff',
-  };
-
-  const categoryIconStyle: React.CSSProperties = {
-    fontSize: '24px',
-    marginBottom: '8px',
-  };
-
-  const categoryNameStyle: React.CSSProperties = {
-    fontSize: '14px',
-  };
+    fetchCategories();
+  }, []);
 
   return (
-    <section style={categorySectionStyle}>
-      {/* Category Header */}
-      <div style={categoryHeaderStyle}>
-        <h2 style={categoryTitleStyle}>Category</h2>
-        <a href="#" style={viewAllLinkStyle}>
-          View all
-        </a>
+    <section style={{ marginBottom: "32px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+        <h2 style={{ fontSize: "20px", fontWeight: "bold" }}>Category</h2>
       </div>
 
-      {/* Category List */}
-      <div style={categoryListStyle}>
-        {[
-          { id: 1, name: 'Fast Food', icon: '🍔' },
-          { id: 2, name: 'Pizza', icon: '🍕' },
-          { id: 3, name: 'Sushi', icon: '🍣' },
-          { id: 4, name: 'Desserts', icon: '🍩' },
-        ].map((category) => (
-          <button
-            key={category.id}
-            style={categoryItemStyle}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#FFB800';
-              e.currentTarget.style.color = '#ffffff';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#ffffff';
-              e.currentTarget.style.color = '#000000';
-            }}
-          >
-            <span style={categoryIconStyle}>{category.icon}</span>
-            <span style={categoryNameStyle}>{category.name}</span>
-          </button>
-        ))}
-      </div>
+      {loading ? (
+        <p>Loading categories...</p>
+      ) : error ? (
+        <p style={{ color: "red" }}>{error}</p>
+      ) : (
+        <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "16px" }}>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: "100px",
+                borderRadius: "12px",
+                backgroundColor: "#ffffff",
+                padding: "16px",
+                transition: "background-color 0.2s, color 0.2s",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#FFB800";
+                e.currentTarget.style.color = "#ffffff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#ffffff";
+                e.currentTarget.style.color = "#000000";
+              }}
+            >
+              <span style={{ fontSize: "24px", marginBottom: "8px" }}>{category.icon}</span>
+              <span style={{ fontSize: "14px" }}>{category.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   );
 };
 
 export default Category;
-
-
-
-
-
-
-
-
-
-
-// "use client"; // Mark this component as a Client Component
-// import React, { useEffect, useState } from 'react';
-
-// interface CategoryItem {
-//   id: number;
-//   name: string;
-//   icon: string;
-// }
-
-// const Category: React.FC = () => {
-//   const [categories, setCategories] = useState<CategoryItem[]>([]);
-//   const [loading, setLoading] = useState<boolean>(true);
-
-//   useEffect(() => {
-//     fetch("https://your-api-endpoint.com/categories")
-//       .then((response) => response.json())
-//       .then((data) => {
-//         setCategories(data);
-//         setLoading(false);
-//       })
-//       .catch((error) => {
-//         console.error("Error fetching category data:", error);
-//         setLoading(false);
-//       });
-//   }, []);
-
-//   const categorySectionStyle: React.CSSProperties = {
-//     marginBottom: '32px',
-//   };
-
-//   const categoryHeaderStyle: React.CSSProperties = {
-//     display: 'flex',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     marginBottom: '16px',
-//   };
-
-//   const categoryTitleStyle: React.CSSProperties = {
-//     fontSize: '20px',
-//     fontWeight: 'bold',
-//   };
-
-//   const viewAllLinkStyle: React.CSSProperties = {
-//     color: '#FFB800',
-//     fontSize: '14px',
-//     textDecoration: 'none',
-//   };
-
-//   const categoryListStyle: React.CSSProperties = {
-//     display: 'flex',
-//     gap: '16px',
-//     overflowX: 'auto',
-//     paddingBottom: '16px',
-//   };
-
-//   const categoryItemStyle: React.CSSProperties = {
-//     display: 'flex',
-//     flexDirection: 'column',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     minWidth: '100px',
-//     borderRadius: '12px',
-//     backgroundColor: '#ffffff',
-//     padding: '16px',
-//     transition: 'background-color 0.2s, color 0.2s',
-//     cursor: 'pointer',
-//   };
-
-//   const categoryIconStyle: React.CSSProperties = {
-//     fontSize: '24px',
-//     marginBottom: '8px',
-//   };
-
-//   const categoryNameStyle: React.CSSProperties = {
-//     fontSize: '14px',
-//   };
-
-//   return (
-//     <section style={categorySectionStyle}>
-//       {/* Category Header */}
-//       <div style={categoryHeaderStyle}>
-//         <h2 style={categoryTitleStyle}>Category</h2>
-//         <a href="#" style={viewAllLinkStyle}>
-//           View all
-//         </a>
-//       </div>
-
-//       {/* Category List */}
-//       {loading ? (
-//         <p>Loading categories...</p>
-//       ) : (
-//         <div style={categoryListStyle}>
-//           {categories.map((category) => (
-//             <button
-//               key={category.id}
-//               style={categoryItemStyle}
-//               onMouseEnter={(e) => {
-//                 e.currentTarget.style.backgroundColor = '#FFB800';
-//                 e.currentTarget.style.color = '#ffffff';
-//               }}
-//               onMouseLeave={(e) => {
-//                 e.currentTarget.style.backgroundColor = '#ffffff';
-//                 e.currentTarget.style.color = '#000000';
-//               }}
-//             >
-//               <span style={categoryIconStyle}>{category.icon}</span>
-//               <span style={categoryNameStyle}>{category.name}</span>
-//             </button>
-//           ))}
-//         </div>
-//       )}
-//     </section>
-//   );
-// };
-
-// export default Category;
