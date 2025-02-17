@@ -10,7 +10,6 @@ CREATE TABLE `User` (
     `imageUrl` VARCHAR(191) NULL,
     `role` ENUM('CUSTOMER', 'DELIVERYMAN', 'RESTAURANT_OWNER', 'ADMIN') NOT NULL DEFAULT 'CUSTOMER',
     `banned` BOOLEAN NOT NULL DEFAULT false,
-    `deliverymanId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -51,11 +50,22 @@ CREATE TABLE `Order` (
     `userId` INTEGER NOT NULL,
     `restaurantId` INTEGER NOT NULL,
     `deliverymanId` INTEGER NULL,
-    `status` VARCHAR(191) NOT NULL DEFAULT 'Pending',
+    `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
     `totalAmount` DOUBLE NOT NULL,
+    `deliveryCost` DOUBLE NOT NULL DEFAULT 5,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
-    `deliveryCost` DOUBLE NOT NULL DEFAULT 5,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `OrderItem` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `orderId` INTEGER NOT NULL,
+    `menuId` INTEGER NOT NULL,
+    `quantity` INTEGER NOT NULL,
+    `price` DOUBLE NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -151,7 +161,7 @@ CREATE TABLE `Payment` (
     `paymentMethod` VARCHAR(191) NOT NULL,
     `status` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -181,12 +191,12 @@ CREATE TABLE `OrderHistory` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `_OrderSupplements` (
+CREATE TABLE `_OrderItemSupplements` (
     `A` INTEGER NOT NULL,
     `B` INTEGER NOT NULL,
 
-    UNIQUE INDEX `_OrderSupplements_AB_unique`(`A`, `B`),
-    INDEX `_OrderSupplements_B_index`(`B`)
+    UNIQUE INDEX `_OrderItemSupplements_AB_unique`(`A`, `B`),
+    INDEX `_OrderItemSupplements_B_index`(`B`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -212,6 +222,12 @@ ALTER TABLE `Order` ADD CONSTRAINT `Order_restaurantId_fkey` FOREIGN KEY (`resta
 
 -- AddForeignKey
 ALTER TABLE `Order` ADD CONSTRAINT `Order_deliverymanId_fkey` FOREIGN KEY (`deliverymanId`) REFERENCES `Deliveryman`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OrderItem` ADD CONSTRAINT `OrderItem_orderId_fkey` FOREIGN KEY (`orderId`) REFERENCES `Order`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `OrderItem` ADD CONSTRAINT `OrderItem_menuId_fkey` FOREIGN KEY (`menuId`) REFERENCES `Menu`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Chat` ADD CONSTRAINT `Chat_orderId_fkey` FOREIGN KEY (`orderId`) REFERENCES `Order`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -250,10 +266,10 @@ ALTER TABLE `Payment` ADD CONSTRAINT `Payment_orderId_fkey` FOREIGN KEY (`orderI
 ALTER TABLE `OrderHistory` ADD CONSTRAINT `OrderHistory_orderId_fkey` FOREIGN KEY (`orderId`) REFERENCES `Order`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `_OrderSupplements` ADD CONSTRAINT `_OrderSupplements_A_fkey` FOREIGN KEY (`A`) REFERENCES `Order`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `_OrderItemSupplements` ADD CONSTRAINT `_OrderItemSupplements_A_fkey` FOREIGN KEY (`A`) REFERENCES `OrderItem`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `_OrderSupplements` ADD CONSTRAINT `_OrderSupplements_B_fkey` FOREIGN KEY (`B`) REFERENCES `Supplement`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `_OrderItemSupplements` ADD CONSTRAINT `_OrderItemSupplements_B_fkey` FOREIGN KEY (`B`) REFERENCES `Supplement`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `_MenuSupplements` ADD CONSTRAINT `_MenuSupplements_A_fkey` FOREIGN KEY (`A`) REFERENCES `Menu`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

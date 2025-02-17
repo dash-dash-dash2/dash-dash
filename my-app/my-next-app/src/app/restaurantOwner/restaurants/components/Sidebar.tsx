@@ -19,7 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ selected, setSelected }) => {
     <div className="w-64 bg-white border-r">
       <div className="p-4 flex items-center gap-2">
         <Building2 className="h-6 w-6 text-red-500" />
-        <span className="font-semibold text-lg">RestaurantOS</span>
+        <span className="font-semibold text-lg">DishDash</span>
       </div>
       <nav className="space-y-1 px-2">
         {menuItems.map((item) => (
