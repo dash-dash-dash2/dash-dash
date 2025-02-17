@@ -3,45 +3,90 @@
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { socket } from '../utils/socket';
 
-const containerStyle = {
-  width: '100%',
-  height: '400px'
-};
+interface Location {
+  lat: number;
+  lng: number;
+}
 
-const DeliveryTracking = () => {
-  const { user } = useAuth();
-  const { activeOrder } = useOrders();
+interface Order {
+  id: string;
+  orderItems: Array<{
+    menu: {
+      name: string;
+      description: string;
+      price: number;
+    };
+  }>;
+  restaurant: {
+    name: string;
+    location: string;
+  };
+  user: {
+    name: string;
+    address: string;
+  };
+}
+
+interface DeliveryTrackingProps {
+  order: Order;
+}
+
+const DeliveryTracking = ({ order }: DeliveryTrackingProps) => {
+  const [driverLocation, setDriverLocation] = useState<Location | null>(null);
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [isMapsLoaded, setIsMapsLoaded] = useState(false);
-console.log(activeOrder);
-  useEffect(() => {
-    if (activeOrder && window.google) {
-      const directionsService = new google.maps.DirectionsService();
-      
-      directionsService.route({
-        origin: new google.maps.LatLng(
-          activeOrder.restaurant.latitude,
-          activeOrder.restaurant.longitude
-        ),
-        destination: new google.maps.LatLng(
-          activeOrder.deliveryLocation.lat,
-          activeOrder.deliveryLocation.lng
-        ),
-        travelMode: google.maps.TravelMode.DRIVING
-      }, (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          setDirections(result);
-        }
-      });
-    }
-  }, [activeOrder, isMapsLoaded]);
+  const mapRef = useRef<google.maps.Map | null>(null);
 
-  // if (!activeOrder) {
-  //   return <div className="p-4">No active delivery</div>;
-  // }
+  useEffect(() => {
+    // Join order-specific room
+    socket.emit('joinOrderRoom', order.id);
+
+    // Listen for location updates
+    socket.on('locationUpdate', (data: { latitude: number; longitude: number }) => {
+      setDriverLocation({
+        lat: data.latitude,
+        lng: data.longitude
+      });
+    });
+
+    return () => {
+      socket.off('locationUpdate');
+      socket.emit('leaveOrderRoom', order.id);
+    };
+  }, [order.id]);
+
+  useEffect(() => {
+    if (driverLocation && window.google) {
+      const directionsService = new google.maps.DirectionsService();
+      const [restLat, restLng] = order.restaurant.location.split(',').map(Number);
+      const [destLat, destLng] = order.user.address.split(',').map(Number);
+      
+      directionsService.route(
+        {
+          origin: { lat: driverLocation.lat, lng: driverLocation.lng },
+          destination: { lat: destLat, lng: destLng },
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === 'OK') {
+            setDirections(result);
+          }
+        }
+      );
+    }
+  }, [driverLocation, order]);
+
+  const mapContainerStyle = {
+    width: '100%',
+    height: '400px'
+  };
+
+  const center = driverLocation || {
+    lat: parseFloat(order.restaurant.location.split(',')[0]),
+    lng: parseFloat(order.restaurant.location.split(',')[1])
+  };
 
   return (
     <div className="p-6">
@@ -51,28 +96,30 @@ console.log(activeOrder);
         {/* Order Details Card */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Order Details</h2>
-          <div className="flex mb-4">
-            <div className="ml-4">
-              <h3 className="text-lg font-medium">{activeOrder.orderItems[0].menu.name}</h3>
-              <p className="text-gray-600">{activeOrder.orderItems[0].menu.description}</p>
-              <p className="text-yellow-600 font-medium mt-2">
-                ${activeOrder.orderItems[0].menu.price}
-              </p>
+          {order.orderItems[0] && (
+            <div className="flex mb-4">
+              <div className="ml-4">
+                <h3 className="text-lg font-medium">{order.orderItems[0].menu.name}</h3>
+                <p className="text-gray-600">{order.orderItems[0].menu.description}</p>
+                <p className="text-yellow-600 font-medium mt-2">
+                  ${order.orderItems[0].menu.price}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center">
               <span className="text-gray-500 w-32">Restaurant:</span>
-              <span className="font-medium">{activeOrder.restaurant.name}</span>
+              <span className="font-medium">{order.restaurant.name}</span>
             </div>
             <div className="flex items-center">
               <span className="text-gray-500 w-32">Customer:</span>
-              <span className="font-medium">{activeOrder.user.name}</span>
+              <span className="font-medium">{order.user.name}</span>
             </div>
             <div className="flex items-center">
               <span className="text-gray-500 w-32">Delivery Address:</span>
-              <span className="font-medium">{activeOrder.deliveryLocation.address}</span>
+              <span className="font-medium">{order.user.address}</span>
             </div>
           </div>
         </div>
@@ -80,56 +127,17 @@ console.log(activeOrder);
         {/* Map Container */}
         <div className="bg-white p-4 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Delivery Route</h2>
-          <LoadScript
-            googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-            onLoad={() => setIsMapsLoaded(true)}
-          >
-            
-<GoogleMap
-  mapContainerStyle={containerStyle}
-  center={{
-    lat: activeOrder.restaurant.latitude,
-    lng: activeOrder.restaurant.longitude,
-  }}
-  zoom={12}
-  onLoad={map => setMap(map)}
->
-              {directions && (
-                <DirectionsRenderer
-                  directions={directions}
-                  options={{
-                    polylineOptions: {
-                      strokeColor: '#ecc94b',
-                      strokeWeight: 5
-                    },
-                    suppressMarkers: false
-                  }}
-                />
-              )}
-
-              {/* Restaurant Marker */}
-              <Marker
-                position={{
-                  lat: activeOrder.restaurant.latitude,
-                  lng: activeOrder.restaurant.longitude
-                }}
-                icon={{
-                  url: '/restaurant-marker.png',
-                  scaledSize: new window.google.maps.Size(40, 40)
-                }}
-              />
-
-              {/* Delivery Location Marker */}
-              <Marker
-  position={{
-    lat: activeOrder.user.address.latitude,
-    lng: activeOrder.user.address.longitude,
-  }}
-  icon={{
-    url: '/delivery-marker.png',
-    scaledSize: new window.google.maps.Size(40, 40),
-  }}
-              />
+          <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={center}
+              zoom={15}
+              onLoad={map => {
+                mapRef.current = map;
+              }}
+            >
+              {driverLocation && <Marker position={driverLocation} icon="/driver-marker.png" />}
+              {directions && <DirectionsRenderer directions={directions} />}
             </GoogleMap>
           </LoadScript>
         </div>

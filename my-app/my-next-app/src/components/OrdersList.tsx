@@ -1,8 +1,41 @@
 import React from 'react';
 import { useOrders } from '@/context/OrderContext';
+import { useAuth } from '@/context/AuthContext';
+import { socket } from '@/utils/socket';
 
 export default function OrdersList() {
-  const { orders, loading, error } = useOrders();
+  const { orders, loading, error, acceptOrder } = useOrders();
+  const { user } = useAuth();
+
+  const handleAcceptOrder = async (orderId: string) => {
+    try {
+      await acceptOrder(orderId);
+      
+      // Join the order tracking room
+      socket.emit('joinOrderTracking', orderId);
+      
+      // Start location tracking
+      if ('geolocation' in navigator) {
+        navigator.geolocation.watchPosition(
+          (position) => {
+            socket.emit('updateLocation', {
+              orderId,
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => console.error('Geolocation error:', error),
+          {
+            enableHighAccuracy: true,
+            maximumAge: 10000,
+            timeout: 5000
+          }
+        );
+      }
+    } catch (err) {
+      console.error('Error accepting order:', err);
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center p-4">Loading orders...</div>;
@@ -56,6 +89,15 @@ export default function OrdersList() {
               </span>
             </div>
           </div>
+          
+          {order.status === 'PENDING' && user?.role === 'DELIVERYMAN' && (
+            <button
+              onClick={() => handleAcceptOrder(order.id)}
+              className="mt-4 w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition-colors"
+            >
+              Accept Order
+            </button>
+          )}
         </div>
       ))}
     </div>

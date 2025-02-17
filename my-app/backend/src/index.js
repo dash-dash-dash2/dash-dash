@@ -32,10 +32,14 @@ const httpServer = createServer(app);
 // Socket.IO setup with better connection handling
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+    allowedHeaders: ["Authorization"]
+  },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 // Middleware
@@ -51,35 +55,50 @@ app.use(limiter);
 // Make cache available throughout the app
 app.set('cache', cache);
 
+// Socket authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
+  
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error('Authentication error'));
+  }
+});
+
 // Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
-  // Join a chat room based on orderId
-  socket.on("join_chat", (orderId) => {
+  // Join order tracking room
+  socket.on("joinOrderTracking", (orderId) => {
     socket.join(`order_${orderId}`);
-    console.log(`Socket ${socket.id} joined chat room: order_${orderId}`);
+    console.log(`Socket ${socket.id} joined tracking room: order_${orderId}`);
   });
 
-  // Handle new chat messages
-  socket.on("send_message", async (data) => {
-    try {
-      const { orderId, message, userId, role } = data;
-      
-      // Save message to database with sender info
-      const savedMessage = await saveMessage(
-        orderId, 
-        userId, 
-        message, 
-        role || 'user' // Provide default role if not specified
-      );
-      
-      // Broadcast message to all clients in the room
-      io.to(`order_${orderId}`).emit("receive_message", savedMessage);
-    } catch (error) {
-      console.error("Error handling message:", error);
-      socket.emit("error", { message: "Failed to send message" });
-    }
+  // Handle location updates
+  socket.on("updateLocation", (data) => {
+    const { orderId, latitude, longitude } = data;
+    io.to(`order_${orderId}`).emit("locationUpdate", {
+      latitude,
+      longitude,
+      orderId
+    });
+  });
+
+  // Handle order status updates
+  socket.on("updateOrderStatus", (data) => {
+    const { orderId, status } = data;
+    io.to(`order_${orderId}`).emit("orderStatusUpdate", {
+      orderId,
+      status
+    });
   });
 
   socket.on("disconnect", () => {
