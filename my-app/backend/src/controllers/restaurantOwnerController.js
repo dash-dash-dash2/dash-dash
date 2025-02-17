@@ -1,4 +1,4 @@
-  import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
   import bcrypt from 'bcrypt';
 
   const prisma = new PrismaClient();
@@ -31,15 +31,15 @@
       res.status(500).json({ error: 'Failed to register restaurant owner' });
     }
   };
-
   // Get all restaurants by the authenticated owner
   const getRestaurantsByOwner = async (req, res) => {
     const userId = req.user.id;
-
+  
     try {
       const restaurants = await prisma.restaurant.findMany({
         where: {
           userId: userId,
+          isDeleted: false, // Only get non-deleted restaurants
         },
         select: {
           id: true,
@@ -82,18 +82,17 @@
           },
         },
       });
-
+  
       if (!restaurants || restaurants.length === 0) {
         return res.status(404).json({ error: "No restaurants found for this owner" });
       }
-
+  
       res.status(200).json(restaurants);
     } catch (error) {
       console.error("Error fetching restaurants by owner:", error);
       res.status(500).json({ error: "Failed to fetch restaurants", details: error.message });
     }
   };
-
   // Add a new restaurant for an authenticated owner
   const addRestaurant = async (req, res) => {
     const userId = req.user?.id; // Ensure userId is available
@@ -133,73 +132,65 @@
     }
   };
 
-
   // Update an existing restaurant
-  const updateRestaurant = async (req, res) => {
-    const userId = req.user.id;
-    const { restaurantId } = req.params;
-    const { name, cuisineType, location, imageUrl } = req.body;
+    const updateRestaurant = async (req, res) => {
+      const userId = req.user.id;
+      const { restaurantId } = req.params;
+      const { name, cuisineType, location, imageUrl } = req.body;
 
-    try {
-      // Ensure the restaurant exists and belongs to the authenticated owner
-      const restaurant = await prisma.restaurant.findUnique({
-        where: { id: Number(restaurantId) },
-      });
+      try {
+        // Ensure the restaurant exists and belongs to the authenticated owner
+        const restaurant = await prisma.restaurant.findUnique({
+          where: { id: Number(restaurantId) },
+        });
 
-      if (!restaurant) {
-        return res.status(404).json({ error: 'Restaurant not found' });
+        if (!restaurant) {
+          return res.status(404).json({ error: 'Restaurant not found' });
+        }
+
+        if (restaurant.userId !== userId) {
+          return res.status(403).json({ error: 'You are not authorized to update this restaurant' });
+        }
+
+        // Update the restaurant details
+        const updatedRestaurant = await prisma.restaurant.update({
+          where: { id: Number(restaurantId) },
+          data: {
+            name: name || restaurant.name,
+            cuisineType: cuisineType || restaurant.cuisineType,
+            location: location || restaurant.location,
+            imageUrl: imageUrl || restaurant.imageUrl,
+          },
+        });
+
+        res.status(200).json(updatedRestaurant);
+      } catch (error) {
+        console.error('Error updating restaurant:', error);
+        res.status(500).json({ error: 'Failed to update restaurant', details: error.message });
       }
-
-      if (restaurant.userId !== userId) {
-        return res.status(403).json({ error: 'You are not authorized to update this restaurant' });
-      }
-
-      // Update the restaurant details
-      const updatedRestaurant = await prisma.restaurant.update({
-        where: { id: Number(restaurantId) },
-        data: {
-          name: name || restaurant.name,
-          cuisineType: cuisineType || restaurant.cuisineType,
-          location: location || restaurant.location,
-          imageUrl: imageUrl || restaurant.imageUrl,
-        },
-      });
-
-      res.status(200).json(updatedRestaurant);
-    } catch (error) {
-      console.error('Error updating restaurant:', error);
-      res.status(500).json({ error: 'Failed to update restaurant', details: error.message });
-    }
-  };
+    };
 
   // Delete a restaurant
   const deleteRestaurant = async (req, res) => {
-    const userId = req.user.id;
-    const { restaurantId } = req.params;
-
     try {
-      // Ensure the restaurant exists and belongs to the authenticated owner
-      const restaurant = await prisma.restaurant.findUnique({
-        where: { id: Number(restaurantId) },
+      const { restaurantId } = req.params;
+      const userId = req.user.id;
+    
+      // Update restaurant to mark as deleted instead of actually deleting
+      const restaurant = await prisma.restaurant.update({
+        where: {
+          id: parseInt(restaurantId),
+          userId: userId, // Ensure the restaurant belongs to the user
+        },
+        data: {
+          isDeleted: true,
+        },
       });
-
-      if (!restaurant) {
-        return res.status(404).json({ error: 'Restaurant not found' });
-      }
-
-      if (restaurant.userId !== userId) {
-        return res.status(403).json({ error: 'You are not authorized to delete this restaurant' });
-      }
-
-      // Delete the restaurant
-      await prisma.restaurant.delete({
-        where: { id: Number(restaurantId) },
-      });
-
-      res.status(200).json({ message: 'Restaurant deleted successfully' });
+    
+      res.json({ message: "Restaurant deleted successfully" });
     } catch (error) {
-      console.error('Error deleting restaurant:', error);
-      res.status(500).json({ error: 'Failed to delete restaurant', details: error.message });
+      console.error("Error in deleteRestaurant:", error);
+      res.status(500).json({ error: "Failed to delete restaurant" });
     }
   };
   const getOwnerProfile = async (req, res) => {

@@ -26,9 +26,11 @@ router.post("/add", addRestaurant);
 
 // Route to update an existing restaurant
 router.put("/update/:restaurantId", updateRestaurant);
+// Add this new route for soft delete
+router.put("/soft-delete/:restaurantId", deleteRestaurant);
 
-// Route to delete a restaurant
-router.delete("/delete/:restaurantId", deleteRestaurant);
+// Comment out or remove the hard delete route
+// router.delete("/delete/:restaurantId", deleteRestaurant);
 
 // Route to get the profile of the authenticated owner
 router.get("/profile", getOwnerProfile);

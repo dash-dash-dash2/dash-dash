@@ -18,7 +18,6 @@ export interface Rating {
     name: string;
   };
 }
-
 export interface Category {
   id: number;
   name: string;
@@ -37,7 +36,6 @@ export interface Category {
   };
   menus: Menu[];
 }
-
 export interface Menu {
   id: number;
   name: string;
@@ -47,7 +45,6 @@ export interface Menu {
   restaurantId: number;
   restaurantName?: string;
 }
-
 export type OrderStatus = 
   | 'PENDING'
   | 'ACCEPTED'
@@ -57,7 +54,6 @@ export type OrderStatus =
   | 'DELIVERING'
   | 'DELIVERED'
   | 'CANCELLED';
-
 export interface RestaurantOrder {
   id: number;
   status: OrderStatus;
@@ -85,7 +81,6 @@ export interface RestaurantOrder {
   restaurantId: number;
   supplements: Supplement[];
 }
-
 export interface Order {
   id: number;
   userId: number;
@@ -105,7 +100,6 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
 }
-
 export interface OrderItem {
   id: number;
   menuId: number;
@@ -114,7 +108,6 @@ export interface OrderItem {
   menu: Menu;
   supplements?: Supplement[];
 }
-
 export interface Supplement {
   id: number;
   name: string;
@@ -130,7 +123,6 @@ export type OrderStatus =
   | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
   | 'CANCELLED';
-
 export interface Review {
   id: number;
   score: number;
@@ -139,4 +131,4 @@ export interface Review {
     name: string;
   };
   createdAt: string;
-} 
+}

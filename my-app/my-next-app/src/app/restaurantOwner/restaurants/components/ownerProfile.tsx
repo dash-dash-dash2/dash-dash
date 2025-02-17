@@ -51,7 +51,11 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
         setUpdatedProfile(response.data);
       } catch (error) {
         console.error("Error fetching profile:", error);
-        toast.error(error.response?.data?.message || "Failed to load profile");
+        if (axios.isAxiosError(error) && error.response) {
+          toast.error(error.response.data?.message || "Failed to load profile");
+        } else {
+          toast.error("Failed to load profile");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +92,11 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error(error.response?.data?.message || "Failed to update profile");
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data?.message || "Failed to update profile");
+      } else {
+        toast.error("Failed to update profile");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -98,54 +106,33 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
     setUpdatedProfile(profile);
     setIsEditing(false);
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
+      await handleImageUpload(e.target.files[0]); // Automatically upload the image
     }
   };
-
-  const handleImageUpload = async () => {
-    if (!file) return alert("Please select a file");
-
-    setLoadingImage(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "ml_default"); // Use your preset
-
-    try {
-      const response = await fetch("https://api.cloudinary.com/v1_1/doxjp0kvo/image/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.secure_url) {
-        setUpdatedProfile((prev) => ({ ...prev, imageUrl: data.secure_url }));
-      }
-
-      setLoadingImage(false);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      setLoadingImage(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <Card className="w-[600px]">
-          <CardContent className="pt-6 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-            <p className="mt-2">Loading profile...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+  setLoadingImage(true);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "ml_default"); // Use your preset
+  try {
+    const response = await fetch("https://api.cloudinary.com/v1_1/doxjp0kvo/image/upload", {
+      method: "POST",
+      body: formData,
+    });
+  const data = await response.json();
+  if (data.secure_url) {
+    setUpdatedProfile((prev) => ({ ...prev, imageUrl: data.secure_url }));
   }
-
+  } catch (error) {
+    console.error("Error uploading image:", error);
+  } finally {
+    setLoadingImage(false);
+  }
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <Card className="w-[600px] max-h-[90vh] overflow-y-auto">
@@ -178,14 +165,22 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
             {isEditing && (
               <div className="space-y-2">
                 <Label htmlFor="imageUrl">Upload New Profile Picture</Label>
-                <input
+                <Input
                   type="file"
                   onChange={handleFileChange}
                   className="w-full p-2 border rounded-md"
                 />
-                <Button onClick={handleImageUpload} disabled={loadingImage}>
-                  {loadingImage ? "Uploading..." : "Upload Image"}
-                </Button>
+                {updatedProfile.imageUrl && (
+                  <div className="mt-2">
+                    <Image
+                      src={updatedProfile.imageUrl || "/placeholder.svg"}
+                      alt="Profile preview"
+                      width={100}
+                      height={100}
+                      className="object-cover rounded"
+                    />
+                  </div>
+                )}
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
@@ -265,6 +260,6 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
       </Card>
     </div>
   );
-};
+}
 
 export default Profile;
