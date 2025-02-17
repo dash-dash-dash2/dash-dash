@@ -39,6 +39,10 @@ const Category: React.FC = () => {
     fetchCategories();
   }, []);
 
+  // Calculate the total width required for all categories
+  const categoryWidth = 132; // Width of each category button (100px + padding + gap)
+  const containerWidth = categories.length * categoryWidth;
+
   return (
     <section style={{ marginBottom: "32px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
@@ -50,21 +54,30 @@ const Category: React.FC = () => {
       ) : error ? (
         <p style={{ color: "red" }}>{error}</p>
       ) : (
-        <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "16px",
+            width: `${containerWidth}px`, // Set the container width dynamically
+            overflowX: "auto", // Allow horizontal scrolling if the screen is too small
+            paddingBottom: "16px",
+          }}
+        >
           {categories.map((category) => (
             <button
               key={category.id}
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: "100px",
-                borderRadius: "12px",
-                backgroundColor: "#ffffff",
-                padding: "16px",
-                transition: "background-color 0.2s, color 0.2s",
-                cursor: "pointer",
+                // display: "flex",
+                // flexDirection: "column",
+                // alignItems: "center",
+                // justifyContent: "center",
+                // minWidth: "100px",
+                // borderRadius: "12px",
+                // backgroundColor: "#ffffff",
+                // padding: "16px",
+                // transition: "background-color 0.2s, color 0.2s",
+                // // cursor: "pointer",
+                // flexShrink: 0, // Prevent the button from shrinking
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#FFB800";
