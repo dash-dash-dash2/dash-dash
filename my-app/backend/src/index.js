@@ -33,14 +33,9 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST"],
     credentials: true
-  },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000
+  }
 });
 
 // Middleware
@@ -60,25 +55,35 @@ app.set('cache', cache);
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
 
-  socket.on("disconnect", (reason) => {
-    console.log("Client disconnected:", socket.id, "Reason:", reason);
+  // Join a chat room based on orderId
+  socket.on("join_chat", (orderId) => {
+    socket.join(`order_${orderId}`);
+    console.log(`Socket ${socket.id} joined chat room: order_${orderId}`);
   });
 
-  socket.on("error", (error) => {
-    console.error("Socket error:", error);
+  // Handle new chat messages
+  socket.on("send_message", async (data) => {
+    try {
+      const { orderId, message, userId, role } = data;
+      
+      // Save message to database with sender info
+      const savedMessage = await saveMessage(
+        orderId, 
+        userId, 
+        message, 
+        role || 'user' // Provide default role if not specified
+      );
+      
+      // Broadcast message to all clients in the room
+      io.to(`order_${orderId}`).emit("receive_message", savedMessage);
+    } catch (error) {
+      console.error("Error handling message:", error);
+      socket.emit("error", { message: "Failed to send message" });
+    }
   });
 
-  socket.on("reconnect_attempt", () => {
-    console.log("Client attempting to reconnect");
-  });
-
-  socket.on("reconnect", () => {
-    console.log("Client reconnected successfully");
-  });
-
-  // Handle order status updates
-  socket.on("orderStatusUpdate", (data) => {
-    io.emit("orderStatusUpdate", data);
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
   });
 });
 

@@ -112,14 +112,14 @@ const getRecentMessages = async (orderId) => {
   }
 };
 
- const saveMessage = async (orderId, userId, message, role) => {
+const saveMessage = async (orderId, userId, message, role) => {
   try {
     const chat = await prisma.chat.create({
       data: {
         orderId: parseInt(orderId),
         userId,
         message,
-        senderRole: role
+        sender: role.toLowerCase()
       },
       include: {
         user: {

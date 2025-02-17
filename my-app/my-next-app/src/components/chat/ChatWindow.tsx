@@ -23,15 +23,9 @@ const ChatWindow = ({ chatId }: ChatWindowProps) => {
   };
 
   useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        await fetchMessages(chatId);
-      } catch (error) {
-        console.error('Failed to load messages:', error);
-      }
-    };
-    
-    if (chatId) loadMessages();
+    if (chatId) {
+      fetchMessages(chatId);
+    }
   }, [chatId]);
 
   useEffect(() => {
@@ -56,7 +50,7 @@ const ChatWindow = ({ chatId }: ChatWindowProps) => {
   if (chats.length === 0) return null;
 
   const renderMessage = (message: Message) => {
-    const isOwnMessage = message.sender === 'user' && message.userId === user?.id;
+    const isOwnMessage = user?.id === message.userId;
     
     return (
       <div

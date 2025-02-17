@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import api from '@/lib/axios';
 import { useAuth } from "@/context/AuthContext";
 import axios from 'axios';
+import { io, Socket } from 'socket.io-client';
 
 export interface Message {
   id: number;
@@ -53,6 +54,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const { token, user } = useAuth();
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   const fetchChats = async () => {
     if (!token) return;
@@ -112,71 +114,77 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendMessage = async (orderId: string, content: string) => {
-    if (!token || !user) return;
-
-    try {
-      const response = await axios.post('http://localhost:5000/api/chat/message', 
-        {
-          orderId: parseInt(orderId),
-          message: content,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+  // Initialize socket connection
+  useEffect(() => {
+    if (token) {
+      const newSocket = io('http://localhost:5000', {
+        auth: { token },
+        transports: ['websocket']
+      });
       
-      // Update the specific chat's messages
+      setSocket(newSocket);
+
+      return () => {
+        newSocket.close();
+      };
+    }
+  }, [token]);
+
+  // Handle incoming messages
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("receive_message", (newMessage: Message) => {
       setChats(prevChats => {
-        const chatIndex = prevChats.findIndex(chat => chat.orderId === parseInt(orderId));
+        const chatIndex = prevChats.findIndex(
+          chat => chat.orderId === newMessage.orderId
+        );
+        
         if (chatIndex === -1) {
-          // If chat doesn't exist, create new chat with the message
           return [...prevChats, {
-            id: Date.now(),
-            orderId: parseInt(orderId),
-            messages: [response.data]
+            id: newMessage.orderId,
+            orderId: newMessage.orderId,
+            messages: [newMessage]
           }];
         }
 
-        // Update existing chat's messages
         const updatedChats = [...prevChats];
         updatedChats[chatIndex] = {
           ...updatedChats[chatIndex],
-          messages: [...updatedChats[chatIndex].messages, response.data]
+          messages: [...updatedChats[chatIndex].messages, newMessage]
         };
         return updatedChats;
+      });
+    });
+
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [socket]);
+
+  // Join chat room when activeChat changes
+  useEffect(() => {
+    if (socket && activeChat) {
+      socket.emit("join_chat", activeChat);
+    }
+  }, [socket, activeChat]);
+
+  // Update sendMessage function to use socket
+  const sendMessage = async (orderId: string, content: string) => {
+    if (!socket || !token || !user) return;
+
+    try {
+      socket.emit("send_message", {
+        orderId: parseInt(orderId),
+        message: content,
+        userId: user.id,
+        role: user.role
       });
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
     }
   };
-
-  // Update useEffect to use a cleanup function
-  // useEffect(() => {
-  //   let mounted = true;
-  //   let intervalId: NodeJS.Timeout;
-
-  //   if (token) {
-  //     fetchChats();
-  //     // Poll less frequently - every 10 seconds
-  //     intervalId = setInterval(() => {
-  //       if (mounted) {
-  //         fetchChats();
-  //       }
-  //     }, 10000);
-  //   }
-
-  //   // Cleanup function
-  //   return () => {
-  //     mounted = false;
-  //     if (intervalId) {
-  //       clearInterval(intervalId);
-  //     }
-  //   };
-  // }, [token]);
 
   return (
     <ChatContext.Provider value={{ 
