@@ -1,5 +1,5 @@
-import { AuthProvider } from "@/context/AuthContext"; // Import AuthProvider
-import { ChatProvider } from "@/context/ChatContext"; // Import ChatProvider
+import { AuthProvider } from "../../context/AuthContext.js";
+import { ChatProvider } from "../../context/ChatContext.js";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

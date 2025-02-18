@@ -67,25 +67,28 @@ const RestaurantOrdersPage: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]); // State for cart items
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetails | null>(null); // State for selected order details
   const [showCartModal, setShowCartModal] = useState<boolean>(false); // State for cart modal visibility
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const [user, setUser] = useState(null);
   const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState<number | null>(null);
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]); // State for notifications
 
   useEffect(() => {
+    // Get user data from localStorage after component mounts
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+
     const fetchMenuItems = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`http://localhost:5000/api/menus/restaurant/${onerestorantid}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(`http://localhost:5000/api/menus/restaurant/${onerestorantid}`);
         setMenuItems(response.data);
+        setLoading(false);
       } catch (err) {
+        console.error("Error fetching menu items:", err);
         setError("Failed to fetch menu items");
-        console.error(err);
+        setLoading(false);
       }
     };
 
@@ -148,7 +151,9 @@ const RestaurantOrdersPage: React.FC = () => {
       setLoading(false); // Set loading to false after both fetches
 
       // Socket.IO connection
-      const socket = io("http://localhost:5000"); // Use Socket.IO client
+      const socket = io("http://localhost:5000", {
+        auth: { token: localStorage.getItem("token") }
+      });
 
       socket.on("connect", () => {
         console.log("Socket.IO connection established");
@@ -206,12 +211,31 @@ const RestaurantOrdersPage: React.FC = () => {
     );
   };
 
-  const handleAddToCart = (menuId: number, quantity: number, selectedSupplements: number[]) => {
-    const newCartItem: CartItem = { menuId, quantity, selectedSupplements };
-    const updatedCart = [...cart, newCartItem];
-    setCart(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart)); // Save to local storage
-    Swal.fire("Success", "Item added to cart!", "success");
+  const handleAddToCart = (menuItem: MenuItem) => {
+    if (!user) {
+      Swal.fire({
+        title: 'Please Login',
+        text: 'You need to be logged in to add items to cart',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
+
+    const cartItem: CartItem = {
+      menuId: menuItem.id,
+      quantity: quantity,
+      selectedSupplements: selectedSupplements
+    };
+
+    setCart(prevCart => [...prevCart, cartItem]);
+    
+    Swal.fire({
+      title: 'Added to Cart!',
+      text: `${menuItem.name} has been added to your cart`,
+      icon: 'success',
+      timer: 1500
+    });
   };
 
   const handleQuantityChange = (menuId: number, newQuantity: number) => {
@@ -550,7 +574,7 @@ const RestaurantOrdersPage: React.FC = () => {
             <p>Total Amount: ${((selectedItem.price * quantity) + selectedSupplements.reduce((acc, id) => acc + (selectedItem.supplements.find(s => s.id === id)?.price || 0), 0)).toFixed(2)}</p>
             <div className={styles.modalActions}>
               <button className={styles.closeButton} onClick={() => setSelectedItem(null)}>Close</button>
-              <button className={styles.addButton} onClick={() => handleAddToCart(selectedItem.id, quantity, selectedSupplements)}>Add to Cart</button>
+              <button className={styles.addButton} onClick={() => handleAddToCart(selectedItem)}>Add to Cart</button>
             </div>
           </div>
         </div>

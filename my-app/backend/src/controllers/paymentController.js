@@ -1,5 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+import { PrismaClient } from '@prisma/client';
+import stripe from 'stripe';
+
+const stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
 const prisma = new PrismaClient();
 
 // Create a new payment
@@ -90,7 +92,7 @@ const processStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
 
   try {
-    const event = stripe.webhooks.constructEvent(
+    const event = stripeClient.webhooks.constructEvent(
       req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
@@ -112,7 +114,7 @@ const processStripeWebhook = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   createPayment,
   getPaymentStatus,
   getPaymentHistory,

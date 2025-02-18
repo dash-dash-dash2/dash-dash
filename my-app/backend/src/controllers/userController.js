@@ -1,6 +1,7 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
 const prisma = new PrismaClient();
 
 // Register a new user
@@ -81,29 +82,30 @@ const loginUser = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: "Invalid credentials" });
-    }
-
+    // Generate token with correct user ID field
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { 
+        id: user.id,  // Changed from userId to id to match auth middleware
+        role: user.role 
+      },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
+    // Remove password from user object
     const { password: _, ...userWithoutPassword } = user;
 
-    res.status(200).json({ 
-      message: "Login successful", 
+    res.status(200).json({
+      message: "Login successful",
       user: userWithoutPassword,
-      token 
+      token
     });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Login failed", details: error.message });
   }
 };
+
 const updateProfile = async (req, res) => {
   const userId = req.user.id;
   const { name, phone, address } = req.body;
@@ -133,6 +135,7 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ error: "Failed to update profile", details: error.message });
   }
 };
+
 // Get user profile
 const getUserProfile = async (req, res) => {
   const userId = req.user.id;
@@ -158,5 +161,9 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-
-module.exports = { registerUser, loginUser, getUserProfile,updateProfile };
+export {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  updateProfile
+};

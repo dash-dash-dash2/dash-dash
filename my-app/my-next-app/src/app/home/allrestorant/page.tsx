@@ -1,11 +1,31 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Navbar from "../../../components/Navbar";
+import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
-import ReviewsPopup from './ReviewsPopup'; // Import the ReviewsPopup component
+import ReviewsPopup from './ReviewsPopup';
 import Footer from "@/components/Footer";
-import { Review } from "@/types/index"; // Import the Review type
+import { Review } from "@/types/index";
+import { 
+  Search, 
+  MapPin, 
+  Star, 
+  Clock, 
+  Filter,
+  ChevronDown,
+  Heart
+} from 'lucide-react';
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import RatingPopup from '@/components/RatingPopup';
 
 // Interface for restaurant data
 interface RestaurantItem {
@@ -21,59 +41,6 @@ interface RestaurantItem {
   latitude: number;
   longitude: number;
 }
-
-// RatingPopup component for submitting a new rating
-const RatingPopup: React.FC<{ restaurantId: string; onClose: () => void; onRatingAdded: (newRating: any) => void; }> = ({ restaurantId, onClose, onRatingAdded }) => {
-  const [score, setScore] = useState<number>(1);
-  const [comment, setComment] = useState<string>("");
-
-  const handleSubmit = async () => {
-    const token = localStorage.getItem("token"); // Assuming you store the token in localStorage
-
-    const response = await fetch(`http://localhost:5000/api/ratings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, // Include the token in the Authorization header
-      },
-      body: JSON.stringify({ restaurantId, score, comment }),
-    });
-
-    if (response.ok) {
-      const newRating = await response.json();
-      onRatingAdded(newRating); // Call the function to update the rating in the parent component
-      onClose(); // Close the popup
-    } else {
-      const errorData = await response.json(); // Get error details from the response
-      console.error("Failed to submit rating:", errorData);
-    }
-  };
-
-  return (
-    <div className="modal">
-      <h2 style={{ textAlign: 'center' }}>Rate this Restaurant</h2>
-      <div className="star-rating" style={{ textAlign: 'center' }}>
-        {[1, 2, 3, 4, 5].map((num) => (
-          <span
-            key={num}
-            onClick={() => setScore(num)}
-            style={{ cursor: "pointer", color: num <= score ? "gold" : "gray", fontSize: '24px' }}
-          >
-            ★
-          </span>
-        ))}
-      </div>
-      <label style={{ display: 'block', marginTop: '10px' }}>
-        Comment:
-        <textarea value={comment} onChange={(e) => setComment(e.target.value)} style={{ width: '100%', height: '60px', marginTop: '5px' }} />
-      </label>
-      <div style={{ textAlign: 'center', marginTop: '10px' }}>
-        <button onClick={handleSubmit} style={{ marginRight: '10px' }}>Submit</button>
-        <button onClick={onClose}>Cancel</button>
-      </div>
-    </div>
-  );
-};
 
 // Function to render stars based on the rating
 const renderStars = (rating: number) => {
@@ -198,6 +165,19 @@ const RestaurantList: React.FC = () => {
   const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCuisine, setSelectedCuisine] = useState('All');
+  const [sortBy, setSortBy] = useState('rating');
+  const router = useRouter();
+  const { toast } = useToast();
+  const [showRatingPopup, setShowRatingPopup] = useState(false);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
+  const [showReviews, setShowReviews] = useState(false);
+  const [isNearby, setIsNearby] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Cuisine types for filter
+  const cuisineTypes = ['All', 'Italian', 'Japanese', 'Indian', 'American', 'Mexican', 'Chinese'];
 
   useEffect(() => {
     const fetchNearbyRestaurants = async (latitude: number, longitude: number) => {
@@ -205,95 +185,311 @@ const RestaurantList: React.FC = () => {
         const response = await fetch(
           `http://localhost:5000/api/restaurants/nearby?latitude=${latitude}&longitude=${longitude}`
         );
-        if (!response.ok) {
-          throw new Error("Failed to fetch restaurant data");
-        }
-        const data = await response.json();
-        console.log("Fetched nearby restaurants:", data);
+        if (!response.ok) throw new Error("Failed to fetch restaurant data");
         
-        // Fetch ratings for each restaurant
-        const restaurantsWithRatings = await Promise.all(data.map(async (restaurant: RestaurantItem) => {
-          const ratingsResponse = await fetch(`http://localhost:5000/api/ratings/restaurant/${restaurant.id}`);
-          const ratingsData = await ratingsResponse.json();
-          const totalRatings = ratingsData.totalRatings || 0; // Get total ratings
-          const averageRating = ratingsData.averageRating || 0; // Get average rating
-          return { ...restaurant, ratings: ratingsData.ratings, totalRatings, averageRating }; // Add ratings and totals to restaurant data
-        }));
+        const data = await response.json();
+        const restaurantsWithRatings = await Promise.all(
+          data.map(async (restaurant: RestaurantItem) => {
+            const ratingsResponse = await fetch(
+              `http://localhost:5000/api/ratings/restaurant/${restaurant.id}`
+            );
+            const ratingsData = await ratingsResponse.json();
+            return { 
+              ...restaurant, 
+              ratings: ratingsData.ratings, 
+              totalRatings: ratingsData.totalRatings || 0,
+              averageRating: ratingsData.averageRating || 0
+            };
+          })
+        );
 
         setRestaurants(restaurantsWithRatings);
       } catch (err) {
-        console.error("Error fetching nearby restaurants:", err);
         setError((err as Error).message);
       } finally {
         setLoading(false);
       }
     };
 
-    // Get user's location
-    const getUserLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            fetchNearbyRestaurants(latitude, longitude);
-          },
-          (error) => {
-            console.error("Error getting location:", error);
-            setError("Unable to retrieve your location.");
-            setLoading(false);
-          }
-        );
-      } else {
-        setError("Geolocation is not supported by this browser.");
-        setLoading(false);
-      }
-    };
-
-    getUserLocation();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          fetchNearbyRestaurants(position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          setError("Unable to retrieve your location.");
+          setLoading(false);
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by this browser.");
+      setLoading(false);
+    }
   }, []);
 
-  const handleRatingAdded = (newRating: any) => {
-    // Update the restaurant list with the new rating
-    setRestaurants((prevRestaurants) =>
-      prevRestaurants.map((restaurant) => {
-        if (restaurant.id === newRating.restaurantId) {
-          const updatedRatings = [...(restaurant.ratings || []), newRating];
-          const totalRatings = updatedRatings.length;
-          const averageRating = updatedRatings.reduce((acc, curr) => acc + curr.score, 0) / totalRatings;
-          return { ...restaurant, ratings: updatedRatings, totalRatings, averageRating }; // Update the restaurant with new rating
-        }
-        return restaurant;
-      })
-    );
+  const filteredRestaurants = restaurants
+    .filter(restaurant => {
+      const matchesSearch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          restaurant.cuisineType.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCuisine = selectedCuisine === 'All' || restaurant.cuisineType === selectedCuisine;
+      return matchesSearch && matchesCuisine;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'rating') {
+        return (typeof b.averageRating === 'number' ? b.averageRating : 0) - 
+               (typeof a.averageRating === 'number' ? a.averageRating : 0);
+      }
+      return 0;
+    });
+
+  const handleRestaurantClick = (restaurantId: string) => {
+    router.push(`/home/onerestorant/${restaurantId}`);
   };
 
-  if (loading) return <p>Loading restaurants...</p>;
-  if (error) return <p>Error: {error}</p>;
+  const handleRateClick = (restaurantId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the card click
+    setSelectedRestaurantId(restaurantId);
+    setShowRatingPopup(true);
+  };
+
+  const handleShowReviews = (restaurantId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedRestaurantId(restaurantId);
+    setShowReviews(true);
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d;
+  };
+
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI / 180);
+  };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "24px",
-        padding: "24px",
-        backgroundColor: "white",
-        minHeight: "100vh",
-      }}
-    >
-       <Navbar />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-          gap: "24px",
-        }}
-      >
-        {restaurants.map((restaurant) => (
-          <RestaurantCard key={restaurant.id} {...restaurant} onRatingAdded={handleRatingAdded} />
-        ))}
-      </div>
-      <Footer /> {/* Add the Footer here */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-primary/90 to-primary-dark/90 py-20">
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative container mx-auto px-4 text-center text-white z-10">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in">
+            Discover Amazing Restaurants
+          </h1>
+          <p className="text-xl mb-8 animate-fade-in opacity-90">
+            Find and review the best local restaurants in your area
+          </p>
+          
+          {/* Search and Filter Section */}
+          <div className="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
+            <div className="flex-1 relative">
+              <Input 
+                type="text"
+                placeholder="Search restaurants..."
+                className="w-full h-12 pl-12 bg-white/90 backdrop-blur-sm text-gray-800"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" className="h-12 px-6">
+                  <Filter className="w-5 h-5 mr-2" />
+                  {selectedCuisine}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {cuisineTypes.map((cuisine) => (
+                  <DropdownMenuItem
+                    key={cuisine}
+                    onClick={() => setSelectedCuisine(cuisine)}
+                  >
+                    {cuisine}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              variant="outline"
+              className="h-12 px-6"
+              onClick={() => {
+                setIsNearby(!isNearby);
+                if (!isNearby) {
+                  // Get user location and fetch nearby restaurants
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setUserLocation({ lat: latitude, lng: longitude });
+                        fetchNearbyRestaurants(latitude, longitude);
+                      },
+                      (error) => {
+                        toast({
+                          title: "Location Error",
+                          description: "Unable to get your location",
+                          variant: "destructive",
+                        });
+                      }
+                    );
+                  }
+                }
+              }}
+            >
+              <MapPin className="w-5 h-5 mr-2" />
+              {isNearby ? 'Show All' : 'Near Me'}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Restaurants Grid */}
+      <section className="container mx-auto px-4 py-12">
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array(6).fill(null).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <div className="h-48 bg-gray-200 rounded-t-lg" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-500">{error}</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRestaurants.map((restaurant, index) => (
+              <Card
+                key={restaurant.id}
+                className="group overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+                onClick={() => handleRestaurantClick(restaurant.id)}
+                style={{
+                  animation: `fadeIn 0.5s ease-out ${index * 0.1}s`,
+                  opacity: 0,
+                  animationFillMode: 'forwards'
+                }}
+              >
+                <div className="relative overflow-hidden">
+                  <img
+                    src={restaurant.imageUrl || '/default-restaurant.jpg'}
+                    alt={restaurant.name}
+                    className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 text-white hover:text-primary"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Heart className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg mb-2">{restaurant.name}</h3>
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                      {typeof restaurant.averageRating === 'number' 
+                        ? restaurant.averageRating.toFixed(1) 
+                        : '0.0'}
+                      <span className="text-gray-400 ml-1">
+                        ({restaurant.totalRatings})
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      {userLocation && restaurant.latitude && restaurant.longitude ? (
+                        <span>
+                          {calculateDistance(
+                            userLocation.lat,
+                            userLocation.lng,
+                            restaurant.latitude,
+                            restaurant.longitude
+                          ).toFixed(1)} km away
+                        </span>
+                      ) : (
+                        restaurant.location
+                      )}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      25-35 min
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex justify-between items-center">
+                    <span className="text-sm font-medium text-primary">
+                      {restaurant.cuisineType}
+                    </span>
+                    <div className="space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => handleShowReviews(restaurant.id, e)}
+                        className="hover:bg-primary hover:text-white"
+                      >
+                        See Reviews
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={(e) => handleRateClick(restaurant.id, e)}
+                        className="bg-primary hover:bg-primary-dark"
+                      >
+                        Rate
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+      
+      {/* Rating Popup */}
+      {showRatingPopup && selectedRestaurantId && (
+        <RatingPopup
+          restaurantId={selectedRestaurantId}
+          onClose={() => setShowRatingPopup(false)}
+          onRatingAdded={(newRating) => {
+            toast({
+              title: "Rating Submitted",
+              description: "Thank you for your review!",
+              duration: 3000,
+            });
+            // Update the restaurants list with the new rating
+            // ... implement rating update logic
+          }}
+        />
+      )}
+
+      {/* Reviews Popup */}
+      {showReviews && selectedRestaurantId && (
+        <ReviewsPopup
+          reviews={restaurants.find(r => r.id === selectedRestaurantId)?.ratings || []}
+          onClose={() => setShowReviews(false)}
+        />
+      )}
+      
+      <Footer />
     </div>
   );
 };

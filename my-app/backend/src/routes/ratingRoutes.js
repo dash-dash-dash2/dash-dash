@@ -1,11 +1,12 @@
-const express = require("express");
-const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const {
+import express from "express";
+import { authenticate } from "../middleware/authMiddleware.js";
+import {
   createRating,
   getRestaurantRatings,
   updateRating
-} = require("../controllers/ratingController");
+} from "../controllers/ratingController.js";
+
+const router = express.Router();
 
 // Public routes
 router.get("/restaurant/:restaurantId", getRestaurantRatings);
@@ -15,4 +16,4 @@ router.use(authenticate);
 router.post("/", createRating);
 router.put("/:id", updateRating);
 
-module.exports = router; 
+export default router; 

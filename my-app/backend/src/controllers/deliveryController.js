@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // Get available orders for delivery
@@ -196,7 +196,7 @@ const getCurrentDeliveries = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAvailableOrders,
   acceptDelivery,
   updateDeliveryStatus,

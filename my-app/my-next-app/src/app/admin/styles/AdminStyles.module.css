@@ -1,0 +1,172 @@
+.adminContainer {
+  @apply max-w-7xl mx-auto p-6;
+}
+
+.header {
+  @apply mb-8 p-6 bg-white rounded-lg shadow-md;
+}
+
+.headerTitle {
+  @apply text-2xl font-bold text-gray-800 mb-2;
+}
+
+.headerDescription {
+  @apply text-gray-600;
+}
+
+.card {
+  @apply bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg;
+}
+
+.statsGrid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8;
+}
+
+.statCard {
+  @apply bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
+}
+
+.statValue {
+  @apply text-3xl font-bold text-gray-800 mb-2;
+}
+
+.statLabel {
+  @apply text-sm text-gray-600;
+}
+
+.table {
+  @apply w-full bg-white rounded-lg shadow-md overflow-hidden;
+}
+
+.tableHeader {
+  @apply bg-gray-50 text-left;
+}
+
+.tableHeaderCell {
+  @apply px-6 py-4 text-sm font-semibold text-gray-800;
+}
+
+.tableRow {
+  @apply border-t border-gray-200 hover:bg-gray-50 transition-colors duration-200;
+}
+
+.tableCell {
+  @apply px-6 py-4 text-sm text-gray-700;
+}
+
+.button {
+  @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+}
+
+.primaryButton {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.secondaryButton {
+  @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+}
+
+.dangerButton {
+  @apply bg-red-600 text-white hover:bg-red-700;
+}
+
+.successButton {
+  @apply bg-green-600 text-white hover:bg-green-700;
+}
+
+.searchInput {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}
+
+.filterSelect {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+}
+
+.badge {
+  @apply px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.successBadge {
+  @apply bg-green-100 text-green-800;
+}
+
+.warningBadge {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.dangerBadge {
+  @apply bg-red-100 text-red-800;
+}
+
+.modal {
+  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+}
+
+.modalContent {
+  @apply bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4;
+}
+
+.modalHeader {
+  @apply text-xl font-bold mb-4;
+}
+
+.modalBody {
+  @apply mb-6;
+}
+
+.modalFooter {
+  @apply flex justify-end space-x-4;
+}
+
+/* Animations */
+.fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.slideIn {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Loading States */
+.skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+.skeletonText {
+  @apply h-4 bg-gray-200 rounded;
+}
+
+.skeletonCircle {
+  @apply h-12 w-12 bg-gray-200 rounded-full;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .statsGrid {
+    @apply grid-cols-1;
+  }
+  
+  .tableResponsive {
+    @apply block overflow-x-auto;
+  }
+} 

@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Get all users
@@ -24,7 +24,7 @@ const getAllUsers = async (req, res) => {
 
 // Ban a user
 const banUser = async (req, res) => {
-  const { userId } = req.params; // Get user ID from request parameters
+  const { userId } = req.params;
 
   try {
     const user = await prisma.user.update({
@@ -40,7 +40,7 @@ const banUser = async (req, res) => {
 
 // Unban a user
 const unbanUser = async (req, res) => {
-  const { userId } = req.params; // Get user ID from request parameters
+  const { userId } = req.params;
 
   try {
     const user = await prisma.user.update({
@@ -74,14 +74,14 @@ const getAllRestaurants = async (req, res) => {
   }
 };
 
-// Add this function to your existing controller
+// Get user by ID
 const getUserById = async (req, res) => {
-  const { userId } = req.params; // Get user ID from request parameters
+  const { userId } = req.params;
 
   try {
     const user = await prisma.user.findUnique({
       where: {
-        id: parseInt(userId), // Ensure userId is parsed as an integer
+        id: parseInt(userId),
       },
       select: {
         id: true,
@@ -105,9 +105,9 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Add this function to your existing controller
+// Delete restaurant
 const deleteRestaurant = async (req, res) => {
-  const { restaurantId } = req.params; // Get restaurant ID from request parameters
+  const { restaurantId } = req.params;
 
   try {
     await prisma.restaurant.delete({
@@ -120,50 +120,9 @@ const deleteRestaurant = async (req, res) => {
   }
 };
 
-// Add this function to your existing controller
-const addRestaurant = async (req, res) => {
-  const { name, cuisineType, location } = req.body; // Get restaurant details from request body
-
-  try {
-    const newRestaurant = await prisma.restaurant.create({
-      data: {
-        name,
-        cuisineType,
-        location,
-        // Add any other default values or relationships as needed
-      },
-    });
-    res.status(201).json(newRestaurant); // Respond with the created restaurant
-  } catch (error) {
-    console.error("Error adding restaurant:", error);
-    res.status(500).json({ error: "Failed to add restaurant", details: error.message });
-  }
-};
-
-// Add this function to your existing controller
-const updateRestaurant = async (req, res) => {
-  const { restaurantId } = req.params; // Get restaurant ID from request parameters
-  const { name, cuisineType, location } = req.body; // Get updated details from request body
-
-  try {
-    const updatedRestaurant = await prisma.restaurant.update({
-      where: { id: parseInt(restaurantId) },
-      data: {
-        name,
-        cuisineType,
-        location,
-      },
-    });
-    res.status(200).json(updatedRestaurant); // Respond with the updated restaurant
-  } catch (error) {
-    console.error("Error updating restaurant:", error);
-    res.status(500).json({ error: "Failed to update restaurant", details: error.message });
-  }
-};
-
-// Add this function to your existing controller
+// Get restaurant by ID
 const getRestaurantById = async (req, res) => {
-  const { restaurantId } = req.params; // Get restaurant ID from request parameters
+  const { restaurantId } = req.params;
 
   try {
     const restaurant = await prisma.restaurant.findUnique({
@@ -173,7 +132,6 @@ const getRestaurantById = async (req, res) => {
         name: true,
         cuisineType: true,
         location: true,
-        // Add more fields as needed
       }
     });
 
@@ -188,24 +146,24 @@ const getRestaurantById = async (req, res) => {
   }
 };
 
-// Add this function to your existing controller
+// Update user role
 const updateUserRole = async (req, res) => {
-  const { userId } = req.params; // Get user ID from request parameters
-  const { role } = req.body; // Get new role from request body
+  const { userId } = req.params;
+  const { role } = req.body;
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id: parseInt(userId) },
       data: { role },
     });
-    res.status(200).json(updatedUser); // Respond with the updated user
+    res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Error updating user role:", error);
     res.status(500).json({ error: "Failed to update user role", details: error.message });
   }
 };
 
-// Add this function to your existing controller
+// Get user growth data
 const getUserGrowthData = async (req, res) => {
   try {
     const userGrowthData = await prisma.user.groupBy({
@@ -215,7 +173,7 @@ const getUserGrowthData = async (req, res) => {
       },
       where: {
         createdAt: {
-          gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), // Last year
+          gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)),
         },
       },
       orderBy: {
@@ -223,9 +181,8 @@ const getUserGrowthData = async (req, res) => {
       },
     });
 
-    // Format the data to return month and count
     const formattedData = userGrowthData.map(item => ({
-      month: item.createdAt.toISOString().slice(0, 7), // Format to YYYY-MM
+      month: item.createdAt.toISOString().slice(0, 7),
       count: item._count.id,
     }));
 
@@ -236,6 +193,14 @@ const getUserGrowthData = async (req, res) => {
   }
 };
 
-// Add more admin functionalities as needed...
-
-module.exports = { getAllUsers, getAllRestaurants, banUser, unbanUser, getUserById, deleteRestaurant, addRestaurant, updateRestaurant, getRestaurantById, updateUserRole, getUserGrowthData };
+export {
+  getAllUsers,
+  getAllRestaurants,
+  banUser,
+  unbanUser,
+  getUserById,
+  deleteRestaurant,
+  getRestaurantById,
+  updateUserRole,
+  getUserGrowthData
+};

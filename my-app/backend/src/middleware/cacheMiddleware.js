@@ -1,4 +1,4 @@
-const cache = require('../config/cache');
+import cache from '../config/cache.js';
 
 const cacheMiddleware = (duration) => {
   return (req, res, next) => {
@@ -33,4 +33,4 @@ const clearCache = (key) => {
   }
 };
 
-module.exports = { cacheMiddleware, clearCache }; 
+export { cacheMiddleware, clearCache }; 

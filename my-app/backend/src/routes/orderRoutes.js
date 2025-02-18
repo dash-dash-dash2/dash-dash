@@ -1,15 +1,16 @@
-const express = require("express");
-const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const {
+import express from 'express';
+import { authenticate } from '../middleware/authMiddleware.js';
+import {
   createOrder,
   getUserOrders,
   updateOrderStatus,
   getOrderById,
   deleteOrder,
   getOrderHistory
-} = require("../controllers/orderController");
-const orderItemController = require('../controllers/orderItemController');
+} from '../controllers/orderController.js';
+import { getOrderItems, updateOrderItem } from '../controllers/orderItemController.js';
+
+const router = express.Router();
 
 // Apply authentication middleware
 router.use(authenticate);
@@ -23,7 +24,7 @@ router.put("/:id/status", updateOrderStatus); // Update order status
 router.delete("/:id", deleteOrder); // Delete an order by ID
 
 // Order item routes
-router.get('/:orderId/items', orderItemController.getOrderItems);
-router.put('/items/:id', orderItemController.updateOrderItem);
+router.get('/:orderId/items', getOrderItems);
+router.put('/items/:id', updateOrderItem);
 
-module.exports = router; 
+export default router; 

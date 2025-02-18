@@ -98,21 +98,22 @@ model OrderItem {
   order       Order       @relation(fields: [orderId], references: [id])
   menu        Menu        @relation("MenuOrderItems", fields: [menuId], references: [id])
   supplements Supplement[] @relation("OrderItemSupplements")
+  
 }
 
 // Chat Table (Real-time chat between user and driver)
 model Chat {
   id            Int          @id @default(autoincrement())
   orderId       Int
-  userId        Int? // Make optional if user can be null
-  deliverymanId Int? // Make optional if deliveryman can be null
+  userId        Int?
+  deliverymanId Int?
   message       String
-  sender        String // "user" or "deliveryman"
+  sender        String
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   order         Order        @relation(fields: [orderId], references: [id])
-  user          User?        @relation(fields: [userId], references: [id]) // Make optional
-  deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id]) // Make optional
+  user          User?        @relation(fields: [userId], references: [id])
+  deliveryman   Deliveryman? @relation(fields: [deliverymanId], references: [id])
 }
 
 // Notification Table
@@ -169,6 +170,7 @@ model Menu {
   restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
   orderItems   OrderItem[]  @relation("MenuOrderItems")
   supplements  Supplement[]  @relation("MenuSupplements")
+
 }
 
 // Rating Table (User ratings for restaurants)

@@ -18,7 +18,6 @@ import type { RestaurantOrder, OrderStatus } from "@/types"
 import Swal from "sweetalert2"
 import { io, type Socket } from "socket.io-client"
 import UpdateRestaurantModal from "./components/UpdateRestaurantModal"
-import DeleteRestaurantModal from "./components/DeleteRestaurantModal"
 import { Button } from "@/components/ui/button"
 import type { Rating } from "@/types" // Add this import
 import type { Category } from "@/types" // Add this import
@@ -82,13 +81,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selected, setSelected }) => {
 const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [restaurantToModify, setRestaurantToModify] = useState<Restaurant | null>(null)
 
   const handleRestaurantClick = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant)
     setIsUpdateModalOpen(false)
-    setIsDeleteModalOpen(false)
   }
 
   const handleUpdateClick = (restaurant: Restaurant) => {
@@ -98,7 +95,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
 
   const handleDeleteClick = (restaurant: Restaurant) => {
     setRestaurantToModify(restaurant)
-    setIsDeleteModalOpen(true)
   }
 
   return (
@@ -149,11 +145,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
         onClose={() => setIsUpdateModalOpen(false)}
         restaurant={restaurantToModify}
       />
-      <DeleteRestaurantModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        restaurant={restaurantToModify}
-      />
+     
       <RatingsModal
         isOpen={!!selectedRestaurant}
         onClose={() => setSelectedRestaurant(null)}

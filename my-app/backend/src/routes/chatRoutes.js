@@ -1,11 +1,12 @@
-const express = require("express");
-const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const {
+import express from "express";
+import { authenticate } from "../middleware/authMiddleware.js";
+import {
+  getOrderChats,
   getChatHistory,
-  sendMessage,
-  getOrderChats
-} = require("../controllers/chatController");
+  sendMessage
+} from "../controllers/chatController.js";
+
+const router = express.Router();
 
 router.use(authenticate);
 
@@ -16,6 +17,6 @@ router.get("/order/:orderId", getOrderChats);
 router.get("/history", getChatHistory);
 
 // Send a new message
-router.post("/send", sendMessage);
+router.post("/message", sendMessage);
 
-module.exports = router; 
+export default router; 

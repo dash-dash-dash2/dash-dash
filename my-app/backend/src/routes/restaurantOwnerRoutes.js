@@ -1,16 +1,18 @@
-const express = require("express");
-const router = express.Router();
-const { authenticate } = require("../middleware/authMiddleware");
-const { 
+import express from "express";
+import { authenticate } from "../middleware/authMiddleware.js";
+import {
   registerRestaurantOwner,
   getRestaurantsByOwner,
   addRestaurant,
   updateRestaurant,
-  getOwnerProfile,         // Importing getOwnerProfile
-  updateOwnerProfile,      // Importing updateOwnerProfile
-  addMenu                  // Importing addMenu
-} = require('../controllers/restaurantOwnerController');
-const { getRestaurantOrders } = require('../controllers/orderController');
+  getOwnerProfile,
+  updateOwnerProfile,
+  addMenu
+} from '../controllers/restaurantOwnerController.js';
+import { getRestaurantOrders } from '../controllers/orderController.js';
+
+const router = express.Router();
+
 // Authenticate all routes below
 router.use(authenticate);
 
@@ -32,14 +34,8 @@ router.put("/update/:restaurantId", updateRestaurant);
 
 // Route to get the profile of the authenticated owner
 router.get("/profile", getOwnerProfile);
-
-// Route to update the profile of the authenticated owner
 router.put("/profile", updateOwnerProfile);
-
-// Route to add a menu item to a restaurant
-router.post("/menu/add", addMenu);
-
-// Orders routes
+router.post("/menu", addMenu);
 router.get("/orders", getRestaurantOrders);
 
-module.exports = router;
+export default router;

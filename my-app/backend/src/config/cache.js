@@ -1,4 +1,4 @@
-const NodeCache = require('node-cache');
+import NodeCache from 'node-cache';
 
 const cache = new NodeCache({
   stdTTL: 600, // 10 minutes default TTL
@@ -7,4 +7,4 @@ const cache = new NodeCache({
   deleteOnExpire: true // Delete expired items automatically
 });
 
-module.exports = cache; 
+export default cache; 

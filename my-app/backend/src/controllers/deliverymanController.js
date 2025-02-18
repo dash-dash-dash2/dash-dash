@@ -1,7 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
 const prisma = new PrismaClient();
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
 // Register new deliveryman
 const registerDeliveryman = async (req, res) => {
@@ -286,7 +287,7 @@ const getProfile = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   registerDeliveryman,
   getAvailableOrders,
   getMyOrders,
