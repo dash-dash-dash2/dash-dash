@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRestaurants } from '@/context/RestaurantContext';
 import { toast } from "@/components/ui/use-toast";
+import CareersSection from './components/CareersSection';
 
 const HomePage = () => {
   const router = useRouter();
@@ -245,6 +246,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* Add the Careers Section */}
+      <CareersSection />
     </div>
   );
 };

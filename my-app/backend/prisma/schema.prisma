@@ -217,3 +217,13 @@ model OrderHistory {
   updatedAt DateTime @default(now())
   order     Order    @relation(fields: [orderId], references: [id])
 }
+
+// Add to your existing schema
+model DeliveryLocation {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  latitude  Float
+  longitude Float
+  updatedAt DateTime @updatedAt
+}

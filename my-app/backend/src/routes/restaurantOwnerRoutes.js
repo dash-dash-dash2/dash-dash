@@ -14,10 +14,11 @@ import { getRestaurantOrders } from '../controllers/orderController.js';
 const router = express.Router();
 
 // Authenticate all routes below
-router.use(authenticate);
 
 // Route for registering a restaurant owner
 router.post('/', registerRestaurantOwner);
+
+router.use(authenticate);
 
 // Route to get all restaurants by the authenticated owner
 router.get("/", getRestaurantsByOwner);
