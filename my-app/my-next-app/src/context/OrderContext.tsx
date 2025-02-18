@@ -52,6 +52,8 @@ interface OrderContextType {
   fetchOrders: () => Promise<void>;
   activeOrder: Order | null;
   setActiveOrder: (order: Order | null) => void;
+  addOrder: (order: Order) => void;
+  updateOrder: (orderId: string, updates: any) => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -83,6 +85,18 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
+  const addOrder = (order: Order) => {
+    setOrders(prev => [...prev, order]);
+  };
+
+  const updateOrder = (orderId: string, updates: any) => {
+    setOrders(prev => 
+      prev.map(order => 
+        order.id === orderId ? { ...order, ...updates } : order
+      )
+    );
+  };
+
   return (
     <OrderContext.Provider value={{ 
       orders, 
@@ -90,7 +104,9 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       error, 
       fetchOrders,
       activeOrder,
-      setActiveOrder 
+      setActiveOrder,
+      addOrder,
+      updateOrder
     }}>
       {children}
     </OrderContext.Provider>
@@ -103,5 +119,13 @@ export function useOrders() {
     throw new Error('useOrders must be used within an OrderProvider');
   }
   console.log(context);
+  return context;
+}
+
+export function useOrder() {
+  const context = useContext(OrderContext);
+  if (context === undefined) {
+    throw new Error('useOrder must be used within an OrderProvider');
+  }
   return context;
 } 

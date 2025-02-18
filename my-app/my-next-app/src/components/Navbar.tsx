@@ -1,152 +1,220 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Search, User, ChevronDown } from "lucide-react";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { 
+  Home, 
+  Search, 
+  ShoppingBag, 
+  User, 
+  Menu as MenuIcon,
+  X,
+  LogOut
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { useAuth } from '@/context/AuthContext';
+import { toast } from "@/components/ui/use-toast";
+import Swal from 'sweetalert2';
 
-export default function Navbar() {
-  const [search, setSearch] = useState("");
-  const [showChoices, setShowChoices] = useState(false);
+const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
   const router = useRouter();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/search?query=${search}`);
-    }
+  const handleLogout = () => {
+    // Clear all auth-related items from localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userId');
+    
+    // Call the logout function from auth context
+    logout();
+    
+    // Show success toast
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account",
+      duration: 3000,
+    });
+
+    // Redirect to home page
+    router.push('/home');
   };
 
-  const toggleChoices = () => {
-    setShowChoices((prev) => !prev);
+  const handleLogin = () => {
+    router.push('/auth');
   };
 
-  const handleChoiceClick = (choice: string) => {
-    setShowChoices(false);
-    if (choice === "deliveryman") {
-      router.push("/deliveryRegistration");
-    } else if (choice === "restaurantOwner") {
-      router.push("/restaurantOwner");
-    }
+  const handleAboutClick = () => {
+    Swal.fire({
+      title: 'About DishDash',
+      html: `
+        <div class="text-left">
+          <p class="mb-4">Welcome to DishDash - Your Premier Food Delivery Platform!</p>
+          <p class="mb-4">We connect you with the best local restaurants, offering:</p>
+          <ul class="list-disc pl-5 mb-4">
+            <li>Fast and reliable delivery</li>
+            <li>Wide selection of cuisines</li>
+            <li>Real-time order tracking</li>
+            <li>Secure payment options</li>
+            <li>24/7 customer support</li>
+          </ul>
+          <p>Download our mobile app for an even better experience!</p>
+        </div>
+      `,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#ef4444',
+    });
   };
 
   return (
-    <>
-      {/* Add CSS here */}
-      <style jsx>{`
-        /* Navbar Container */
-        nav.bg-white.shadow-md.py-4.px-6.flex.justify-between.items-center {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1rem 2rem;
-          background-color: #ffffff;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          margin-bottom: 2rem;
-        }
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link href="/home" className="flex items-center space-x-2">
+            <span className="text-2xl font-bold text-primary">
+              DishDash
+            </span>
+          </Link>
 
-        /* Logo */
-        a.text-2xl.font-bold.text-red-500 {
-          font-size: 1.5rem;
-          font-weight: bold;
-          color: #ef4444; /* Red-500 */
-          text-decoration: none;
-        }
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="/home" className="nav-link">
+              Home
+            </Link>
+            <Link href="/home/allrestorant" className="nav-link">
+              Restaurants
+            </Link>
+            <Link href="/orders" className="nav-link">
+              Orders
+            </Link>
+            <Button variant="ghost" onClick={handleAboutClick}>
+              About
+            </Button>
+          </div>
 
-        /* Search Bar Container */
-        form.relative.w-1\/3.hidden.md\:block {
-          position: relative;
-          width: 400px;
-        }
+          {/* Desktop Right Section */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingBag className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                0
+              </span>
+            </Button>
 
-        /* Search Input */
-        input.w-full.px-4.py-2.border.rounded-full.focus\:outline-none.focus\:ring-2.focus\:ring-red-400 {
-          width: 100%;
-          padding: 0.5rem 1rem 0.5rem 2.5rem;
-          font-size: 0.875rem;
-          border: 1px solid #e5e7eb; /* border-gray-200 */
-          border-radius: 9999px; /* rounded-full */
-          outline: none;
-          background-color: #ffffff;
-        }
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center space-x-2"
+                  onClick={() => router.push('/profile')}
+                >
+                  <User className="h-5 w-5" />
+                  <span>{user.name}</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Logout</span>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Button 
+                  variant="ghost"
+                  onClick={handleLogin}
+                >
+                  Login
+                </Button>
+                <Button 
+                  variant="default"
+                  onClick={() => router.push('/auth?mode=register')}
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
+          </div>
 
-        /* Search Icon */
-        button.absolute.right-3.top-1\/2.transform.-translate-y-1\/2 {
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-        }
-
-        /* Connection Button */
-        a.flex.items-center.bg-red-500.text-white.px-4.py-2.rounded-full.hover\:bg-red-600.transition {
-          display: flex;
-          align-items: center;
-          background-color: #ef4444; /* Red-500 */
-          color: #ffffff;
-          padding: 0.5rem 1rem;
-          border-radius: 9999px; /* rounded-full */
-          text-decoration: none;
-          transition: background-color 0.2s ease;
-        }
-
-        a.flex.items-center.bg-red-500.text-white.px-4.py-2.rounded-full.hover\:bg-red-600.transition:hover {
-          background-color: #dc2626; /* Red-600 */
-        }
-      `}</style>
-
-      {/* Navbar JSX */}
-      <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
-        {/* Logo */}
-        <a href="/home" className="text-2xl font-bold text-red-500">
-          🍔 FoodZone
-        </a>
-
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="relative w-1/3 hidden md:block">
-          <input
-            type="text"
-            placeholder="Search food..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-red-400"
-          />
-          <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <Search className="text-gray-500 w-5 h-5" />
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <MenuIcon className="h-6 w-6" />
+            )}
           </button>
-        </form>
-
-        {/* Career Dropdown */}
-        <div className="relative">
-          <button onClick={toggleChoices} className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
-            Career <ChevronDown className="w-5 h-5 ml-2" />
-          </button>
-          {showChoices && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
-              <button
-                onClick={() => handleChoiceClick("deliveryman")}
-                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 w-full text-left"
-              >
-                Deliveryman
-              </button>
-              <button
-                onClick={() => handleChoiceClick("restaurantOwner")}
-                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 w-full text-left"
-              >
-                Restaurant Owner
-              </button>
-            </div>
-          )}
         </div>
+      </div>
 
-        {/* Connection Button */}
-        <a href="/auth" className="flex items-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition">
-          <User className="w-5 h-5 mr-2" />
-          Connect
-        </a>
-      </nav>
-    </>
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-t">
+          <div className="container mx-auto px-4 py-4 space-y-4">
+            <Link href="/home" className="block py-2">
+              Home
+            </Link>
+            <Link href="/home/allrestorant" className="block py-2">
+              Restaurants
+            </Link>
+            <Link href="/orders" className="block py-2">
+              Orders
+            </Link>
+            <Button variant="ghost" onClick={handleAboutClick}>
+              About
+            </Button>
+            <div className="pt-4 border-t">
+              {user ? (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => router.push('/profile')}
+                  >
+                    <User className="h-5 w-5 mr-2" />
+                    Profile
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start mt-2"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-5 w-5 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Button 
+                    variant="default"
+                    className="w-full"
+                    onClick={handleLogin}
+                  >
+                    Login
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => router.push('/auth?mode=register')}
+                  >
+                    Sign Up
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
   );
-}
+};
+
+export default Navbar;

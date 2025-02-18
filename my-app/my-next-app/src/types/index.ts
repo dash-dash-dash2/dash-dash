@@ -21,14 +21,19 @@ export interface Rating {
 export interface Category {
   id: number;
   name: string;
-  cuisineType: string;
-  location: string;
-  imageUrl: string;
+  address: string;
+  imageUrl?: string;
+  ratings?: Rating[];
+  categories?: Category[];
+}
+
+export interface Rating {
+  id: number;
   rating: number;
-  deliveryTime: string;
-  minimumOrder: number;
-  deliveryCost: number;
-  isOpen: boolean;
+  comment: string;
+  userId: number;
+  restaurantId: number;
+  createdAt: string;
   user: {
     id: number;
     name: string;
@@ -75,9 +80,7 @@ export interface RestaurantOrder {
     menu: Menu;
   }>;
   description: string;
-  price: number;
-  imageUrl: string;
-  category: string;
+  imageUrl?: string;
   restaurantId: number;
   supplements: Supplement[];
 }

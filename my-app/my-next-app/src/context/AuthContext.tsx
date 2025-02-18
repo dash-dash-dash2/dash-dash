@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import axios from 'axios'
 
 interface User {
@@ -13,9 +13,10 @@ interface User {
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
+  logout: () => void
   isAuthenticated: boolean
   token: string | null
+  isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -31,10 +32,11 @@ axios.interceptors.request.use((config) => {
   return Promise.reject(error)
 })
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -45,6 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(storedToken)
       setUser(JSON.parse(storedUser))
       setIsAuthenticated(true)
+    }
+    if (!storedToken) {
+      setIsLoading(false)
     }
   }, [])
 
@@ -70,17 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = async () => {
-    try {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      setUser(null)
-      setToken(null)
-      setIsAuthenticated(false)
-    } catch (error) {
-      console.error('Logout error:', error)
-      throw error
-    }
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setToken(null)
+    setIsAuthenticated(false)
   }
 
   return (
@@ -89,7 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login, 
       logout, 
       isAuthenticated, 
-      token 
+      token,
+      isLoading
     }}>
       {children}
     </AuthContext.Provider>

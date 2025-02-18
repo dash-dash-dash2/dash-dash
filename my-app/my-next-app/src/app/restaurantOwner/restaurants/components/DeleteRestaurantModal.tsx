@@ -35,7 +35,6 @@ const DeleteRestaurantModal = ({
       
       // Update to use PUT instead of DELETE
       const response = await axios.put(`http://localhost:5000/api/restaurant-owner/soft-delete/${restaurantId}`, 
-        { isDeleted: true },
         {
           headers: { 
             Authorization: `Bearer ${token}`,

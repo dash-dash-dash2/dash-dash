@@ -5,7 +5,6 @@ import {
   getRestaurantsByOwner,
   addRestaurant,
   updateRestaurant,
-  deleteRestaurant,
   getOwnerProfile,
   updateOwnerProfile,
   addMenu
@@ -15,10 +14,11 @@ import { getRestaurantOrders } from '../controllers/orderController.js';
 const router = express.Router();
 
 // Authenticate all routes below
-router.use(authenticate);
 
 // Route for registering a restaurant owner
 router.post('/', registerRestaurantOwner);
+
+router.use(authenticate);
 
 // Route to get all restaurants by the authenticated owner
 router.get("/", getRestaurantsByOwner);
@@ -29,7 +29,6 @@ router.post("/add", addRestaurant);
 // Route to update an existing restaurant
 router.put("/update/:restaurantId", updateRestaurant);
 // Add this new route for soft delete
-router.put("/soft-delete/:restaurantId", deleteRestaurant);
 
 // Comment out or remove the hard delete route
 // router.delete("/delete/:restaurantId", deleteRestaurant);

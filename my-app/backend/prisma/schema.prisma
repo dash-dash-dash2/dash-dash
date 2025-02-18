@@ -57,7 +57,6 @@ model Restaurant {
   cuisineType String
   location    String? // Latitude and longitude (e.g., "48.8566,2.3522")
   imageUrl    String?
-  isDeleted   Boolean             @default(false)  // Add this field
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   user        User                 @relation("UserRestaurants", fields: [userId], references: [id]) // One-to-one relationship with User
@@ -217,4 +216,14 @@ model OrderHistory {
   status    String // e.g., "Pending", "Preparing", "Out for Delivery", "Delivered"
   updatedAt DateTime @default(now())
   order     Order    @relation(fields: [orderId], references: [id])
+}
+
+// Add to your existing schema
+model DeliveryLocation {
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  latitude  Float
+  longitude Float
+  updatedAt DateTime @updatedAt
 }

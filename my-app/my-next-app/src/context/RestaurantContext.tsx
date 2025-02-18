@@ -19,6 +19,8 @@ interface RestaurantContextType {
   error: string | null;
   fetchRestaurants: () => Promise<void>;
   getRestaurantById: (id: string) => Restaurant | undefined;
+  selectedRestaurant: any;
+  setSelectedRestaurant: (restaurant: any) => void;
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
 
   const fetchRestaurants = async () => {
     setLoading(true);
@@ -51,7 +54,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <RestaurantContext.Provider value={{ restaurants, loading, error, fetchRestaurants, getRestaurantById }}>
+    <RestaurantContext.Provider value={{ restaurants, loading, error, fetchRestaurants, getRestaurantById, selectedRestaurant, setSelectedRestaurant }}>
       {children}
     </RestaurantContext.Provider>
   );
@@ -61,6 +64,14 @@ export function useRestaurants() {
   const context = useContext(RestaurantContext);
   if (context === undefined) {
     throw new Error("useRestaurants must be used within a RestaurantProvider");
+  }
+  return context;
+}
+
+export function useRestaurant() {
+  const context = useContext(RestaurantContext);
+  if (context === undefined) {
+    throw new Error('useRestaurant must be used within a RestaurantProvider');
   }
   return context;
 }

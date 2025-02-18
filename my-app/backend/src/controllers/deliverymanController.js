@@ -1,42 +1,69 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import prisma from '../utils/prisma.js';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
-const prisma = new PrismaClient();
 
 // Register new deliveryman
 const registerDeliveryman = async (req, res) => {
-  const { name, email, password, phone, vehicleType, licensePlate } = req.body;
+  const { name, email, password, phone, address, vehicleType } = req.body;
 
   try {
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({ 
+      where: { email } 
+    });
+
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        phone,
-        role: "DELIVERYMAN"
+    // Create user and deliveryman in a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Create user first
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          phone,
+          address,
+          role: 'DELIVERYMAN'
+        }
+      });
+
+      // Create deliveryman with relation to user
+      const deliveryman = await prisma.deliveryman.create({
+        data: {
+          user: {
+            connect: { id: user.id }
+          },
+          vehicleType,
+          isAvailable: false
+        }
+      });
+
+      return { user, deliveryman };
+    });
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: result.user.id, role: 'DELIVERYMAN' },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      message: "Deliveryman registered successfully",
+      token,
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: result.user.role
       }
     });
 
-    const deliveryman = await prisma.deliveryman.create({
-      data: {
-        userId: user.id,
-        vehicleType,
-        licensePlate,
-        isAvailable: false,
-        currentLocation: null
-      }
-    });
-
-    res.status(201).json({ message: "Deliveryman registered successfully" });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Failed to register deliveryman" });

@@ -3,8 +3,9 @@ import { authenticate } from '../middleware/authMiddleware.js';
 import {
   registerUser,
   loginUser,
+  getProfile,
   updateProfile,
-  getUserProfile
+  updatePassword
 } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -15,7 +16,14 @@ router.post("/login", loginUser);
 
 // Protected routes
 router.use(authenticate);
-router.get("/profile", getUserProfile);
-router.put("/profile", updateProfile);
+
+// Get user profile
+router.get('/profile', getProfile);
+
+// Update user profile
+router.put('/profile', updateProfile);
+
+// Update password
+router.put('/password', updatePassword);
 
 export default router;

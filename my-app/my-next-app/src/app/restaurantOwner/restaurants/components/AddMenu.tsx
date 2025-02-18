@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface Restaurant {
   id: string
@@ -100,7 +102,7 @@ const AddMenu = ({
         },
       )
 
-      alert("Menu item added successfully!")
+      toast.success("Menu item added successfully!")
       setName("")
       setImageUrl("")
       setPrice("")
@@ -110,25 +112,26 @@ const AddMenu = ({
       fetchMenus()
     } catch (err) {
       setError("Failed to add menu item")
+      toast.error("Failed to add menu item")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="p-4 border rounded-lg shadow-md">
-      <h2 className="text-xl font-bold mb-4">Add Menu Item</h2>
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="p-6 border rounded-lg shadow-md bg-gray-100">
+      <h2 className="text-2xl font-bold mb-4 text-blue-600">Add Menu Item</h2>
+      {error && <p className="text-red-600">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="restaurant">Select Restaurant</Label>
-          <Select value={selectedRestaurantId} onValueChange={setSelectedRestaurantId}>
-            <SelectTrigger className="w-full">
+          <Label htmlFor="restaurant" className="text-gray-800">Select Restaurant</Label>
+          <Select value={selectedRestaurantId} onValueChange={setSelectedRestaurantId} className="bg-white">
+            <SelectTrigger className="w-full border border-blue-300 bg-white text-gray-800">
               <SelectValue placeholder="Select a restaurant" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-white">
               {restaurants.map((restaurant) => (
-                <SelectItem key={restaurant.id} value={restaurant.id}>
+                <SelectItem key={restaurant.id} value={restaurant.id} className="text-gray-800">
                   {restaurant.name}
                 </SelectItem>
               ))}
@@ -137,13 +140,13 @@ const AddMenu = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="name">Menu Name</Label>
-          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <Label htmlFor="name" className="text-gray-800">Menu Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="border rounded-md p-2 border-blue-300" />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="imageUpload">Menu Image</Label>
-          <Input id="imageUpload" type="file" onChange={handleFileChange} />
+          <Label htmlFor="imageUpload" className="text-gray-800">Menu Image</Label>
+          <Input id="imageUpload" type="file" onChange={handleFileChange} className="border rounded-md p-2 border-blue-300" />
           {imageUrl && (
             <div className="mt-2">
               <Image
@@ -158,17 +161,18 @@ const AddMenu = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="price">Price</Label>
-          <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} required />
+          <Label htmlFor="price" className="text-gray-800">Price</Label>
+          <Input id="price" type="number" value={price} onChange={(e) => setPrice(e.target.value)} required className="border rounded-md p-2 border-blue-300" />
         </div>
 
-        <Button type="submit" disabled={loading || loadingImage}>
+        <Button type="submit" disabled={loading || loadingImage} className="w-full bg-blue-600 text-white rounded-md hover:bg-blue-700">
           {loading ? "Adding..." : "Add Menu Item"}
         </Button>
       </form>
       <Button onClick={onClose} variant="outline" className="mt-4 bg-gray-200 text-black hover:bg-gray-300">
         Close
       </Button>
+      <ToastContainer />
     </div>
   )
 }

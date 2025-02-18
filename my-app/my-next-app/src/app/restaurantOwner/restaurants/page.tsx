@@ -18,7 +18,6 @@ import type { RestaurantOrder, OrderStatus } from "@/types"
 import Swal from "sweetalert2"
 import { io, type Socket } from "socket.io-client"
 import UpdateRestaurantModal from "./components/UpdateRestaurantModal"
-import DeleteRestaurantModal from "./components/DeleteRestaurantModal"
 import { Button } from "@/components/ui/button"
 import type { Rating } from "@/types" // Add this import
 import type { Category } from "@/types" // Add this import
@@ -82,8 +81,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selected, setSelected }) => {
 const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [restaurantToModify, setRestaurantToModify] = useState<Restaurant | null>(null)
+
+  const handleRestaurantClick = (restaurant: Restaurant) => {
+    setSelectedRestaurant(restaurant)
+    setIsUpdateModalOpen(false)
+  }
 
   const handleUpdateClick = (restaurant: Restaurant) => {
     setRestaurantToModify(restaurant)
@@ -92,7 +95,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
 
   const handleDeleteClick = (restaurant: Restaurant) => {
     setRestaurantToModify(restaurant)
-    setIsDeleteModalOpen(true)
   }
 
   return (
@@ -104,6 +106,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
             <div
               key={restaurant.id}
               className="flex gap-4 p-4 border rounded-lg hover:bg-gray-50 w-full text-left"
+              onClick={() => handleRestaurantClick(restaurant)}
             >
               <Image
                 src={restaurant.imageUrl || "/placeholder.svg"}
@@ -114,18 +117,18 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                    <h3 className="font-medium">{restaurant.name}</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUpdateClick(restaurant)}
-                        className="bg-blue-500 text-white"
-                      >
-                        Update
-                      </Button>
-                    </div>
+                  <h3 className="font-medium">{restaurant.name}</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUpdateClick(restaurant)}
+                      className="bg-blue-500 text-white"
+                    >
+                      Update
+                    </Button>
                   </div>
+                </div>
                 <p className="text-sm text-gray-500 mt-1">{restaurant.cuisineType}</p>
                 <p className="text-xs text-gray-400 mt-1">{restaurant.location}</p>
               </div>
@@ -142,11 +145,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
         onClose={() => setIsUpdateModalOpen(false)}
         restaurant={restaurantToModify}
       />
-      <DeleteRestaurantModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        restaurant={restaurantToModify}
-      />
+     
       <RatingsModal
         isOpen={!!selectedRestaurant}
         onClose={() => setSelectedRestaurant(null)}
@@ -401,6 +400,10 @@ const DashboardPage = () => {
   const [showProfile, setShowProfile] = useState(false)
   const [showAddMenuModal, setShowAddMenuModal] = useState(false)
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false)
+  const [isRatingsModalOpen, setIsRatingsModalOpen] = useState(false)
+  const [ratings, setRatings] = useState<Rating[]>([])
+  const restaurantName = "Your Restaurant Name"
+
   const fetchRestaurants = async () => {
     try {
       const token = localStorage.getItem("token")
@@ -490,6 +493,10 @@ const DashboardPage = () => {
   const handleCategoryAdded = () => {
     // Added function
     fetchCategories()
+  }
+  const fetchRatings = async () => {
+    // Fetch ratings logic here
+    // setRatings(fetchedRatings);
   }
   return (
     <div className="flex min-h-screen">
@@ -678,6 +685,14 @@ const DashboardPage = () => {
           restaurantId={restaurants[0]?.id}
         />
       )}
+  
+      {/* Ratings Modal */}
+      <RatingsModal 
+        isOpen={isRatingsModalOpen} 
+        onClose={() => setIsRatingsModalOpen(false)} 
+        ratings={ratings} 
+        restaurantName={restaurantName} 
+      />
     </div>
   )
 }
