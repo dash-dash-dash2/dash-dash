@@ -41,7 +41,7 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
           return;
         }
 
-        const response = await axios.get("http://localhost:5000/api/restaurant-owner/profile", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -81,7 +81,7 @@ const Profile = ({ onClose }: { onClose: () => void }) => {
         return;
       }
 
-      await axios.put("http://localhost:5000/api/restaurant-owner/profile", updatedProfile, {
+      await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/profile`, updatedProfile, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

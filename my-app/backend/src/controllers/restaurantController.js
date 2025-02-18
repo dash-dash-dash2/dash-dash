@@ -1,102 +1,69 @@
 import { PrismaClient } from '@prisma/client';
 import { clearCache } from '../middleware/cacheMiddleware.js';
+import cacheService from '../services/cacheService.js';
 import geolib from 'geolib';
+import dbManager from '../utils/dbConnectionManager.js';
 
 const prisma = new PrismaClient();
 
 // Create restaurant
 const createRestaurant = async (req, res) => {
-  const userId = req.user.id;
   const { name, cuisineType, location } = req.body;
+  const userId = req.user.id;
 
   try {
-    // Check if user already has a restaurant
-    const existingRestaurant = await prisma.restaurant.findFirst({
-      where: { userId }
-    });
-
-    if (existingRestaurant) {
-      return res.status(400).json({ error: "User already has a restaurant" });
-    }
-
-    const restaurant = await prisma.restaurant.create({
-      data: {
-        name,
-        cuisineType,
-        location,
-        user: {
-          connect: {
-            id: userId
-          }
+    const result = await dbManager.withTransaction(async (prisma) => {
+      const restaurant = await prisma.restaurant.create({
+        data: {
+          name,
+          cuisineType,
+          location,
+          userId
         }
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            phone: true
-          }
+      });
+
+      await prisma.audit.create({
+        data: {
+          action: 'CREATE_RESTAURANT',
+          userId,
+          restaurantId: restaurant.id
         }
-      }
+      });
+
+      return restaurant;
     });
 
     // Clear the restaurants cache when a new restaurant is created
     clearCache('restaurants');
     
-    res.status(201).json(restaurant);
+    res.status(201).json(result);
   } catch (error) {
     console.error("Restaurant creation error:", error);
-    res.status(500).json({ error: "Failed to create restaurant", details: error.message });
+    res.status(500).json({ error: "Failed to create restaurant" });
   }
 };
 
-// Get all restaurants
+// Get all restaurants with connection pooling
 const getAllRestaurants = async (req, res) => {
-  const { cuisine, search } = req.query;
-  
   try {
-    const restaurants = await prisma.restaurant.findMany({
-      where: {
-        AND: [
-          cuisine ? { cuisineType: cuisine } : {},
-          search ? {
-            OR: [
-              { name: { contains: search } },
-              { cuisineType: { contains: search } }
-            ]
-          } : {}
-        ]
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            phone: true
-          }
-        },
-        menus: true,
-        ratings: {
-          select: {
-            score: true
-          }
+    const restaurants = await dbManager.executeWithRetry(async () => {
+      return dbManager.prisma.restaurant.findMany({
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true
+            }
+          },
+          menus: true
         }
-      }
+      });
     });
 
-    // Calculate average rating for each restaurant
-    const restaurantsWithRating = restaurants.map(restaurant => ({
-      ...restaurant,
-      averageRating: restaurant.ratings.length > 0
-        ? restaurant.ratings.reduce((acc, curr) => acc + curr.score, 0) / restaurant.ratings.length
-        : 0
-    }));
-
-    res.status(200).json(restaurantsWithRating);
+    res.status(200).json(restaurants);
   } catch (error) {
-    console.error("Restaurants fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch restaurants", details: error.message });
+    console.error("Restaurant fetch error:", error);
+    res.status(500).json({ error: "Failed to fetch restaurants" });
   }
 };
 
@@ -150,42 +117,20 @@ const getNearbyRestaurants = async (req, res) => {
   }
 };
 
-// Update restaurant
+// Clear restaurant cache when updating
 const updateRestaurant = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
   const { name, cuisineType, location } = req.body;
 
   try {
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: parseInt(id) }
-    });
-
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
-    }
-
-    if (restaurant.userId !== userId) {
-      return res.status(403).json({ error: "Not authorized to update this restaurant" });
-    }
-
     const updatedRestaurant = await prisma.restaurant.update({
       where: { id: parseInt(id) },
-      data: {
-        name,
-        cuisineType,
-        location
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            phone: true
-          }
-        }
-      }
+      data: { name, cuisineType, location }
     });
+
+    // Clear all restaurant-related caches
+    cacheService.clearNamespace('restaurants');
 
     res.status(200).json(updatedRestaurant);
   } catch (error) {

@@ -21,7 +21,7 @@ export default function DeliverymanForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/deliveryman', formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/deliveryman`, formData);
       alert('Deliveryman registered successfully!');
       console.log(response.data);
     } catch (error) {

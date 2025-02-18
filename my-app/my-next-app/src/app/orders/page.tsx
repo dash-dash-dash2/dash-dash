@@ -53,12 +53,12 @@ const OrdersPage = () => {
         }
 
         // Fetch active orders (PENDING, PREPARING, DELIVERING)
-        const activeResponse = await axios.get(`http://localhost:5000/api/orders/user`, {
+        const activeResponse = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/user`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         // Fetch order history (DELIVERED)
-        const historyResponse = await axios.get(`http://localhost:5000/api/orders/history`, {
+        const historyResponse = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/history`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 

@@ -5,18 +5,18 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 
-const EditRestaurant = ({ params }) => {
+const EditRestaurant = ({ params }: { params: { restaurantId: string } }) => {
   const { restaurantId } = params;
   const [name, setName] = useState('');
   const [cuisineType, setCuisineType] = useState('');
   const [location, setLocation] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/admin/restaurants/${restaurantId}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants/${restaurantId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -34,10 +34,10 @@ const EditRestaurant = ({ params }) => {
     fetchRestaurantDetails();
   }, [restaurantId]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/admin/restaurants/${restaurantId}`, {
+      await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants/${restaurantId}`, {
         name,
         cuisineType,
         location,

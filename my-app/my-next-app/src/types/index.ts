@@ -1,23 +1,25 @@
 export interface Restaurant {
   id: number;
   name: string;
-  address: string;
+  cuisineType: string;
+  location: string;
   imageUrl?: string;
   ratings?: Rating[];
-  categories?: Category[];
+  address?: string;
+  menus?: any[];
 }
 
 export interface Rating {
   id: number;
-  rating: number;
+  score: number;
   comment: string;
-  userId: number;
-  restaurantId: number;
-  createdAt: string;
+
   user: {
     name: string;
   };
+  createdAt?: string;
 }
+
 export interface Category {
   id: number;
   name: string;
@@ -27,20 +29,7 @@ export interface Category {
   categories?: Category[];
 }
 
-export interface Rating {
-  id: number;
-  rating: number;
-  comment: string;
-  userId: number;
-  restaurantId: number;
-  createdAt: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  };
-  menus: Menu[];
-}
+
 export interface Menu {
   id: number;
   name: string;
@@ -50,6 +39,7 @@ export interface Menu {
   restaurantId: number;
   restaurantName?: string;
 }
+
 export type OrderStatus = 
   | 'PENDING'
   | 'ACCEPTED'
@@ -58,7 +48,10 @@ export type OrderStatus =
   | 'PICKED_UP'
   | 'DELIVERING'
   | 'DELIVERED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'CONFIRMED'
+  | 'OUT_FOR_DELIVERY';
+
 export interface RestaurantOrder {
   id: number;
   status: OrderStatus;
@@ -78,31 +71,36 @@ export interface RestaurantOrder {
     id: number;
     quantity: number;
     menu: Menu;
+    price: number;
   }>;
   description: string;
   imageUrl?: string;
   restaurantId: number;
   supplements: Supplement[];
 }
+
 export interface Order {
   id: number;
-  userId: number;
-  restaurantId: number;
-  status: OrderStatus;
-  totalAmount: number;
-  deliveryCost: number;
-  orderItems: OrderItem[];
-  restaurant: Restaurant;
-  deliveryman?: {
+  restaurant: {
     id: number;
-    user: {
-      name: string;
-      phone: string;
-    };
+    name: string;
   };
+  status: OrderStatus;
+  total: number;
+  orderItems: Array<{
+    id: number;
+    quantity: number;
+    price: number;
+    menu: {
+      id: number;
+      name: string;
+      price: number;
+    };
+  }>;
   createdAt: string;
   updatedAt: string;
 }
+
 export interface OrderItem {
   id: number;
   menuId: number;
@@ -111,6 +109,7 @@ export interface OrderItem {
   menu: Menu;
   supplements?: Supplement[];
 }
+
 export interface Supplement {
   id: number;
   name: string;
@@ -118,14 +117,7 @@ export interface Supplement {
 }
 
 
-export type OrderStatus = 
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'PREPARING'
-  | 'READY_FOR_PICKUP'
-  | 'OUT_FOR_DELIVERY'
-  | 'DELIVERED'
-  | 'CANCELLED';
+
 export interface Review {
   id: number;
   score: number;
@@ -134,4 +126,13 @@ export interface Review {
     name: string;
   };
   createdAt: string;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  imageUrl?: string;
+  deliverymanId?: number;
 }

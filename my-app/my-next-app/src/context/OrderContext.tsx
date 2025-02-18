@@ -12,37 +12,22 @@ interface User {
 
 interface Order {
   id: string;
-  orderItems: {
-    id: string;
-    quantity: number;
-    price: number;
-    menu: {
-      name: string;
-      price: number;
-      description: string;
-    };
-  }[];
   status: string;
-  total: number;
+  customerId: string;
+  restaurantId: string;
+  totalPrice: number;
+  createdAt: string;
+  deliveryAddress: string;
+  customer: {
+    name: string;
+    email: string;
+  };
+
   restaurant: {
     name: string;
-    latitude: number;
-    longitude: number;
+
   };
-  user: {
-    name: string;
-    address: {
-      latitude: number;
-      longitude: number;
-      address: string;
-    };
-  };
-  deliveryLocation: {
-    lat: number;
-    lng: number;
-    address: string;
-  };
-  // Add other order properties as needed
+
 }
 
 interface OrderContextType {
@@ -54,6 +39,7 @@ interface OrderContextType {
   setActiveOrder: (order: Order | null) => void;
   addOrder: (order: Order) => void;
   updateOrder: (orderId: string, updates: any) => void;
+  acceptOrder: (orderId: string) => Promise<void>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -67,7 +53,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/orders`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders`);
       setOrders(response.data);
       setError(null);
     } catch (err) {
@@ -97,6 +83,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const acceptOrder = async (orderId: string) => {
+    // Implementation of acceptOrder method
+  };
+
   return (
     <OrderContext.Provider value={{ 
       orders, 
@@ -106,7 +96,8 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       activeOrder,
       setActiveOrder,
       addOrder,
-      updateOrder
+      updateOrder,
+      acceptOrder
     }}>
       {children}
     </OrderContext.Provider>

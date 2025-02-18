@@ -5,17 +5,25 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 
-const RestaurantDetails = ({ params }) => {
-  const { restaurantId } = React.use(params);
-  const [restaurant, setRestaurant] = useState(null);
+// Add interface for Restaurant type
+interface Restaurant {
+  id: string;
+  name: string;
+  cuisineType: string;
+  location: string;
+}
+
+const RestaurantDetails = ({ params }: { params: { restaurantId: string } }) => {
+  const { restaurantId } = params;
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/admin/restaurants/${restaurantId}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants/${restaurantId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -34,7 +42,7 @@ const RestaurantDetails = ({ params }) => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/admin/restaurants/${restaurantId}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants/${restaurantId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -52,12 +60,16 @@ const RestaurantDetails = ({ params }) => {
   return (
     <AdminLayout>
       <h1 className="text-3xl font-bold mb-4">Restaurant Details</h1>
-      <p><strong>ID:</strong> {restaurant.id}</p>
-      <p><strong>Name:</strong> {restaurant.name}</p>
-      <p><strong>Cuisine Type:</strong> {restaurant.cuisineType}</p>
-      <p><strong>Location:</strong> {restaurant.location}</p>
-      <button onClick={() => router.push(`/admin/restaurants/edit/${restaurant.id}`)} className="bg-blue-600 text-white p-2 rounded-lg">Edit</button>
-      <button onClick={handleDelete} className="bg-red-600 text-white p-2 rounded-lg ml-2">Delete</button>
+      {restaurant && (
+        <>
+          <p><strong>ID:</strong> {restaurant.id}</p>
+          <p><strong>Name:</strong> {restaurant.name}</p>
+          <p><strong>Cuisine Type:</strong> {restaurant.cuisineType}</p>
+          <p><strong>Location:</strong> {restaurant.location}</p>
+          <button onClick={() => router.push(`/admin/restaurants/edit/${restaurant.id}`)} className="bg-blue-600 text-white p-2 rounded-lg">Edit</button>
+          <button onClick={handleDelete} className="bg-red-600 text-white p-2 rounded-lg ml-2">Delete</button>
+        </>
+      )}
       <button onClick={() => router.back()} className="bg-gray-300 p-2 rounded-lg ml-2">Back</button>
     </AdminLayout>
   );

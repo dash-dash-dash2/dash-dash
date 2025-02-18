@@ -117,7 +117,8 @@ interface SelectedSupplements {
 }
 
 const RestaurantOrdersPage: React.FC = () => {
-  const { onerestorantid } = useParams();
+  const params = useParams() as { onerestorantid: string };
+  const { onerestorantid } = params;
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -139,7 +140,7 @@ const RestaurantOrdersPage: React.FC = () => {
   const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]); // State for notifications
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [filteredMenu, setFilteredMenu] = useState<MenuItem[]>([]);
   const [cartItems, setCartItems] = useState<CartItems>({});
@@ -167,7 +168,17 @@ const RestaurantOrdersPage: React.FC = () => {
           ? {
               id: menuData[0].restaurantId,
               name: menuData[0].name,
-              // Add other restaurant fields as needed
+              description: '',
+              cuisineType: '',
+              location: '',
+              phone: '',
+              website: '',
+              openingHours: '',
+              imageUrl: '',
+              menu: menuData,
+              averageRating: 0,
+              totalRatings: 0,
+              ratings: []
             }
           : null;
         setRestaurant(restaurantData);
@@ -186,7 +197,7 @@ const RestaurantOrdersPage: React.FC = () => {
     const fetchOrders = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/orders", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -209,7 +220,7 @@ const RestaurantOrdersPage: React.FC = () => {
     const fetchOrderHistory = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await axios.get("http://localhost:5000/api/orders/history", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/history`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

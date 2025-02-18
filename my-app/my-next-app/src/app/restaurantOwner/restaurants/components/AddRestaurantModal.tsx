@@ -77,7 +77,7 @@ const AddRestaurantModal = ({
 
       const token = localStorage.getItem("token")
       await axios.post(
-        "http://localhost:5000/api/restaurant-owner/add",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/add`,
         { ...data, imageUrl },
         {
           headers: { Authorization: `Bearer ${token}` },

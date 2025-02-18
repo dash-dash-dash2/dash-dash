@@ -1,14 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import api from '@/utils/api'
+import type { User } from '@/types'
 import axios from 'axios'
-
-interface User {
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: 'CUSTOMER' | 'DELIVERYMAN' | 'RESTAURANT_OWNER' | 'ADMIN';
-}
 
 interface AuthContextType {
   user: User | null
@@ -16,59 +11,32 @@ interface AuthContextType {
   logout: () => void
   isAuthenticated: boolean
   token: string | null
-  isLoading: boolean
+  updateUser: (user: User) => void
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// Add axios interceptor to include token in all requests
-axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-}, (error) => {
-  return Promise.reject(error)
-})
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Initialize auth state from localStorage
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
-      setIsAuthenticated(true)
-    }
-    if (!storedToken) {
-      setIsLoading(false)
-    }
-  }, [])
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/users/login", {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/login`, {
         email,
-        password
+        password,
       })
       
-      const { token: newToken, user: userData } = response.data
+      const { token: authToken, user: userData } = response.data
       
-      // Store auth data
-      localStorage.setItem('token', newToken)
-      localStorage.setItem('user', JSON.stringify(userData))
+      // Store token in localStorage
+      localStorage.setItem('token', authToken)
+      setToken(authToken)
       
-      setToken(newToken)
+      // Set token as default header for all future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`
+      
       setUser(userData)
-      setIsAuthenticated(true)
     } catch (error) {
       console.error('Login error:', error)
       throw error
@@ -77,10 +45,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setUser(null)
     setToken(null)
-    setIsAuthenticated(false)
+    setUser(null)
+    delete axios.defaults.headers.common['Authorization']
+  }
+
+  // Add token restoration on app load
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token')
+    if (storedToken) {
+      setToken(storedToken)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
+      // Optionally fetch user data here
+    }
+  }, [])
+
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser)
   }
 
   return (
@@ -88,20 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       login, 
       logout, 
-      isAuthenticated, 
+      isAuthenticated: !!token,
       token,
-      isLoading
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
-  console.log(context)
-  return context 
+  return context
 } 

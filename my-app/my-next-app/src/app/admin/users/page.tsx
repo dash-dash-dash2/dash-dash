@@ -25,16 +25,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'react-toastify';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  banned: boolean;
+  phone?: string;
+  address?: { address: string };
+  createdAt: string;
+  orders?: any[];
+}
+
 const Users = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('ALL');
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/users', {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/users`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -52,11 +64,11 @@ const Users = () => {
     fetchUsers();
   }, []);
 
-  const handleBanUser = async (userId, isBanned) => {
+  const handleBanUser = async (userId: string, isBanned: boolean) => {
     try {
       const endpoint = isBanned ? 'unban' : 'ban';
       await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/${endpoint}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/users/${userId}/${endpoint}`,
         {},
         {
           headers: {
@@ -73,10 +85,10 @@ const Users = () => {
     }
   };
 
-  const handleUpdateRole = async (userId, newRole) => {
+  const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/role`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/users/${userId}/role`,
         { role: newRole },
         {
           headers: {

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-blue-600 text-white p-4">

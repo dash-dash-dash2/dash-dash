@@ -1,9 +1,10 @@
 import React from 'react';
-import { useOrders } from '@/context/OrderContext';
+import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/context/AuthContext';
 import { socket } from '@/utils/socket';
+import type { Order } from '@/types';
 
-export default function OrdersList() {
+const OrdersList = () => {
   const { orders, loading, error, acceptOrder } = useOrders();
   const { user } = useAuth();
 
@@ -45,7 +46,7 @@ export default function OrdersList() {
     return <div className="text-red-500 p-4">{error}</div>;
   }
 
-  if (orders.length === 0) {
+  if (!orders || orders.length === 0) {
     return (
       <div className="flex flex-col items-center p-8">
         <img 
@@ -60,15 +61,15 @@ export default function OrdersList() {
 
   return (
     <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
-      {orders.map((order) => (
+      {orders.map((order: Order) => (
         <div 
           key={order.id} 
           className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
         >
-          <h3 className="font-semibold mb-2">Order #{order.id}</h3>
+          <h3 className="font-semibold mb-2">{order.restaurant.name}</h3>
           <div className="space-y-2">
-            {order.orderItems.map((item, index) => (
-              <div key={index} className="flex justify-between">
+            {order.orderItems.map((item) => (
+              <div key={item.id} className="flex justify-between">
                 <span>{item.menu.name} x{item.quantity}</span>
                 <span>${item.price.toFixed(2)}</span>
               </div>
@@ -77,12 +78,12 @@ export default function OrdersList() {
           <div className="mt-4 pt-2 border-t">
             <div className="flex justify-between font-semibold">
               <span>Total:</span>
-              <span>${order.total}</span>
+              <span>${order.total.toFixed(2)}</span>
             </div>
             <div className="mt-2">
               <span className={`px-2 py-1 rounded-full text-sm ${
-                order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
                 {order.status}
@@ -92,7 +93,7 @@ export default function OrdersList() {
           
           {order.status === 'PENDING' && user?.role === 'DELIVERYMAN' && (
             <button
-              onClick={() => handleAcceptOrder(order.id)}
+              onClick={() => handleAcceptOrder(order.id.toString())}
               className="mt-4 w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition-colors"
             >
               Accept Order
@@ -102,4 +103,6 @@ export default function OrdersList() {
       ))}
     </div>
   );
-} 
+};
+
+export default OrdersList; 

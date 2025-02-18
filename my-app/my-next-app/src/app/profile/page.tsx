@@ -41,7 +41,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/users/profile", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(response.data);
@@ -103,7 +103,7 @@ const Profile = () => {
 
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        "http://localhost:5000/api/users/profile",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/profile`,
         { ...formData, imageUrl },
         {
           headers: { Authorization: `Bearer ${token}` }

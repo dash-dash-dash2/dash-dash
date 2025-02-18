@@ -14,7 +14,7 @@ export const OrdersSection = () => {
     if (!token) return;
 
     // Initialize socket connection
-    const socket = io("http://localhost:5000", {
+    const socket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, {
       auth: { token },
       transports: ['websocket']
     });
@@ -65,7 +65,7 @@ export const OrdersSection = () => {
     const fetchOrders = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/restaurant-owner/orders",
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/orders`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setOrders(response.data);
@@ -89,7 +89,7 @@ export const OrdersSection = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/orders/${orderId}/status`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/${orderId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -4,7 +4,11 @@ import { useAuth } from '@/context/AuthContext';
 import { FaHome, FaCog, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-// import { getFullImageUrl } from '../utils/imageUtils';
+
+const getFullImageUrl = (imageUrl: string) => {
+  if (!imageUrl) return '';
+  return imageUrl.startsWith('http') ? imageUrl : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${imageUrl}`;
+};
 
 const Navbar = () => {
   const { user, logout } = useAuth();
