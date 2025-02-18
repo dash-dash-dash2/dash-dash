@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
 import { toast } from "@/components/ui/use-toast";
+import Swal from 'sweetalert2';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,6 +46,28 @@ const Navbar = () => {
     router.push('/auth');
   };
 
+  const handleAboutClick = () => {
+    Swal.fire({
+      title: 'About DishDash',
+      html: `
+        <div class="text-left">
+          <p class="mb-4">Welcome to DishDash - Your Premier Food Delivery Platform!</p>
+          <p class="mb-4">We connect you with the best local restaurants, offering:</p>
+          <ul class="list-disc pl-5 mb-4">
+            <li>Fast and reliable delivery</li>
+            <li>Wide selection of cuisines</li>
+            <li>Real-time order tracking</li>
+            <li>Secure payment options</li>
+            <li>24/7 customer support</li>
+          </ul>
+          <p>Download our mobile app for an even better experience!</p>
+        </div>
+      `,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#ef4444',
+    });
+  };
+
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -67,9 +90,9 @@ const Navbar = () => {
             <Link href="/orders" className="nav-link">
               Orders
             </Link>
-            <Link href="/about" className="nav-link">
+            <Button variant="ghost" onClick={handleAboutClick}>
               About
-            </Link>
+            </Button>
           </div>
 
           {/* Desktop Right Section */}
@@ -145,9 +168,9 @@ const Navbar = () => {
             <Link href="/orders" className="block py-2">
               Orders
             </Link>
-            <Link href="/about" className="block py-2">
+            <Button variant="ghost" onClick={handleAboutClick}>
               About
-            </Link>
+            </Button>
             <div className="pt-4 border-t">
               {user ? (
                 <>

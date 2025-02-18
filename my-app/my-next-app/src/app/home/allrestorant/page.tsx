@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import { useRouter } from "next/navigation";
 import ReviewsPopup from './ReviewsPopup';
 import Footer from "@/components/Footer";
-import { Review } from "@/types/index";
 import { 
   Search, 
   MapPin, 
@@ -27,17 +26,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import RatingPopup from '@/components/RatingPopup';
 
-// Interface for restaurant data
-interface RestaurantItem {
+interface Review {
+  id: string;
+  score: number;
+  comment: string;
+  user: {
+    name: string;
+  };
+  createdAt?: string;
+}
+
+interface Restaurant {
   id: string;
   name: string;
   cuisineType: string;
   location: string;
-  averageRating: number | { score: number };
-  categories?: (string | { name: string })[];
+  averageRating: number;
+  ratings: Review[];
+  totalRatings: number;
   imageUrl: string;
-  ratings?: { score: number; comment?: string; user: { name: string } }[];
-  totalRatings?: number;
   latitude: number;
   longitude: number;
 }
@@ -55,19 +62,22 @@ const renderStars = (rating: number) => {
 };
 
 // RestaurantCard component with click handler
-const RestaurantCard: React.FC<RestaurantItem & { onRatingAdded: (newRating: any) => void; }> = ({
+const RestaurantCard: React.FC<Restaurant & { 
+  onRatingAdded: (newRating: Review) => void;
+  onReviewClick: (id: string) => void;
+  onRateClick: (id: string) => void;
+}> = ({
   id,
   name,
   cuisineType,
   location,
   averageRating,
-  categories = [],
+  totalRatings,
   imageUrl,
-  ratings = [],
-  totalRatings = 0,
-  latitude,
-  longitude,
-  onRatingAdded
+  ratings,
+  onRatingAdded,
+  onReviewClick,
+  onRateClick
 }) => {
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [showReviews, setShowReviews] = useState<boolean>(false);
@@ -147,7 +157,10 @@ const RestaurantCard: React.FC<RestaurantItem & { onRatingAdded: (newRating: any
         <RatingPopup
           restaurantId={id}
           onClose={() => setShowPopup(false)}
-          onRatingAdded={onRatingAdded}
+          onRatingAdded={(newRating) => {
+            onRatingAdded(newRating);
+            setShowPopup(false);
+          }}
         />
       )}
       {showReviews && (
@@ -162,7 +175,7 @@ const RestaurantCard: React.FC<RestaurantItem & { onRatingAdded: (newRating: any
 
 // RestaurantList component to fetch and display restaurants
 const RestaurantList: React.FC = () => {
-  const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -179,52 +192,101 @@ const RestaurantList: React.FC = () => {
   // Cuisine types for filter
   const cuisineTypes = ['All', 'Italian', 'Japanese', 'Indian', 'American', 'Mexican', 'Chinese'];
 
-  useEffect(() => {
     const fetchNearbyRestaurants = async (latitude: number, longitude: number) => {
       try {
+      setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/api/restaurants/nearby?latitude=${latitude}&longitude=${longitude}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch restaurant data");
-        
+        `http://localhost:5000/api/restaurants/nearby?latitude=${latitude}&longitude=${longitude}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      
+        if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/auth'); // Redirect to login if unauthorized
+          return;
+        }
+        throw new Error("Failed to fetch nearby restaurants");
+      }
+      
         const data = await response.json();
-        const restaurantsWithRatings = await Promise.all(
-          data.map(async (restaurant: RestaurantItem) => {
+      const restaurantsWithRatings = await Promise.all(
+        data.map(async (restaurant: Restaurant) => {
+          try {
             const ratingsResponse = await fetch(
-              `http://localhost:5000/api/ratings/restaurant/${restaurant.id}`
+              `http://localhost:5000/api/ratings/restaurant/${restaurant.id}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+              }
             );
-            const ratingsData = await ratingsResponse.json();
-            return { 
-              ...restaurant, 
-              ratings: ratingsData.ratings, 
+            
+            if (!ratingsResponse.ok) {
+              return {
+                ...restaurant,
+                ratings: [],
+                totalRatings: 0,
+                averageRating: 0
+              };
+            }
+
+          const ratingsData = await ratingsResponse.json();
+            return {
+              ...restaurant,
+              ratings: (ratingsData.ratings || []).map((rating: any) => ({
+                id: rating.id || String(Math.random()),
+                score: rating.score || 0,
+                comment: rating.comment || "",
+                user: {
+                  name: rating.user?.name || "Anonymous"
+                },
+                createdAt: rating.createdAt
+              })),
               totalRatings: ratingsData.totalRatings || 0,
               averageRating: ratingsData.averageRating || 0
             };
-          })
-        );
+          } catch (error) {
+            return {
+              ...restaurant,
+              ratings: [],
+              totalRatings: 0,
+              averageRating: 0
+            };
+          }
+        })
+      );
 
         setRestaurants(restaurantsWithRatings);
       } catch (err) {
-        setError((err as Error).message);
+      toast({
+        title: "Error",
+        description: "Failed to fetch nearby restaurants",
+        variant: "destructive",
+      });
       } finally {
         setLoading(false);
       }
     };
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
+  useEffect(() => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
           fetchNearbyRestaurants(position.coords.latitude, position.coords.longitude);
-        },
-        (error) => {
-          setError("Unable to retrieve your location.");
-          setLoading(false);
-        }
-      );
-    } else {
-      setError("Geolocation is not supported by this browser.");
-      setLoading(false);
-    }
+          },
+          (error) => {
+            setError("Unable to retrieve your location.");
+            setLoading(false);
+          }
+        );
+      } else {
+        setError("Geolocation is not supported by this browser.");
+        setLoading(false);
+      }
   }, []);
 
   const filteredRestaurants = restaurants
@@ -273,6 +335,23 @@ const RestaurantList: React.FC = () => {
 
   const deg2rad = (deg: number) => {
     return deg * (Math.PI / 180);
+  };
+
+  const handleRatingAdded = (restaurantId: string, newRating: Review) => {
+    setRestaurants(prevRestaurants => 
+      prevRestaurants.map(restaurant => 
+        restaurant.id === restaurantId
+          ? {
+              ...restaurant,
+              ratings: [newRating, ...(restaurant.ratings || [])],
+              totalRatings: (restaurant.totalRatings || 0) + 1,
+              averageRating: 
+                ((restaurant.averageRating || 0) * (restaurant.totalRatings || 0) + newRating.score) / 
+                ((restaurant.totalRatings || 0) + 1)
+            }
+          : restaurant
+      )
+    );
   };
 
   return (
@@ -378,7 +457,7 @@ const RestaurantList: React.FC = () => {
                 key={restaurant.id}
                 className="group overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
                 onClick={() => handleRestaurantClick(restaurant.id)}
-                style={{
+        style={{
                   animation: `fadeIn 0.5s ease-out ${index * 0.1}s`,
                   opacity: 0,
                   animationFillMode: 'forwards'
@@ -459,8 +538,8 @@ const RestaurantList: React.FC = () => {
                   </div>
                 </div>
               </Card>
-            ))}
-          </div>
+        ))}
+      </div>
         )}
       </section>
       
@@ -470,13 +549,13 @@ const RestaurantList: React.FC = () => {
           restaurantId={selectedRestaurantId}
           onClose={() => setShowRatingPopup(false)}
           onRatingAdded={(newRating) => {
+            handleRatingAdded(selectedRestaurantId, newRating);
             toast({
               title: "Rating Submitted",
               description: "Thank you for your review!",
               duration: 3000,
             });
-            // Update the restaurants list with the new rating
-            // ... implement rating update logic
+            setShowRatingPopup(false);
           }}
         />
       )}
@@ -484,7 +563,17 @@ const RestaurantList: React.FC = () => {
       {/* Reviews Popup */}
       {showReviews && selectedRestaurantId && (
         <ReviewsPopup
-          reviews={restaurants.find(r => r.id === selectedRestaurantId)?.ratings || []}
+          reviews={
+            restaurants
+              .find(r => r.id === selectedRestaurantId)
+              ?.ratings?.map(rating => ({
+                id: rating.id,
+                score: rating.score,
+                comment: rating.comment || "",
+                user: rating.user || { name: "Anonymous" },
+                createdAt: rating.createdAt
+              })) || []
+          }
           onClose={() => setShowReviews(false)}
         />
       )}
