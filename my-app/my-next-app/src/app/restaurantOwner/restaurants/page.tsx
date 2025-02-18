@@ -19,22 +19,10 @@ import Swal from "sweetalert2"
 import { io, type Socket } from "socket.io-client"
 import UpdateRestaurantModal from "./components/UpdateRestaurantModal"
 import { Button } from "@/components/ui/button"
-import type { Rating } from "@/types" // Add this import
-import type { Category } from "@/types" // Add this import
+import type { Rating } from "@/types"
+import type { Category } from "@/types"
 import { Analytics } from "./components/Analytics"
-
-// Update Restaurant interface
-interface Restaurant {
-  id: number
-  name: string
-  address: string
-  imageUrl?: string
-  ratings?: Rating[]
-  categories?: Category[]
-  cuisineType?: string
-  location?: string
-  menus?: any[] // Add this if you're using menus property
-}
+import type { Restaurant } from '@/types'
 
 // Add type for Sidebar props
 interface SidebarProps {
@@ -78,7 +66,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selected, setSelected }) => {
   )
 }
 
-const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
+interface RestaurantListProps {
+  restaurants: Restaurant[];
+  fetchRestaurants: () => Promise<void>;
+}
+
+const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants, fetchRestaurants }) => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
   const [restaurantToModify, setRestaurantToModify] = useState<Restaurant | null>(null)
@@ -140,11 +133,14 @@ const RestaurantList: React.FC<RestaurantListProps> = ({ restaurants }) => {
       </div>
 
       {/* Add the modals */}
-      <UpdateRestaurantModal
-        isOpen={isUpdateModalOpen}
-        onClose={() => setIsUpdateModalOpen(false)}
-        restaurant={restaurantToModify}
-      />
+      {restaurantToModify && (
+        <UpdateRestaurantModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          restaurant={restaurantToModify}
+          fetchRestaurants={fetchRestaurants}
+        />
+      )}
      
       <RatingsModal
         isOpen={!!selectedRestaurant}
@@ -180,7 +176,7 @@ const OrdersSection = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token")
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, {
       transports: ["websocket"],
       auth: {
         token,
@@ -224,7 +220,7 @@ const OrdersSection = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:5000/api/restaurant-owner/orders", {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -247,7 +243,7 @@ const OrdersSection = () => {
     try {
       const token = localStorage.getItem("token")
       await axios.put(
-        `http://localhost:5000/api/orders/${orderId}/status`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/orders/${orderId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } },
       )
@@ -547,7 +543,7 @@ const DashboardPage = () => {
             {/* Restaurant List & Revenue Chart */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="flex flex-col">
-                <RestaurantList restaurants={restaurantsToDisplay} />
+                <RestaurantList restaurants={restaurantsToDisplay} fetchRestaurants={fetchRestaurants} />
                 {!showAllRestaurants && (
                   <div className="flex justify-center mt-4">
                     <button
@@ -565,7 +561,12 @@ const DashboardPage = () => {
         )}
   
         {/* Display Restaurant List in "Restaurants" section */}
-        {selectedSection === "Restaurants" && <RestaurantList restaurants={restaurants} />}
+        {selectedSection === "Restaurants" && 
+          <RestaurantList 
+            restaurants={restaurants} 
+            fetchRestaurants={fetchRestaurants} 
+          />
+        }
   {/* Display Analytics section */}
 {selectedSection === "Analytics" && <Analytics />}
   

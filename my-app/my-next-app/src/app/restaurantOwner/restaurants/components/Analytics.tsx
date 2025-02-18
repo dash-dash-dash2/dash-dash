@@ -34,7 +34,7 @@ export const Analytics = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:5000/api/restaurant-owner/orders", {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setOrders(response.data)

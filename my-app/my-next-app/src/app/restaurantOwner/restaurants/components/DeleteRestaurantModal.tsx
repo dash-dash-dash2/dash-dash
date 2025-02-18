@@ -34,7 +34,7 @@ const DeleteRestaurantModal = ({
       const restaurantId = typeof restaurant.id === 'string' ? parseInt(restaurant.id) : restaurant.id
       
       // Update to use PUT instead of DELETE
-      const response = await axios.put(`http://localhost:5000/api/restaurant-owner/soft-delete/${restaurantId}`, 
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/soft-delete/${restaurantId}`, 
         {
           headers: { 
             Authorization: `Bearer ${token}`,

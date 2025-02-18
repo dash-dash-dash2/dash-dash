@@ -3,52 +3,77 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const authenticate = async (req, res, next) => {
+export const authenticate = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const authHeader = req.headers.authorization;
     
-    if (!token) {
-      return res.status(401).json({ error: "No token provided" });
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        error: 'No token provided',
+        details: 'Authentication token is required' 
+      });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Verify that decoded contains a user ID
-    if (!decoded.id) {
-      return res.status(401).json({ error: "Invalid token format" });
+    const token = authHeader.split(' ')[1];
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Find user with role and deliveryman info
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: {
+          id: true,
+          role: true,
+          banned: true,
+          deliveryman: {
+            select: {
+              id: true,
+              isAvailable: true
+            }
+          }
+        }
+      });
+
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+
+      if (user.banned) {
+        return res.status(403).json({ error: 'Account is banned' });
+      }
+
+      // Attach user info to request
+      req.user = {
+        ...user,
+        deliverymanId: user.deliveryman?.id
+      };
+
+      next();
+    } catch (error) {
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Token expired' });
+      }
+      throw error;
     }
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id }
-    });
-
-    if (!user) {
-      return res.status(401).json({ error: "User not found" });
-    }
-
-    req.user = user;
-    next();
   } catch (error) {
-    console.error("Authentication error:", error);
-    return res.status(401).json({ error: "Invalid token" });
+    console.error('Auth error:', error);
+    res.status(500).json({ error: 'Authentication failed' });
   }
 };
 
-export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Authentication token required' });
-  }
-
-  try {
-    const user = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = user;
+// Role-based authorization middleware
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        details: `Access restricted to ${roles.join(', ')}`
+      });
+    }
     next();
-  } catch (error) {
-    return res.status(403).json({ message: 'Invalid or expired token' });
-  }
+  };
 };
-
-export { authenticate };

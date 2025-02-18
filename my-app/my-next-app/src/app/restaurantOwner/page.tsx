@@ -37,7 +37,7 @@ export default function RestaurantOwnerRegister() {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:5000/api/restaurant-owner", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

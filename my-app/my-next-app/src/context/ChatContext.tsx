@@ -60,7 +60,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
     
     try {
-      const response = await axios.get('http://localhost:5000/api/chat/history', {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/history`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -87,7 +87,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/chat/order/${orderId}`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/order/${orderId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -98,7 +98,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         const chatIndex = prevChats.findIndex(c => c.orderId.toString() === orderId);
         if (chatIndex === -1) {
           // If chat doesn't exist, add it
-          return [...prevChats, { orderId: parseInt(orderId), messages: response.data }];
+          return [...prevChats, { 
+            id: parseInt(orderId),
+            orderId: parseInt(orderId), 
+            messages: response.data 
+          }];
         }
         // Update existing chat messages
         const updatedChats = [...prevChats];
@@ -117,7 +121,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Initialize socket connection
   useEffect(() => {
     if (token) {
-      const newSocket = io('http://localhost:5000', {
+      const newSocket = io(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, {
         auth: { token },
         transports: ['websocket']
       });

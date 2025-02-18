@@ -5,12 +5,12 @@ import { createContext, useContext, ReactNode, useState, useEffect } from "react
 interface Restaurant {
   id: string;
   name: string;
-  address: string;
-  image?: string;
-  rating?: number;
-  cuisine?: string;
-  averageRating?:number;
-  cuisineType:string;
+  cuisineType: string;
+  location: string;
+  imageUrl: string;
+  averageRating?: number;
+  totalRatings?: number;
+  ratings?: any[];
 }
 
 interface RestaurantContextType {
@@ -35,7 +35,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:5000/api/restaurants");
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurants`);
       setRestaurants(response.data);
       console.log(response.data)
     } catch (err) {

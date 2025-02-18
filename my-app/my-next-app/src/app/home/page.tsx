@@ -48,7 +48,7 @@ const HomePage = () => {
           
           // Fetch nearby restaurants from your API
           const response = await fetch(
-            `http://localhost:5000/api/restaurants/nearby?latitude=${latitude}&longitude=${longitude}`
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurants/nearby?latitude=${latitude}&longitude=${longitude}`
           );
           const data = await response.json();
           setNearbyRestaurants(data);

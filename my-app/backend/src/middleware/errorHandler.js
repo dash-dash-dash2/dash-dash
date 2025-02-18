@@ -1,24 +1,21 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  console.error(err);
 
-  if (err.name === 'PrismaClientKnownRequestError') {
-    return res.status(400).json({
-      error: 'Invalid data provided',
-      details: err.message
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      error: 'Invalid token or no token provided'
     });
   }
 
-  if (err.name === 'PrismaClientValidationError') {
+  if (err.name === 'ValidationError') {
     return res.status(400).json({
-      error: 'Validation error',
-      details: err.message
+      error: err.message
     });
   }
 
   res.status(500).json({
-    error: 'Internal server error',
-    details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: 'Internal server error'
   });
 };
 
-export default errorHandler; 
+module.exports = errorHandler; 

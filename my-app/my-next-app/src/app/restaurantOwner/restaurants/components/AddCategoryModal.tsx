@@ -40,7 +40,7 @@ export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
     try {
       const token = localStorage.getItem("token")
       await axios.post(
-        "http://localhost:5000/api/categories",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/categories`,
         {
           name: categoryName,
           restaurantId,

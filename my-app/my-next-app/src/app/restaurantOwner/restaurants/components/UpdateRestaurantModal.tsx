@@ -18,15 +18,28 @@ interface UpdateRestaurantForm {
 }
 
 interface Restaurant extends UpdateRestaurantForm {
-  id: string
+  id: number
+}
+
+interface UpdateRestaurantModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  restaurant: {
+    id: number;
+    name: string;
+    cuisineType: string;
+    location: string;
+    imageUrl?: string;
+  };
+  fetchRestaurants: () => void
 }
 
 const UpdateRestaurantModal = ({
   isOpen,
   onClose,
   restaurant,
-  fetchRestaurants, // Add this prop
-}: { isOpen: boolean; onClose: () => void; restaurant: Restaurant; fetchRestaurants: () => void }) => {
+  fetchRestaurants,
+}: UpdateRestaurantModalProps) => {
   const {
     register,
     handleSubmit,
@@ -95,7 +108,7 @@ const UpdateRestaurantModal = ({
 
       const token = localStorage.getItem("token")
       await axios.put(
-        `http://localhost:5000/api/restaurant-owner/update/${restaurant.id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/update/${restaurant.id}`,
         { ...data, imageUrl },
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -25,16 +25,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'react-toastify';
 
+interface Restaurant {
+  id: string;
+  name: string;
+  cuisineType: string;
+  location: string;
+  phone?: string;
+  openingHours?: string;
+  image?: string;
+  orders?: any[];
+  totalRevenue?: number;
+}
+
 const Restaurants = () => {
-  const [restaurants, setRestaurants] = useState([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('ALL');
 
   const fetchRestaurants = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/restaurants', {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -52,10 +64,10 @@ const Restaurants = () => {
     fetchRestaurants();
   }, []);
 
-  const handleDeleteRestaurant = async (restaurantId) => {
+  const handleDeleteRestaurant = async (restaurantId: string) => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/admin/restaurants/${restaurantId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants/${restaurantId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -97,7 +109,7 @@ const Restaurants = () => {
     );
   }
 
-  const uniqueCuisines = [...new Set(restaurants.map(r => r.cuisineType))];
+  const uniqueCuisines = Array.from(new Set(restaurants.map(r => r.cuisineType)));
 
   return (
     <div className="space-y-8">

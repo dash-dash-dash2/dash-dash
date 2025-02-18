@@ -13,15 +13,23 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 interface Restaurant {
-  id: string
+  id: number
   name: string
+}
+
+interface AddMenuProps {
+  restaurants: Restaurant[];
+  onClose: () => void;
+  fetchMenus: () => void;
+  restaurantId?: number;
 }
 
 const AddMenu = ({
   restaurants,
   onClose,
   fetchMenus,
-}: { restaurants: Restaurant[]; onClose: () => void; fetchMenus: () => void }) => {
+  restaurantId
+}: AddMenuProps) => {
   const [name, setName] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [price, setPrice] = useState("")
@@ -88,7 +96,7 @@ const AddMenu = ({
       }
 
       const response = await axios.post(
-        "http://localhost:5000/api/restaurant-owner/menu/add",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/restaurant-owner/menu/add`,
         {
           restaurantId: selectedRestaurantId,
           name,
@@ -125,13 +133,13 @@ const AddMenu = ({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="restaurant" className="text-gray-800">Select Restaurant</Label>
-          <Select value={selectedRestaurantId} onValueChange={setSelectedRestaurantId} className="bg-white">
+          <Select value={selectedRestaurantId} onValueChange={setSelectedRestaurantId}>
             <SelectTrigger className="w-full border border-blue-300 bg-white text-gray-800">
               <SelectValue placeholder="Select a restaurant" />
             </SelectTrigger>
             <SelectContent className="bg-white">
               {restaurants.map((restaurant) => (
-                <SelectItem key={restaurant.id} value={restaurant.id} className="text-gray-800">
+                <SelectItem key={restaurant.id} value={restaurant.id.toString()} className="text-gray-800">
                   {restaurant.name}
                 </SelectItem>
               ))}

@@ -41,7 +41,7 @@ interface Restaurant {
   name: string;
   cuisineType: string;
   location: string;
-  averageRating: number;
+  averageRating: number | { score: number };
   ratings: Review[];
   totalRatings: number;
   imageUrl: string;
@@ -85,7 +85,7 @@ const RestaurantCard: React.FC<Restaurant & {
 
   // Convert ratings to Review type
   const reviews: Review[] = ratings.map(rating => ({
-    id: Math.random(), // You might want to add proper IDs in your data
+    id: String(Math.random()), // Convert to string
     score: rating.score,
     comment: rating.comment || '', // Provide default empty string for undefined comments
     user: rating.user,
@@ -217,7 +217,7 @@ const RestaurantList: React.FC = () => {
         data.map(async (restaurant: Restaurant) => {
           try {
             const ratingsResponse = await fetch(
-              `http://localhost:5000/api/ratings/restaurant/${restaurant.id}`,
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ratings/restaurant/${restaurant.id}`,
               {
                 headers: {
                   'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -337,6 +337,10 @@ const RestaurantList: React.FC = () => {
     return deg * (Math.PI / 180);
   };
 
+  const getAverageRating = (rating: number | { score: number }): number => {
+    return typeof rating === 'number' ? rating : rating.score;
+  };
+
   const handleRatingAdded = (restaurantId: string, newRating: Review) => {
     setRestaurants(prevRestaurants => 
       prevRestaurants.map(restaurant => 
@@ -346,7 +350,7 @@ const RestaurantList: React.FC = () => {
               ratings: [newRating, ...(restaurant.ratings || [])],
               totalRatings: (restaurant.totalRatings || 0) + 1,
               averageRating: 
-                ((restaurant.averageRating || 0) * (restaurant.totalRatings || 0) + newRating.score) / 
+                ((getAverageRating(restaurant.averageRating) || 0) * (restaurant.totalRatings || 0) + newRating.score) / 
                 ((restaurant.totalRatings || 0) + 1)
             }
           : restaurant

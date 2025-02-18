@@ -1,0 +1,10 @@
+{
+  "watch": ["src"],
+  "ext": "js,json",
+  "ignore": ["src/**/*.test.js", "src/**/*.spec.js"],
+  "delay": "2000",
+  "events": {
+    "crash": "echo 'Application crashed - waiting for changes...'",
+    "restart": "echo 'App restarted due to changes'"
+  }
+} 

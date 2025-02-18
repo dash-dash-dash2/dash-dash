@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { User, Mail, Phone, MapPin, Lock, Upload } from 'lucide-react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import axios from 'axios';
 
 interface Credentials {
   name: string;
@@ -90,20 +91,14 @@ export default function AuthPage() {
         imageUrl = await uploadImageToCloudinary(file);
       }
 
-      const res = await fetch("http://localhost:5000/api/users/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...credentials,
-          imageUrl,
-        }),
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/register`, {
+        ...credentials,
+        imageUrl,
       });
 
-      const data = await res.json();
+      const data = response.data;
       
-      if (!res.ok) {
+      if (response.status !== 200 && response.status !== 201) {
         throw new Error(data.error || "Registration failed");
       }
 

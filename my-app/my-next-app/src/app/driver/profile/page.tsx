@@ -19,7 +19,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchDriverData = async () => {
       try {
-        const response = await axios.get(`/api/deliveryman/${user?.id}`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/deliveryman/${user?.id}`);
         setFormData({
           name: response.data.user.name,
           email: response.data.user.email,

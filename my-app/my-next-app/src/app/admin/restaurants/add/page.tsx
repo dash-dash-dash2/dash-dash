@@ -9,13 +9,13 @@ const AddRestaurant = () => {
   const [name, setName] = useState('');
   const [cuisineType, setCuisineType] = useState('');
   const [location, setLocation] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/admin/restaurants', {
+      await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/restaurants`, {
         name,
         cuisineType,
         location,

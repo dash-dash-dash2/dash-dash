@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd my-next-app && npm run dev\"",
+    "start": "concurrently \"cd backend && npm start\" \"cd my-next-app && npm start\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+} 
