@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google';
 import { RestaurantProvider } from '../context/RestaurantContext.js'; // Ensure this path is correct
 
 const inter = Inter({ subsets: ['latin'] });
-
 export const metadata = {
   title: 'My Next App',
   description: 'Admin Dashboard',
